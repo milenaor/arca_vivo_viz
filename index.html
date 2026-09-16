@@ -1,0 +1,1626 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARCA en vivo · tablero analítico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<style>
+:root{
+  --fondo:#1d1411; --panel:#281c17; --panel2:#31241e; --linea:#4a3a31;
+  --texto:#f1e8d8; --tenue:#b5a48c; --oro:#d2a94b; --carmin:#c8465a;
+  --azurita:#6b93d1; --verdigris:#56a791;
+  --serif:"IM Fell English", "Iowan Old Style", Georgia, serif;
+  --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);font-family:var(--sans);font-size:15px;line-height:1.5}
+a{color:var(--oro)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
+img{max-width:100%}
+
+.envoltura{max-width:1400px;margin:0 auto;padding:28px clamp(14px,3vw,40px) 60px}
+/* Encabezado fijo: el fondo se extiende a los lados para tapar el contenido que pasa por debajo */
+header.cabeza::before{content:"";position:absolute;top:0;bottom:-1px;left:calc(-1 * clamp(14px,3vw,40px));right:calc(-1 * clamp(14px,3vw,40px));background:var(--fondo);border-bottom:1px solid var(--linea);z-index:-1}
+header.cabeza{position:sticky;top:0;z-index:30;
+  display:grid;grid-template-columns:1fr auto;gap:6px 32px;align-items:end;border-bottom:1px solid var(--linea);padding:14px 0 12px;margin-top:-28px}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(2rem,4vw,2.9rem);line-height:.95;margin:0;letter-spacing:-.01em}
+h1 i{color:var(--oro)}
+.subtitulo,.resumen{font-family:var(--serif);font-size:clamp(.98rem,1.5vw,1.12rem);line-height:1.3;margin:0;color:var(--texto)}
+.subtitulo{margin-top:8px}
+.resumen{margin-top:2px}
+.conexion .alcance{font-family:var(--serif);font-size:1.12rem;color:var(--texto);text-align:right}
+.resumen b{font-weight:400;color:var(--oro);font-variant-numeric:oldstyle-nums}
+.conexion{display:flex;flex-direction:column;gap:6px;min-width:min(340px,100%)}
+.conexion label{font-size:.8rem;color:var(--tenue)}
+.fila{display:flex;gap:8px}
+.fila input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--linea);border-radius:6px;padding:7px 10px;font-size:.85rem}
+.boton{background:var(--oro);color:#241910;border:0;border-radius:6px;padding:7px 14px;font-weight:600;cursor:pointer}
+.boton.sec{background:transparent;color:var(--texto);border:1px solid var(--linea);font-weight:500}
+.boton:disabled{opacity:.5;cursor:default}
+.estado{font-size:.82rem;color:var(--tenue);min-height:1.3em}
+.estado.error{color:#ff9aa8}
+
+.filtros{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:12px 0;border-bottom:1px solid var(--linea)}
+.filtros .grupo{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--tenue)}
+.filtros input[type=number]{width:78px;background:var(--panel);border:1px solid var(--linea);border-radius:6px;padding:5px 8px;color:var(--texto)}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--oro);color:var(--texto);border-radius:999px;padding:3px 6px 3px 12px;font-size:.85rem}
+.chip button{background:none;border:0;color:var(--oro);cursor:pointer;font-size:1rem;line-height:1;padding:0 4px}
+.filtros .alcance{margin-left:auto;font-family:var(--serif);font-size:1.05rem;color:var(--texto)}
+
+.aviso{background:#3a1d22;border:1px solid var(--carmin);border-radius:8px;padding:14px 18px;margin:18px 0;display:none}
+.aviso.visible{display:block}
+.aviso h3{margin:0 0 6px;font-family:var(--serif);font-weight:400;font-size:1.3rem}
+.aviso p{margin:6px 0;max-width:75ch}
+.aviso code{background:rgba(0,0,0,.3);padding:1px 5px;border-radius:4px;font-size:.85em}
+
+.rejilla{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin-top:22px}
+section.bloque{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:18px 18px 14px;min-width:0;position:relative}
+.b-mapa{grid-column:span 7}
+.b-tiempo{grid-column:span 5}
+.b-pulso{grid-column:1/-1}
+.b-atlas{grid-column:span 7}
+.b-flujos{grid-column:span 5}
+.b-ranking{grid-column:span 5}
+.b-red{grid-column:span 7}
+@media (max-width:1000px){.b-mapa,.b-tiempo,.b-atlas,.b-flujos,.b-ranking,.b-red{grid-column:1/-1}}
+.bloque h2{font-family:var(--serif);font-weight:400;font-size:1.55rem;margin:0;line-height:1.1}
+.bloque .nota{color:var(--tenue);font-size:.84rem;margin:4px 0 12px;max-width:60ch}
+.controles{display:flex;flex-wrap:wrap;gap:8px 12px;margin-bottom:10px;align-items:center}
+.controles label{font-size:.8rem;color:var(--tenue);display:flex;flex-direction:column;gap:3px}
+.controles select{background:var(--panel2);border:1px solid var(--linea);border-radius:6px;padding:5px 8px;max-width:210px}
+.lienzo{width:100%;position:relative}
+.lienzo svg{display:block;width:100%;height:auto}
+.vacio{color:var(--tenue);font-size:.9rem;padding:40px 0;text-align:center}
+.cargando{position:absolute;inset:auto 18px 14px auto;font-size:.78rem;color:var(--oro)}
+
+.pulso{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--linea);border:1px solid var(--linea);border-radius:7px;overflow:hidden;margin-top:14px}
+.metrica{background:var(--panel);padding:14px 16px;min-height:106px}
+.metrica .valor{display:block;font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.8rem);line-height:1;color:var(--oro);font-variant-numeric:tabular-nums}
+.metrica .rotulo{display:block;margin-top:7px;font-size:.83rem;color:var(--texto)}
+.metrica .explica{display:block;margin-top:2px;font-size:.73rem;color:var(--tenue)}
+@media (max-width:760px){.pulso{grid-template-columns:repeat(2,1fr)}}
+
+.celda-calor{cursor:pointer;stroke:var(--panel);stroke-width:2}
+.celda-calor:hover{stroke:var(--texto)}
+.nodo-flujo{fill:var(--panel2);stroke:var(--linea)}
+.etiqueta-flujo{font-size:10px;fill:var(--texto)}
+.cinta-flujo{fill-opacity:.4;stroke-opacity:.6;transition:fill-opacity .12s}
+.cinta-flujo:hover{fill-opacity:.82}
+
+.pais{stroke:var(--fondo);stroke-width:.6;cursor:pointer;transition:opacity .15s}
+.pais:hover{opacity:.8}
+.pais.sel{stroke:var(--oro);stroke-width:2}
+.punto{fill:var(--carmin);fill-opacity:.55;stroke:#ffd9df;stroke-width:.5}
+.leyenda{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--tenue);margin-top:6px}
+.leyenda .barra{height:8px;width:120px;border-radius:2px;background:linear-gradient(90deg,#3b2b24,var(--oro))}
+
+.lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;max-height:560px;overflow:auto}
+.lista li button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;width:100%;padding:5px 6px;border-radius:5px;cursor:pointer}
+.lista li button:hover,.lista li button:focus-visible{background:var(--panel2)}
+.lista .nombre{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lista .cifra{font-size:.82rem;color:var(--tenue);font-variant-numeric:tabular-nums}
+.lista .pista{grid-column:1/-1;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden}
+.lista .pista span{display:block;height:100%;background:var(--oro)}
+
+.red-leyenda{display:flex;gap:14px;font-size:.78rem;color:var(--tenue);margin-top:6px;flex-wrap:wrap}
+.red-leyenda span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.nodo{cursor:pointer;stroke:var(--fondo);stroke-width:1}
+.etiqueta{font-size:10px;fill:var(--texto);pointer-events:none;paint-order:stroke;stroke:var(--panel);stroke-width:3px}
+.arista{stroke:var(--tenue)}
+
+#tip{position:fixed;pointer-events:none;background:#120c0a;border:1px solid var(--linea);color:var(--texto);padding:6px 10px;border-radius:6px;font-size:.82rem;z-index:50;opacity:0;transition:opacity .1s;max-width:260px}
+
+.detalle{position:fixed;top:0;right:0;height:100%;width:min(420px,100%);background:var(--panel);border-left:1px solid var(--linea);z-index:40;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column}
+.detalle.abierto{transform:none}
+.detalle .cab{padding:18px 20px 12px;border-bottom:1px solid var(--linea);display:flex;gap:12px;align-items:start}
+.detalle h3{font-family:var(--serif);font-weight:400;font-size:1.6rem;margin:0;line-height:1.1;flex:1}
+.detalle .cuerpo{padding:14px 20px 30px;overflow:auto}
+.detalle .dato{color:var(--tenue);font-size:.88rem;margin:0 0 12px}
+.galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.galeria a{display:block;text-decoration:none;color:var(--texto);font-size:.72rem;line-height:1.25}
+.galeria img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;background:var(--panel2);display:block;margin-bottom:4px}
+@media (max-width:640px){
+  .detalle{top:auto;bottom:0;height:78vh;width:100%;border-left:0;border-top:1px solid var(--linea);transform:translateY(100%);border-radius:12px 12px 0 0}
+  header.cabeza{grid-template-columns:1fr}
+  .conexion .alcance{text-align:left}
+}
+/* ---------- Panel lateral de filtros ---------- */
+body{padding-left:var(--pestana)}
+:root{--pestana:56px; --ancho-panel:min(420px,100%)}
+.pestana-filtros{all:unset;box-sizing:border-box;position:fixed;top:0;bottom:0;left:0;width:var(--pestana);z-index:46;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:var(--panel);border-right:1px solid var(--linea);box-shadow:inset 3px 0 0 var(--oro);
+  transition:left .25s ease,background .15s}
+.pestana-filtros:hover{background:var(--panel2)}
+.pestana-filtros:focus-visible{outline:2px solid var(--oro);outline-offset:-4px}
+.pestana-filtros .rotulo{font-family:var(--serif);font-size:1.05rem;font-weight:400;color:var(--texto)}
+.pestana-filtros .flecha{color:var(--oro);font-size:1.15rem;line-height:1;transition:transform .25s ease}
+.pestana-filtros .cuenta{background:var(--oro);color:#241910;border-radius:999px;padding:0 7px;font-size:.74rem;font-weight:600;line-height:1.5}
+.pestana-filtros .cuenta:empty{display:none}
+.pestana-filtros.abierto{left:var(--ancho-panel);box-shadow:none;border-left:0}
+.pestana-filtros.abierto .flecha{transform:rotate(180deg)}
+@media (max-width:640px){
+  :root{--pestana:40px}
+  .pestana-filtros .rotulo{font-size:.85rem}
+  .pestana-filtros.abierto{display:none}
+}
+.velo{position:fixed;inset:0;background:rgba(10,6,5,.55);z-index:44;opacity:0;pointer-events:none;transition:opacity .25s}
+.velo.visible{opacity:1;pointer-events:auto}
+.panel-filtros{position:fixed;top:0;left:0;height:100%;width:var(--ancho-panel);background:var(--panel);border-right:1px solid var(--linea);z-index:45;display:flex;flex-direction:column;transform:translateX(-100%);visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
+.panel-filtros.abierto{transform:none;visibility:visible;transition:transform .25s ease}
+.panel-filtros .cab{padding:18px 20px 12px;border-bottom:1px solid var(--linea);display:flex;gap:10px;align-items:center}
+.panel-filtros h3{font-family:var(--serif);font-weight:400;font-size:1.6rem;margin:0;line-height:1.1;flex:1}
+.panel-filtros .cuerpo{padding:14px 20px 40px;overflow:auto;flex:1}
+.pf-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.pf-chips:empty{display:none}
+.pf-chips .chip,.pf-mini .chip{font-size:.78rem;padding:2px 4px 2px 10px}
+.pf-grupo{border-bottom:1px solid var(--linea)}
+.pf-grupo.g-basicos{--c:var(--oro)} .pf-grupo.g-analisis{--c:var(--azurita)} .pf-grupo.g-gestos{--c:var(--verdigris)}
+.pf-toggle{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:12px 6px 12px 12px;margin:6px 0;border-left:4px solid var(--c);cursor:pointer;font-size:.98rem;color:var(--texto)}
+.pf-toggle:hover{background:var(--panel2)}
+.pf-toggle:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
+.pf-toggle .flecha{color:var(--c);font-size:1.05rem}
+.pf-toggle .titulo{flex:1;font-family:var(--serif);font-weight:400;font-size:1.35rem;line-height:1.1}
+.pf-toggle .cnt{color:var(--oro);font-size:.8rem}
+.pf-toggle .chev{color:var(--tenue);font-size:.7rem;transition:transform .15s}
+.pf-grupo.open .chev{transform:rotate(180deg)}
+.pf-cuerpo-grupo{display:none;padding:6px 0 14px 16px}
+.pf-grupo.open .pf-cuerpo-grupo{display:block}
+.faceta{margin-bottom:18px}
+.faceta-rotulo{display:block;font-size:.86rem;color:var(--texto);margin-bottom:4px}
+.pf-pista{display:flex;gap:6px;font-size:.74rem;color:var(--tenue);line-height:1.35;margin:0 0 7px}
+.pf-pista::before{content:"i";flex:none;display:inline-grid;place-items:center;width:13px;height:13px;margin-top:2px;border:1px solid currentColor;border-radius:50%;font-size:9px;font-weight:600;font-style:normal}
+.pf-rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 10px}
+.pf-rejilla label{display:block;font-size:.74rem;color:var(--tenue);margin-bottom:3px}
+.faceta select,.faceta input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--linea);border-radius:6px;padding:6px 8px;font-size:.84rem;color:var(--texto)}
+.faceta select:focus,.faceta input[type=text]:focus{outline:1px solid var(--oro);border-color:var(--oro)}
+label.faceta-rotulo select{margin-top:4px}
+.faceta select option{background:var(--panel2);color:var(--texto)}
+.faceta select option.cero{color:var(--tenue)}
+.pf-geo{font-size:.78rem;margin-top:6px}
+.pf-rango{position:relative;height:52px}
+.pf-rango-valores{display:flex;justify-content:space-between;font-size:.8rem;color:var(--oro);font-variant-numeric:tabular-nums}
+.pf-rango-pista{position:absolute;top:33px;left:0;right:0;height:4px;border-radius:999px;background:var(--linea)}
+.pf-rango-relleno{position:absolute;top:0;height:4px;border-radius:999px;background:var(--oro)}
+.pf-rango input[type=range]{-webkit-appearance:none;appearance:none;position:absolute;top:27px;left:0;width:100%;height:16px;margin:0;background:transparent;pointer-events:none}
+.pf-rango input[type=range]::-webkit-slider-runnable-track{background:transparent;height:16px}
+.pf-rango input[type=range]::-moz-range-track{background:transparent;height:16px;border:0}
+.pf-rango input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;pointer-events:auto;width:16px;height:16px;border-radius:50%;background:var(--texto);border:2px solid var(--oro);cursor:pointer}
+.pf-rango input[type=range]::-moz-range-thumb{pointer-events:auto;width:16px;height:16px;border-radius:50%;background:var(--texto);border:2px solid var(--oro);cursor:pointer}
+.pf-lista,.pf-check{max-height:200px;overflow-y:auto;background:var(--panel2);border:1px solid var(--linea);border-radius:6px;margin-top:4px}
+.pf-lista{display:none}
+.pf-lista.show{display:block}
+.pf-lista div{padding:5px 9px;font-size:.8rem;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.pf-lista div:hover{background:var(--panel);color:var(--oro)}
+.pf-lista .vacio-f,.pf-check .vacio-f{color:var(--tenue);cursor:default}
+.pf-lista .n,.pf-check .n{color:var(--tenue);font-size:.74rem;white-space:nowrap;margin-left:auto;font-variant-numeric:tabular-nums}
+.pf-check{padding:4px 9px}
+.pf-check label{display:flex;align-items:center;gap:7px;font-size:.8rem;padding:3px 0;cursor:pointer}
+.pf-check input{accent-color:var(--oro)}
+.desplegable .pf-check{display:none}
+.desplegable .pf-check.show{display:block}
+.pf-mini{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.pf-mini:empty{display:none}
+
+footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="envoltura">
+  <header class="cabeza">
+    <div>
+      <h1>ARCA <i>en vivo</i></h1>
+      <p class="subtitulo">Tablero analítico conectado a la base de datos de Arte Colonial Americano.</p>
+      <p class="resumen" id="resumen">Consultando cifras…</p>
+    </div>
+    <div class="conexion">
+      <div class="alcance" id="alcance"></div>
+      <div class="estado" id="estado" role="status">Sin conectar</div>
+    </div>
+  </header>
+
+  <div class="aviso" id="aviso">
+    <h3>No fue posible leer la API</h3>
+    <p id="avisoTexto"></p>
+    <p>Si el mensaje dice <code>Failed to fetch</code>, lo más probable es que el servidor no autorice solicitudes desde este origen (CORS). Hay tres salidas: pedir al equipo de ARCA que agregue el dominio donde publiques este archivo a <code>CORS_ORIGIN</code> en Directus, servirlo desde un dominio ya autorizado, o usar un proxy propio y escribir su dirección arriba.</p>
+  </div>
+
+
+  <div class="rejilla">
+    <section class="bloque b-pulso">
+      <h2>Pulso de la colección</h2>
+      <p class="nota">Una lectura crítica del conjunto visible: escala, cronología, precisión documental y desplazamiento geográfico.</p>
+      <div class="pulso" id="pulso"><div class="vacio">Esperando datos.</div></div>
+    </section>
+
+    <section class="bloque b-mapa">
+      <h2>Geografía de las obras</h2>
+      <p class="nota">Color: pinturas por país según el periodo. Círculos: lugares donde se conservan. Toca un país para filtrar todo el tablero.</p>
+      <div class="lienzo" id="mapa"><div class="vacio">Conecta la API para dibujar el mapa.</div></div>
+      <div class="leyenda"><span>menos</span><span class="barra"></span><span>más obras</span></div>
+    </section>
+
+    <section class="bloque b-tiempo">
+      <h2>Producción por década</h2>
+      <p class="nota">Según la fecha inicial registrada. Toca una década para usarla como periodo; en gris, el total sin el filtro de país.</p>
+      <div class="lienzo" id="tiempo"><div class="vacio">Esperando datos.</div></div>
+    </section>
+
+    <section class="bloque b-atlas">
+      <h2>Atlas iconográfico en el tiempo</h2>
+      <p class="nota">Composición temática por cuartos de siglo, usando el punto medio de cada intervalo de datación. El color expresa la proporción dentro de cada periodo; toca una celda para filtrar esos 25 años.</p>
+      <div class="lienzo" id="atlas"><div class="vacio">Esperando datos.</div></div>
+    </section>
+
+    <section class="bloque b-flujos">
+      <h2>Trayectorias de las obras</h2>
+      <p class="nota">País de origen registrado a la izquierda y país de conservación actual a la derecha. Se muestran únicamente desplazamientos entre países.</p>
+      <div class="lienzo" id="flujos"><div class="vacio">Esperando datos.</div></div>
+    </section>
+
+    <section class="bloque b-ranking">
+      <h2>Lo más representado</h2>
+      <p class="nota">Conteo de obras por término dentro de los filtros activos.</p>
+      <div class="controles">
+        <label>Dimensión<select id="rDim"></select></label>
+        <label>Mostrar<select id="rTop"><option>15</option><option selected>30</option><option>60</option></select></label>
+      </div>
+      <div class="lienzo" id="ranking"><div class="vacio">Esperando datos.</div></div>
+      <div class="cargando" id="rCarga"></div>
+    </section>
+
+    <section class="bloque b-red">
+      <h2>Relaciones entre bases de datos</h2>
+      <p class="nota">Dos términos se unen cuando aparecen en la misma pintura; el grosor es el número de obras compartidas. Arrastra, acerca con la rueda y toca un nodo para ver ejemplos.</p>
+      <div class="controles">
+        <label>Base A<select id="nA"></select></label>
+        <label>Base B<select id="nB"></select></label>
+        <label>Nodos por base<select id="nTop"><option>15</option><option selected>25</option><option>40</option></select></label>
+        <label>Obras mínimas por vínculo<select id="nMin"><option>2</option><option selected>5</option><option>10</option><option>25</option></select></label>
+      </div>
+      <div class="lienzo" id="red"><div class="vacio">Esperando datos.</div></div>
+      <div class="red-leyenda" id="redLeyenda"></div>
+      <div class="cargando" id="nCarga"></div>
+    </section>
+  </div>
+
+  <footer>
+    Datos: <a href="https://arca.uniandes.edu.co" target="_blank" rel="noopener">ARCA, Arte Colonial Americano</a>, Universidad de los Andes.
+  </footer>
+</div>
+
+<aside class="detalle" id="detalle" aria-hidden="true">
+  <div class="cab"><h3 id="dTitulo"></h3><button class="boton sec" id="dCerrar" aria-label="Cerrar">Cerrar</button></div>
+  <div class="cuerpo" id="dCuerpo"></div>
+</aside>
+<div id="tip"></div>
+
+<div class="velo" id="veloFiltros"></div>
+<button class="pestana-filtros" id="abrirFiltros" aria-controls="panelFiltros" aria-expanded="false" aria-label="Abrir filtros">
+  <span class="rotulo">Filtros</span>
+  <span class="flecha" aria-hidden="true">→</span>
+  <span class="cuenta" id="cuentaFiltros"></span>
+</button>
+<aside class="panel-filtros" id="panelFiltros" aria-hidden="true" aria-label="Filtros">
+  <div class="cab">
+    <h3>Filtros</h3>
+    <button class="boton sec" id="pf-reiniciar">Reiniciar todo</button>
+    <button class="boton sec" id="pf-cerrar" aria-label="Cerrar filtros">Cerrar</button>
+  </div>
+  <div class="cuerpo">
+    <div class="pf-chips" id="pf-chips"></div>
+    <p class="pf-pista" id="pf-carga">Cargando opciones de filtro…</p>
+
+    <section class="pf-grupo g-basicos" data-group="basicos">
+      <button class="pf-toggle" aria-expanded="false"><span class="flecha">↓</span><span class="titulo">Datos básicos</span><span class="cnt" id="pf-cnt-basicos"></span><span class="chev">▾</span></button>
+      <div class="pf-cuerpo-grupo">
+        <div class="faceta">
+          <span class="faceta-rotulo">Ubicación actual</span>
+          <p class="pf-pista">Elige país, ciudad o lugar; los demás campos se ajustan solos.</p>
+          <div class="pf-rejilla">
+            <div><label for="pf-pais">País</label><select id="pf-pais"></select></div>
+            <div><label for="pf-ciudad">Ciudad</label><select id="pf-ciudad"></select></div>
+            <div><label for="pf-ubicacion">Lugar</label><select id="pf-ubicacion"></select></div>
+          </div>
+          <div class="pf-geo" id="pf-geo"></div>
+        </div>
+
+        <div class="faceta">
+          <span class="faceta-rotulo">Lugar de origen</span>
+          <p class="pf-pista">Dónde se creó la obra, no dónde está hoy.</p>
+          <div class="pf-rejilla">
+            <div><label for="pf-pais-origen">País</label><select id="pf-pais-origen"></select></div>
+            <div><label for="pf-ciudad-origen">Ciudad</label><select id="pf-ciudad-origen"></select></div>
+          </div>
+        </div>
+
+        <div class="faceta">
+          <span class="faceta-rotulo">Fecha (rango de años, se cruza con la datación de la obra)</span>
+          <p class="pf-pista">Arrastra los dos extremos para definir el rango.</p>
+          <div class="pf-rango">
+            <div class="pf-rango-valores"><span id="pf-val-desde"></span><span id="pf-val-hasta"></span></div>
+            <div class="pf-rango-pista"><div class="pf-rango-relleno" id="pf-relleno"></div></div>
+            <input type="range" id="pf-rango-desde" step="1" aria-label="Año desde">
+            <input type="range" id="pf-rango-hasta" step="1" aria-label="Año hasta">
+          </div>
+        </div>
+
+        <div class="faceta">
+          <span class="faceta-rotulo">Clasificación</span>
+          <p class="pf-pista">Hasta 6 niveles; cada uno depende del anterior.</p>
+          <div class="pf-rejilla">
+            <div><label for="pf-cat-0">Nivel 1</label><select id="pf-cat-0"></select></div>
+            <div><label for="pf-cat-1">Nivel 2</label><select id="pf-cat-1"></select></div>
+            <div><label for="pf-cat-2">Nivel 3</label><select id="pf-cat-2"></select></div>
+            <div><label for="pf-cat-3">Nivel 4</label><select id="pf-cat-3"></select></div>
+            <div><label for="pf-cat-4">Nivel 5</label><select id="pf-cat-4"></select></div>
+            <div><label for="pf-cat-5">Nivel 6</label><select id="pf-cat-5"></select></div>
+          </div>
+        </div>
+
+        <div class="faceta" data-facet="tecnicas">
+          <span class="faceta-rotulo">Técnicas</span>
+          <p class="pf-pista">Puedes marcar varias.</p>
+          <div class="pf-check"></div>
+        </div>
+
+        <div class="faceta" data-facet="autores">
+          <span class="faceta-rotulo">Autor (nombre completo)</span>
+          <p class="pf-pista">Busca y agrega varios autores.</p>
+          <input type="text" class="pf-typeahead" placeholder="Buscar autor por nombre o apellido…" autocomplete="off">
+          <div class="pf-lista"></div>
+          <div class="pf-mini"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pf-grupo g-analisis" data-group="analisis">
+      <button class="pf-toggle" aria-expanded="false"><span class="flecha">↓</span><span class="titulo">Datos de análisis</span><span class="cnt" id="pf-cnt-analisis"></span><span class="chev">▾</span></button>
+      <div class="pf-cuerpo-grupo">
+        <div class="faceta desplegable" data-facet="simbolos">
+          <span class="faceta-rotulo">Símbolos</span>
+          <p class="pf-pista">Haz clic en la caja para ver las opciones; puedes marcar varios.</p>
+          <input type="text" class="pf-buscar" placeholder="Buscar símbolo…" autocomplete="off">
+          <div class="pf-check"></div><div class="pf-mini"></div>
+        </div>
+        <div class="faceta desplegable" data-facet="descriptores">
+          <span class="faceta-rotulo">Descriptores</span>
+          <p class="pf-pista">Haz clic en la caja para ver las opciones; puedes marcar varios.</p>
+          <input type="text" class="pf-buscar" placeholder="Buscar descriptor…" autocomplete="off">
+          <div class="pf-check"></div><div class="pf-mini"></div>
+        </div>
+        <div class="faceta desplegable" data-facet="caracteristicas">
+          <span class="faceta-rotulo">Características particulares</span>
+          <p class="pf-pista">Haz clic en la caja para ver las opciones; puedes marcar varias.</p>
+          <input type="text" class="pf-buscar" placeholder="Buscar característica…" autocomplete="off">
+          <div class="pf-check"></div><div class="pf-mini"></div>
+        </div>
+        <div class="faceta desplegable" data-facet="escenarios">
+          <span class="faceta-rotulo">Escenarios</span>
+          <p class="pf-pista">Haz clic en la caja para ver las opciones; puedes marcar varios.</p>
+          <input type="text" class="pf-buscar" placeholder="Buscar escenario…" autocomplete="off">
+          <div class="pf-check"></div><div class="pf-mini"></div>
+        </div>
+        <div class="faceta desplegable" data-facet="objetos">
+          <span class="faceta-rotulo">Objetos</span>
+          <p class="pf-pista">Haz clic en la caja para ver las opciones; puedes marcar varios.</p>
+          <input type="text" class="pf-buscar" placeholder="Buscar objeto…" autocomplete="off">
+          <div class="pf-check"></div><div class="pf-mini"></div>
+        </div>
+        <div class="faceta" data-facet="relato_visual"><label class="faceta-rotulo">Relato visual<select></select></label></div>
+        <div class="faceta" data-facet="donante"><label class="faceta-rotulo">Donante<select></select></label></div>
+        <div class="faceta" data-facet="cartela_filacteria"><label class="faceta-rotulo">Cartela / Filacteria<select></select></label></div>
+        <div class="faceta" data-facet="personajes">
+          <span class="faceta-rotulo">Personaje central / tema</span>
+          <p class="pf-pista">Busca y agrega varios.</p>
+          <input type="text" class="pf-typeahead" placeholder="Buscar personaje…" autocomplete="off">
+          <div class="pf-lista"></div>
+          <div class="pf-mini"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="pf-grupo g-gestos" data-group="gestos">
+      <button class="pf-toggle" aria-expanded="false"><span class="flecha">↓</span><span class="titulo">Datos de gestos</span><span class="cnt" id="pf-cnt-gestos"></span><span class="chev">▾</span></button>
+      <div class="pf-cuerpo-grupo">
+        <div class="faceta" data-facet="fisiognomica"><label class="faceta-rotulo">Fisiognómica: postura del cuerpo<select></select></label></div>
+        <div class="faceta" data-facet="fisiognomica_imagen"><label class="faceta-rotulo">Fisiognómica: cuerpo y proporciones<select></select></label></div>
+        <div class="faceta" data-facet="rostro"><label class="faceta-rotulo">Rostro<select></select></label></div>
+        <div class="faceta" data-facet="tipo_gestual"><label class="faceta-rotulo">Tipo gestual (relación gesto-objeto)<select></select></label></div>
+        <div class="faceta" data-facet="gesto1"><label class="faceta-rotulo">Gesto — nivel 1<select></select></label></div>
+        <div class="faceta" data-facet="gesto2"><label class="faceta-rotulo">Gesto — nivel 2<select></select></label></div>
+        <div class="faceta" data-facet="gesto3"><label class="faceta-rotulo">Gesto — nivel 3<select></select></label></div>
+        <div class="faceta" data-facet="complejo_gestual"><label class="faceta-rotulo">Complejo gestual<select></select></label></div>
+      </div>
+    </section>
+  </div>
+</aside>
+
+<script>
+/* ---------- Configuración de dimensiones (según el esquema de ARCA) ---------- */
+const DIMS = {
+  autores:        {label:'Autores', tipo:'m2m', col:'autores', key:'autores_id', campos:'id nombre apellido', idf:'id', ruta:o=>`/autores/${o.id}`},
+  personajes:     {label:'Personajes', tipo:'m2m', col:'personajes', key:'personajes_id', campos:'nombre slug', idf:'slug'},
+  simbolos:       {label:'Símbolos', tipo:'m2m', col:'simbolos', key:'simbolos_id', campos:'nombre slug', idf:'slug'},
+  objetos:        {label:'Objetos', tipo:'m2m', col:'objetos', key:'objetos_id', campos:'nombre slug', idf:'slug'},
+  escenarios:     {label:'Escenarios', tipo:'m2m', col:'escenarios', key:'escenarios_id', campos:'nombre slug', idf:'slug'},
+  tecnicas:       {label:'Técnicas', tipo:'m2m', col:'tecnicas', key:'tecnicas_id', campos:'nombre slug', idf:'slug'},
+  descriptores:   {label:'Descriptores', tipo:'m2m', col:'descriptores', key:'descriptores_id', campos:'nombre slug', idf:'slug'},
+  caracteristicas:{label:'Características', tipo:'m2m', col:'caracteristicas', key:'caracteristicas_id', campos:'nombre slug', idf:'slug'},
+  categoria1:     {label:'Categoría, nivel 1', tipo:'m2o', campo:'categoria1', col:'categorias1'},
+  categoria2:     {label:'Categoría, nivel 2', tipo:'m2o', campo:'categoria2', col:'categorias2'},
+  categoria3:     {label:'Categoría, nivel 3', tipo:'m2o', campo:'categoria3', col:'categorias3'},
+  categoria4:     {label:'Categoría, nivel 4', tipo:'m2o', campo:'categoria4', col:'categorias4'},
+  categoria5:     {label:'Categoría, nivel 5', tipo:'m2o', campo:'categoria5', col:'categorias5'},
+  categoria6:     {label:'Categoría, nivel 6', tipo:'m2o', campo:'categoria6', col:'categorias6'},
+  relato_visual:  {label:'Relato visual', tipo:'m2o', campo:'relato_visual', col:'relatos_visuales'},
+  donante:        {label:'Donantes', tipo:'m2o', campo:'donante', col:'donantes'},
+  tipo_gestual:   {label:'Tipo gestual', tipo:'m2o', campo:'tipo_gestual', col:'tipos_gestuales'},
+  complejo_gestual:{label:'Complejo gestual', tipo:'m2o', campo:'complejo_gestual', col:'complejos_gestuales'},
+  gesto1:         {label:'Gesto principal', tipo:'m2o', campo:'gesto1', col:'gestos', conteo:'obras_gesto_1_func'},
+  rostro:         {label:'Rostro', tipo:'m2o', campo:'rostro', col:'rostros'},
+  cartela_filacteria:{label:'Cartela o filacteria', tipo:'m2o', campo:'cartela_filacteria', col:'cartelas_filacterias'},
+  fisiognomica:   {label:'Fisiognómica', tipo:'m2o', campo:'fisiognomica', col:'fisiognomicas'},
+};
+for (const [k,d] of Object.entries(DIMS)) {
+  d.id = k;
+  if (d.tipo === 'm2o') { d.campos = 'nombre slug'; d.idf = 'slug'; }
+  if (!d.ruta) d.ruta = o => `/${d.col}/${o.slug}`;
+}
+const nombreItem = o => o ? ([o.nombre, o.apellido].filter(Boolean).join(' ') || '(sin nombre)') : null;
+
+/* ---------- Estado ---------- */
+const S = {
+  api:'', obras:[], obraPais:new Map(), paises:[], ubic:[], total:0,
+  filtro:{pais:null, desde:null, hasta:null}, permitidas:null, panelIds:null,
+  dimCache:new Map(), indexCache:new Map(), pendientes:new Map()
+};
+const fmt = n => new Intl.NumberFormat('es-CO').format(n);
+const $ = id => document.getElementById(id);
+const estado = (t, error=false) => { const e=$('estado'); e.textContent=t; e.classList.toggle('error', error); };
+
+/* ---------- API ---------- */
+async function gql(query){
+  const r = await fetch(`${S.api}/graphql`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query})});
+  if (!r.ok) throw new Error(`La API respondió ${r.status} ${r.statusText}`);
+  const j = await r.json();
+  if (j.errors && !j.data) throw new Error(j.errors.map(e=>e.message).join('; '));
+  if (j.errors) console.warn('GraphQL', j.errors);
+  return j.data || {};
+}
+async function contar(coleccion){
+  try { const d = await gql(`query{ ${coleccion}_aggregated { count { id } } }`); return d[`${coleccion}_aggregated`]?.[0]?.count?.id ?? null; }
+  catch { return null; }
+}
+async function paginar(coleccion, campos, total, alAvanzar, L=2000){
+  const out = []; let off = 0, orden = 'sort:["id"],';
+  while (true){
+    let d;
+    try { d = await gql(`query{ ${coleccion}(${orden} limit:${L}, offset:${off}) { ${campos} } }`); }
+    catch(e){ if (orden){ orden=''; continue; } throw e; }
+    const filas = d[coleccion] || [];
+    if (!filas.length) break;
+    out.push(...filas); off += filas.length;
+    alAvanzar && alAvanzar(out.length, total);
+    if (total ? out.length >= total : filas.length < L) break;
+  }
+  return out;
+}
+
+/* ---------- Carga base ---------- */
+async function conectar(){
+  S.api = 'https://apiarca.uniandes.edu.co';
+  $('aviso').classList.remove('visible');
+  S.dimCache.clear(); S.indexCache.clear(); S.pendientes.clear();
+  try {
+    estado('Consultando totales…');
+    const [obras, autores, ubicaciones, personajes] = await Promise.all(['obras','autores','ubicaciones','personajes'].map(contar));
+    if (obras == null) await gql('query{ obras(limit:1){ id } }'); // fuerza el error real si no hay acceso
+    S.total = obras || 0;
+
+    estado('Cargando geografía…');
+    const g = await gql(`query{
+      paises(filter:{obras_func:{count:{_neq:0}}}, limit:-1){ id nombre slug geo obras_func{count} }
+      ubicaciones(limit:-1){ id nombre geo obras_func{count} }
+    }`);
+    S.paises = (g.paises||[]).filter(p=>p.geo);
+    S.ubic = (g.ubicaciones||[]).filter(u=>u.geo && u.geo.coordinates);
+
+    const filas = await paginar('obras', 'id registro fecha_inicial fecha_final fecha_periodo categoria1{ nombre slug } ciudad_origen{ pais{ id nombre } } ubicacion{ id ciudad{ pais{ id nombre } } }', S.total,
+      (n,t)=>estado(`Leyendo obras ${fmt(n)}${t?` de ${fmt(t)}`:''}…`));
+    S.obras = filas.map(o=>({
+      id:o.id, fi:o.fecha_inicial, ff:o.fecha_final, periodo:o.fecha_periodo,
+      ub:o.ubicacion?.id ?? null,
+      pais:o.ubicacion?.ciudad?.pais?.id ?? null,
+      conserva:o.ubicacion?.ciudad?.pais ?? null,
+      origen:o.ciudad_origen?.pais ?? null,
+      categoria:o.categoria1 ?? null
+    }));
+    if (!S.total) S.total = S.obras.length;
+
+    const cuando = new Date().toLocaleString('es-CO',{dateStyle:'medium', timeStyle:'short'});
+    const partes = [`<b>${fmt(S.total)}</b> pinturas`];
+    if (autores) partes.push(`<b>${fmt(autores)}</b> autores`);
+    if (personajes) partes.push(`<b>${fmt(personajes)}</b> personajes`);
+    if (ubicaciones) partes.push(`<b>${fmt(ubicaciones)}</b> lugares`);
+    partes.push(`<b>${fmt(S.paises.length)}</b> países`);
+    $('resumen').innerHTML = `${partes.slice(0,-1).join(', ')} y ${partes.at(-1)}.`;
+    estado(`Conectado a ${S.api} · ${cuando}`);
+    aplicarFiltros();
+  } catch(e){
+    console.error(e);
+    estado('Error de conexión', true);
+    $('avisoTexto').textContent = `Detalle: ${e.message}`;
+    $('aviso').classList.add('visible');
+  }
+}
+
+/* ---------- Filtros ---------- */
+function pasaPeriodo(o){
+  const {desde, hasta} = S.filtro;
+  if (desde==null && hasta==null) return true;
+  if (o.fi==null) return false;
+  const fin = o.ff ?? o.fi;
+  return (desde==null || fin>=desde) && (hasta==null || o.fi<=hasta);
+}
+// Filtros del panel lateral que se resuelven en el servidor (todo salvo país y fecha)
+function pasaPanel(o){ return !S.panelIds || S.panelIds.has(String(o.id)); }
+function obrasVisibles(){ return S.permitidas ? S.obras.filter(o=>S.permitidas.has(o.id)) : S.obras; }
+function aplicarFiltros(){
+  const f = S.filtro;
+  const activo = f.pais || f.desde!=null || f.hasta!=null || S.panelIds;
+  S.permitidas = activo ? new Set(S.obras.filter(o=>pasaPanel(o) && pasaPeriodo(o) && (!f.pais || o.pais===f.pais.id)).map(o=>o.id)) : null;
+  PF.sincronizar();
+  const n = S.permitidas ? S.permitidas.size : S.total;
+  $('alcance').textContent = activo ? `${fmt(n)} de ${fmt(S.total)} obras en el filtro` : `${fmt(S.total)} obras`;
+  dibujarPulso(); dibujarMapa(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRanking(); dibujarRed();
+}
+// Periodo elegido desde los gráficos (décadas y atlas)
+function fijarPeriodo(desde, hasta){
+  S.filtro.desde = desde; S.filtro.hasta = hasta;
+  if (S.obras.length) aplicarFiltros();
+}
+
+/* ---------- Tooltip ---------- */
+const tip = $('tip');
+function mostrarTip(ev, html){ tip.innerHTML=html; tip.style.opacity=1; moverTip(ev); }
+function moverTip(ev){ const x=Math.min(ev.clientX+14, innerWidth-270); tip.style.left=x+'px'; tip.style.top=(ev.clientY+14)+'px'; }
+function ocultarTip(){ tip.style.opacity=0; }
+
+/* ---------- Indicadores de lectura ---------- */
+function dibujarPulso(){
+  const obras = obrasVisibles(), n = obras.length;
+  if (!n){ $('pulso').innerHTML='<div class="vacio">Ninguna obra coincide con los filtros.</div>'; return; }
+  const fechadas = obras.filter(o=>o.fi!=null);
+  const medianas = fechadas.map(o=>(o.fi+(o.ff??o.fi))/2).sort(d3.ascending);
+  const anchas = fechadas.filter(o=>o.periodo || (o.ff!=null && o.ff-o.fi>=25)).length;
+  const comparables = obras.filter(o=>o.origen && o.conserva);
+  const movidas = comparables.filter(o=>o.origen.id!==o.conserva.id).length;
+  const categorias = new Set(obras.map(o=>o.categoria?.slug).filter(Boolean));
+  const tarjetas = [
+    [fmt(n),'obras en la lectura',S.permitidas?'con los filtros activos':'colección completa'],
+    [medianas.length?Math.round(d3.median(medianas)):'—','año central estimado',`${fmt(fechadas.length)} obras con fecha`],
+    [fechadas.length?`${(anchas/fechadas.length*100).toFixed(1)} %`:'—','datación amplia','periodos o intervalos de 25+ años'],
+    [comparables.length?`${(movidas/comparables.length*100).toFixed(1)} %`:'—','fuera del país de origen',`${fmt(movidas)} de ${fmt(comparables.length)} comparables · ${fmt(categorias.size)} temas mayores`]
+  ];
+  $('pulso').innerHTML = tarjetas.map(([v,r,e])=>`<div class="metrica"><span class="valor">${v}</span><span class="rotulo">${r}</span><span class="explica">${e}</span></div>`).join('');
+}
+
+/* ---------- Mapa ---------- */
+function corregirOrientacion(f){
+  // PostGIS/GeoJSON usa anillos antihorarios; d3 los espera horarios.
+  if (d3.geoArea(f) > 2*Math.PI){
+    const g = f.geometry;
+    if (g.type==='Polygon') g.coordinates.forEach(r=>r.reverse());
+    if (g.type==='MultiPolygon') g.coordinates.forEach(p=>p.forEach(r=>r.reverse()));
+  }
+  return f;
+}
+function dibujarMapa(){
+  const cont = $('mapa');
+  if (!S.paises.length){ cont.innerHTML='<div class="vacio">La API no devolvió geometrías de países.</div>'; return; }
+  const W = cont.clientWidth || 700, H = Math.max(360, Math.min(620, W*0.9));
+  const feats = S.paises.map(p=>corregirOrientacion({type:'Feature', properties:p, geometry:JSON.parse(JSON.stringify(p.geo))}));
+  const proy = d3.geoMercator().fitExtent([[10,10],[W-10,H-10]], {type:'FeatureCollection', features:feats});
+  const ruta = d3.geoPath(proy);
+
+  const porPais = new Map(), porUb = new Map();
+  for (const o of S.obras){
+    if (!pasaPeriodo(o) || !pasaPanel(o)) continue;
+    if (o.pais!=null) porPais.set(o.pais,(porPais.get(o.pais)||0)+1);
+    if (o.ub!=null && (!S.filtro.pais || o.pais===S.filtro.pais.id)) porUb.set(o.ub,(porUb.get(o.ub)||0)+1);
+  }
+  const max = d3.max([...porPais.values()]) || 1;
+  const color = d3.scaleSequentialSqrt([0,max], d3.interpolateRgb('#3b2b24','#d2a94b'));
+  const maxU = d3.max([...porUb.values()]) || 1;
+  const radio = d3.scaleSqrt([0,maxU],[0,Math.max(10, W/40)]);
+
+  const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Mapa de obras por país');
+  svg.append('g').selectAll('path').data(feats).join('path')
+    .attr('class', d=>'pais'+(S.filtro.pais?.id===d.properties.id?' sel':''))
+    .attr('d', ruta).attr('fill', d=>{ const n=porPais.get(d.properties.id)||0; return n?color(n):'#2e221c'; })
+    .attr('tabindex',0)
+    .on('mousemove', (ev,d)=>mostrarTip(ev, `<strong>${d.properties.nombre}</strong><br>${fmt(porPais.get(d.properties.id)||0)} obras`))
+    .on('mouseleave', ocultarTip)
+    .on('click keydown', (ev,d)=>{ if(ev.type==='keydown' && ev.key!=='Enter') return; const p=d.properties; S.filtro.pais = S.filtro.pais?.id===p.id?null:{id:p.id,nombre:p.nombre}; ocultarTip(); aplicarFiltros(); });
+
+  const puntos = S.ubic.map(u=>({u, n:porUb.get(u.id)||0, xy:proy(u.geo.coordinates)})).filter(p=>p.n && p.xy).sort((a,b)=>b.n-a.n);
+  svg.append('g').selectAll('circle').data(puntos).join('circle')
+    .attr('class','punto').attr('cx',d=>d.xy[0]).attr('cy',d=>d.xy[1]).attr('r',d=>Math.max(1.5,radio(d.n)))
+    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d.u.nombre}</strong><br>${fmt(d.n)} obras`))
+    .on('mouseleave', ocultarTip);
+  cont.replaceChildren(svg.node());
+}
+
+/* ---------- Línea de tiempo ---------- */
+function dibujarTiempo(){
+  const cont = $('tiempo');
+  const decada = y => Math.floor(y/10)*10;
+  const conFecha = S.obras.filter(o=>o.fi!=null && o.fi>=1450 && o.fi<=1900 && pasaPanel(o));
+  if (!conFecha.length){ cont.innerHTML='<div class="vacio">No hay fechas disponibles.</div>'; return; }
+  const total = d3.rollup(conFecha, v=>v.length, o=>decada(o.fi));
+  const filtr = S.filtro.pais ? d3.rollup(conFecha.filter(o=>o.pais===S.filtro.pais.id), v=>v.length, o=>decada(o.fi)) : total;
+  const [mn, mx] = d3.extent(conFecha, o=>decada(o.fi));
+  const decs = d3.range(mn, mx+10, 10);
+
+  const W = cont.clientWidth || 500, H = 300, m = {t:10,r:8,b:30,l:44};
+  const x = d3.scaleBand(decs,[m.l,W-m.r]).padding(.18);
+  const y = d3.scaleLinear([0, d3.max(decs, d=>total.get(d)||0)],[H-m.b,m.t]).nice();
+  const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Obras por década');
+  svg.append('g').attr('transform',`translate(0,${H-m.b})`).call(d3.axisBottom(x).tickValues(decs.filter(d=>d%50===0)).tickSizeOuter(0))
+    .call(g=>g.selectAll('text').attr('fill','var(--tenue)')).call(g=>g.selectAll('line,path').attr('stroke','var(--linea)'));
+  svg.append('g').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(fmt))
+    .call(g=>g.select('.domain').remove()).call(g=>g.selectAll('text').attr('fill','var(--tenue)'))
+    .call(g=>g.selectAll('line').attr('x2',W-m.l-m.r).attr('stroke','var(--linea)').attr('stroke-opacity',.5));
+  const {desde,hasta} = S.filtro;
+  const enRango = d => (desde==null || d+9>=desde) && (hasta==null || d<=hasta);
+  if (S.filtro.pais){
+    svg.append('g').selectAll('rect').data(decs).join('rect')
+      .attr('x',d=>x(d)).attr('width',x.bandwidth()).attr('y',d=>y(total.get(d)||0)).attr('height',d=>y(0)-y(total.get(d)||0))
+      .attr('fill','#4a3a31').style('pointer-events','none');
+  }
+  svg.append('g').selectAll('rect').data(decs).join('rect')
+    .attr('x',d=>x(d)).attr('width',x.bandwidth()).attr('y',d=>y(filtr.get(d)||0)).attr('height',d=>y(0)-y(filtr.get(d)||0))
+    .attr('fill',d=>enRango(d)?'var(--oro)':'#7a6547').style('cursor','pointer')
+    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d}–${d+9}</strong><br>${fmt(filtr.get(d)||0)} obras${S.filtro.pais?` en ${S.filtro.pais.nombre} (de ${fmt(total.get(d)||0)})`:''}`))
+    .on('mouseleave', ocultarTip)
+    .on('click',(ev,d)=>{
+      const mismo = S.filtro.desde===d && S.filtro.hasta===d+9;
+      ocultarTip(); fijarPeriodo(mismo?null:d, mismo?null:d+9);
+    });
+  cont.replaceChildren(svg.node());
+}
+
+/* ---------- Composición iconográfica ---------- */
+function dibujarAtlas(){
+  const cont = $('atlas'), obras = obrasVisibles().filter(o=>o.fi!=null && o.categoria);
+  if (!obras.length){ cont.innerHTML='<div class="vacio">No hay fechas y categorías para este filtro.</div>'; return; }
+  const inicio=1450, fin=1900, paso=25, periodos=d3.range(inicio,fin,paso);
+  const periodo = o => Math.floor(((o.fi+(o.ff??o.fi))/2)/paso)*paso;
+  const validas = obras.filter(o=>periodo(o)>=inicio && periodo(o)<fin);
+  const totCat = d3.rollup(validas,v=>v.length,o=>o.categoria.nombre);
+  const cats = [...totCat].sort((a,b)=>b[1]-a[1]).map(d=>d[0]);
+  const porCelda = d3.rollup(validas,v=>v.length,o=>o.categoria.nombre,o=>periodo(o));
+  const porPeriodo = d3.rollup(validas,v=>v.length,o=>periodo(o));
+  const celdas = cats.flatMap(cat=>periodos.map(p=>({cat,p,n:porCelda.get(cat)?.get(p)||0,total:porPeriodo.get(p)||0})));
+  const W=cont.clientWidth||700, m={t:18,r:10,b:34,l:Math.min(142,W*.28)}, fila=25, H=m.t+cats.length*fila+m.b;
+  const x=d3.scaleBand(periodos,[m.l,W-m.r]).padding(.04), y=d3.scaleBand(cats,[m.t,H-m.b]).padding(.04);
+  const maxP=d3.max(celdas,d=>d.total?d.n/d.total:0)||1;
+  const color=d3.scaleSequentialSqrt([0,maxP],d3.interpolateRgb('#342720','#d2a94b'));
+  const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Composición iconográfica por cuartos de siglo');
+  svg.append('g').selectAll('rect').data(celdas).join('rect').attr('class','celda-calor')
+    .attr('x',d=>x(d.p)).attr('y',d=>y(d.cat)).attr('width',x.bandwidth()).attr('height',y.bandwidth())
+    .attr('rx',2).attr('fill',d=>d.n?color(d.n/d.total):'#2d211c')
+    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.cat}</strong><br>${d.p}–${d.p+24}: ${fmt(d.n)} obras<br>${d.total?(d.n/d.total*100).toFixed(1):0} % del periodo`))
+    .on('mouseleave',ocultarTip)
+    .on('click',(ev,d)=>{ ocultarTip(); fijarPeriodo(d.p, d.p+24); });
+  svg.append('g').selectAll('text').data(cats).join('text').attr('x',m.l-7).attr('y',d=>y(d)+y.bandwidth()/2)
+    .attr('text-anchor','end').attr('dominant-baseline','middle').attr('fill','var(--texto)').attr('font-size',10).text(d=>d);
+  svg.append('g').attr('transform',`translate(0,${H-m.b})`).call(d3.axisBottom(x).tickValues(periodos.filter(p=>p%50===0)).tickFormat(d=>d).tickSizeOuter(0))
+    .call(g=>g.selectAll('text').attr('fill','var(--tenue)').attr('font-size',9)).call(g=>g.selectAll('line,path').attr('stroke','var(--linea)'));
+  cont.replaceChildren(svg.node());
+}
+
+/* ---------- Origen y conservación ---------- */
+function dibujarFlujos(){
+  const cont=$('flujos');
+  const movidas=obrasVisibles().filter(o=>o.origen&&o.conserva&&o.origen.id!==o.conserva.id);
+  if (!movidas.length){ cont.innerHTML='<div class="vacio">No hay desplazamientos internacionales documentados para este filtro.</div>'; return; }
+  const marginal = campo => [...d3.rollup(movidas,v=>v.length,o=>o[campo].nombre)].sort((a,b)=>b[1]-a[1]);
+  const topO=new Set(marginal('origen').slice(0,7).map(d=>d[0])), topD=new Set(marginal('conserva').slice(0,7).map(d=>d[0]));
+  const pares=d3.rollup(movidas,v=>v.length,o=>topO.has(o.origen.nombre)?o.origen.nombre:'Otros orígenes',o=>topD.has(o.conserva.nombre)?o.conserva.nombre:'Otros destinos');
+  const enlaces=[];
+  for(const [a,bs] of pares) for(const [b,n] of bs) enlaces.push({a,b,n});
+  enlaces.sort((a,b)=>b.n-a.n);
+  const sumaL=d3.rollup(enlaces,v=>d3.sum(v,d=>d.n),d=>d.a), sumaR=d3.rollup(enlaces,v=>d3.sum(v,d=>d.n),d=>d.b);
+  const izq=[...sumaL].sort((a,b)=>b[1]-a[1]), der=[...sumaR].sort((a,b)=>b[1]-a[1]);
+  const W=cont.clientWidth||500, H=Math.max(390,Math.max(izq.length,der.length)*39), xL=Math.min(145,W*.32), xR=Math.max(W-145,W*.68), gap=6;
+  const total=movidas.length, escala=Math.min((H-28-gap*(izq.length-1))/total,(H-28-gap*(der.length-1))/total);
+  const colocar = lista => { let y=14; const m=new Map(); for(const [nombre,n] of lista){ m.set(nombre,{nombre,n,y,h:Math.max(2,n*escala),off:0}); y+=Math.max(2,n*escala)+gap; } return m; };
+  const nodosL=colocar(izq), nodosR=colocar(der), paleta=d3.scaleOrdinal(izq.map(d=>d[0]),['#d2a94b','#c8465a','#6b93d1','#56a791','#d07f53','#9672bd','#a9a15b','#8b796c']);
+  const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Flujos entre país de origen y país de conservación');
+  const cintas=svg.append('g').selectAll('path').data(enlaces).join('path').attr('class','cinta-flujo').attr('fill',d=>paleta(d.a)).attr('stroke',d=>paleta(d.a))
+    .attr('d',d=>{ const a=nodosL.get(d.a),b=nodosR.get(d.b),h=Math.max(1,d.n*escala),sy=a.y+a.off,ty=b.y+b.off,mid=(xL+xR)/2; a.off+=h;b.off+=h; return `M${xL},${sy}C${mid},${sy} ${mid},${ty} ${xR},${ty}L${xR},${ty+h}C${mid},${ty+h} ${mid},${sy+h} ${xL},${sy+h}Z`; })
+    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.a} → ${d.b}</strong><br>${fmt(d.n)} obras`)).on('mouseleave',ocultarTip);
+  const dibujarLado=(mapa,x,ancla) => { const ns=[...mapa.values()]; svg.append('g').selectAll('rect').data(ns).join('rect').attr('class','nodo-flujo').attr('x',x-4).attr('y',d=>d.y).attr('width',8).attr('height',d=>d.h); svg.append('g').selectAll('text').data(ns).join('text').attr('class','etiqueta-flujo').attr('x',x+(ancla==='start'?9:-9)).attr('y',d=>d.y+d.h/2).attr('text-anchor',ancla).attr('dominant-baseline','middle').text(d=>`${d.nombre} · ${fmt(d.n)}`); };
+  dibujarLado(nodosL,xL,'end'); dibujarLado(nodosR,xR,'start');
+  svg.append('text').attr('x',xL).attr('y',10).attr('text-anchor','end').attr('fill','var(--tenue)').attr('font-size',9).text('ORIGEN');
+  svg.append('text').attr('x',xR).attr('y',10).attr('text-anchor','start').attr('fill','var(--tenue)').attr('font-size',9).text('CONSERVACIÓN');
+  cont.replaceChildren(svg.node());
+}
+
+/* ---------- Carga de dimensiones ---------- */
+async function cargarDim(dim, indicador){
+  if (S.dimCache.has(dim.id)) return S.dimCache.get(dim.id);
+  if (S.pendientes.has(dim.id)) return S.pendientes.get(dim.id);
+  const p = (async ()=>{
+    const aviso = (n,t)=>{ if(indicador) indicador.textContent=`Descargando ${dim.label.toLowerCase()}: ${fmt(n)}${t?` de ${fmt(t)}`:''}`; };
+    let filas;
+    if (dim.tipo==='m2m'){
+      const col = `obras_${dim.col}`;
+      const total = await contar(col);
+      const crudo = await paginar(col, `obras_id{ id } ${dim.key}{ ${dim.campos} }`, total, aviso, 5000);
+      filas = crudo.filter(r=>r.obras_id && r[dim.key]).map(r=>({o:r.obras_id.id, it:r[dim.key]}));
+    } else {
+      const crudo = await paginar('obras', `id ${dim.campo}{ ${dim.campos} }`, S.total, aviso, 5000);
+      filas = crudo.filter(r=>r[dim.campo]).map(r=>({o:r.id, it:r[dim.campo]}));
+    }
+    if (indicador) indicador.textContent='';
+    S.dimCache.set(dim.id, filas); S.pendientes.delete(dim.id);
+    return filas;
+  })();
+  S.pendientes.set(dim.id, p);
+  return p;
+}
+async function indiceDim(dim){
+  if (S.indexCache.has(dim.id)) return S.indexCache.get(dim.id);
+  const c = dim.conteo || 'obras_func';
+  const d = await gql(`query{ ${dim.col}(limit:-1){ ${dim.campos} ${c}{ count } } }`);
+  const lista = (d[dim.col]||[]).map(o=>({item:o, n:o[c]?.count||0})).filter(x=>x.n).sort((a,b)=>b.n-a.n);
+  S.indexCache.set(dim.id, lista);
+  return lista;
+}
+function contarFilas(filas){
+  const m = new Map();
+  for (const r of filas){
+    if (S.permitidas && !S.permitidas.has(r.o)) continue;
+    const k = r.it.id ?? r.it.slug;
+    const e = m.get(k) || {item:r.it, n:0}; e.n++; m.set(k,e);
+  }
+  return [...m.values()].sort((a,b)=>b.n-a.n);
+}
+
+/* ---------- Ranking ---------- */
+let turnoRanking = 0;
+async function dibujarRanking(){
+  if (!S.obras.length) return;
+  const turno = ++turnoRanking;
+  const dim = DIMS[$('rDim').value], top = +$('rTop').value, cont = $('ranking');
+  try {
+    let lista;
+    if (!S.permitidas){
+      try { lista = await indiceDim(dim); }
+      catch { lista = contarFilas(await cargarDim(dim, $('rCarga'))); }
+    } else {
+      lista = contarFilas(await cargarDim(dim, $('rCarga')));
+    }
+    if (turno !== turnoRanking) return;
+    if (!lista.length){ cont.innerHTML='<div class="vacio">Ningún término coincide con los filtros.</div>'; return; }
+    const max = lista[0].n, base = S.permitidas ? S.permitidas.size : S.total;
+    const ul = document.createElement('ol'); ul.className='lista';
+    lista.slice(0,top).forEach(({item,n})=>{
+      const li = document.createElement('li'), b = document.createElement('button');
+      b.innerHTML = `<span class="nombre"></span><span class="cifra">${fmt(n)} · ${(n/base*100).toFixed(1)} %</span><span class="pista"><span style="width:${n/max*100}%"></span></span>`;
+      b.querySelector('.nombre').textContent = nombreItem(item);
+      b.onclick = ()=>abrirDetalle(dim, item, n);
+      li.append(b); ul.append(li);
+    });
+    cont.replaceChildren(ul);
+  } catch(e){ if (turno===turnoRanking) cont.innerHTML=`<div class="vacio">No se pudo leer ${dim.label.toLowerCase()}: ${e.message}</div>`; }
+}
+
+/* ---------- Red de co-ocurrencias ---------- */
+let turnoRed = 0, simulacion = null;
+async function dibujarRed(){
+  if (!S.obras.length) return;
+  const turno = ++turnoRed;
+  const dA = DIMS[$('nA').value], dB = DIMS[$('nB').value];
+  const top = +$('nTop').value, minW = +$('nMin').value, cont = $('red');
+  const mismo = dA.id === dB.id;
+  $('redLeyenda').innerHTML = mismo ? `<span style="--c:var(--oro)">${dA.label}</span>` : `<span style="--c:var(--carmin)">${dA.label}</span><span style="--c:var(--azurita)">${dB.label}</span>`;
+  try {
+    const [fA, fB] = await Promise.all([cargarDim(dA,$('nCarga')), mismo?null:cargarDim(dB,$('nCarga'))]);
+    if (turno !== turnoRed) return;
+    const kf = it => String(it.id ?? it.slug);
+    const prep = (filas, d) => {
+      const frec = contarFilas(filas).slice(0, top);
+      const claves = new Set(frec.map(x=>kf(x.item)));
+      const porObra = new Map();
+      for (const r of filas){
+        if (S.permitidas && !S.permitidas.has(r.o)) continue;
+        const k = kf(r.it); if (!claves.has(k)) continue;
+        if (!porObra.has(r.o)) porObra.set(r.o, new Set());
+        porObra.get(r.o).add(`${d.id}:${k}`);
+      }
+      return {frec, porObra};
+    };
+    const A = prep(fA, dA), B = mismo ? A : prep(fB, dB);
+    const pesos = new Map();
+    for (const [o, setA] of A.porObra){
+      const la = [...setA];
+      if (mismo){
+        for (let i=0;i<la.length;i++) for (let j=i+1;j<la.length;j++){ const k=[la[i],la[j]].sort().join('|'); pesos.set(k,(pesos.get(k)||0)+1); }
+      } else {
+        const setB = B.porObra.get(o); if (!setB) continue;
+        for (const a of la) for (const b of setB){ const k=`${a}|${b}`; pesos.set(k,(pesos.get(k)||0)+1); }
+      }
+    }
+    let aristas = [...pesos].filter(([,w])=>w>=minW).sort((a,b)=>b[1]-a[1]).slice(0,400)
+      .map(([k,w])=>{ const [s,t]=k.split('|'); return {source:s, target:t, w}; });
+    const info = new Map();
+    A.frec.forEach(x=>info.set(`${dA.id}:${kf(x.item)}`, {dim:dA, item:x.item, n:x.n}));
+    if (!mismo) B.frec.forEach(x=>info.set(`${dB.id}:${kf(x.item)}`, {dim:dB, item:x.item, n:x.n}));
+    const usados = new Set(aristas.flatMap(a=>[a.source,a.target]));
+    const nodos = [...usados].filter(id=>info.has(id)).map(id=>({id, ...info.get(id)}));
+    if (!nodos.length){ cont.innerHTML='<div class="vacio">No hay vínculos con ese mínimo de obras. Baja el umbral o amplía los filtros.</div>'; return; }
+
+    const W = cont.clientWidth || 700, H = Math.max(420, Math.min(640, W*.8));
+    const r = d3.scaleSqrt([0, d3.max(nodos,d=>d.n)], [3, Math.max(14, W/36)]);
+    const grosor = d3.scaleSqrt([minW, d3.max(aristas,d=>d.w)], [.4, 6]);
+    const colorNodo = d => mismo ? 'var(--oro)' : (d.dim.id===dA.id ? 'var(--carmin)' : 'var(--azurita)');
+
+    const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label',`Red de relaciones entre ${dA.label} y ${dB.label}`);
+    const g = svg.append('g');
+    svg.call(d3.zoom().scaleExtent([.4,5]).on('zoom', ev=>g.attr('transform', ev.transform)));
+    const lA = g.append('g').selectAll('line').data(aristas).join('line').attr('class','arista')
+      .attr('stroke-width',d=>grosor(d.w)).attr('stroke-opacity',.35);
+    const lN = g.append('g').selectAll('circle').data(nodos).join('circle').attr('class','nodo')
+      .attr('r',d=>r(d.n)).attr('fill',colorNodo);
+    const umbralEtiqueta = d3.quantile(nodos.map(d=>d.n).sort(d3.ascending), .6);
+    const lT = g.append('g').selectAll('text').data(nodos.filter(d=>d.n>=umbralEtiqueta)).join('text').attr('class','etiqueta')
+      .attr('text-anchor','middle').text(d=>nombreItem(d.item));
+
+    const vecinos = new Map(nodos.map(n=>[n.id,new Set([n.id])]));
+    aristas.forEach(a=>{ vecinos.get(a.source)?.add(a.target); vecinos.get(a.target)?.add(a.source); });
+    lN.on('mouseenter',(ev,d)=>{
+        const v = vecinos.get(d.id);
+        lN.attr('opacity',n=>v.has(n.id)?1:.15); lT.attr('opacity',n=>v.has(n.id)?1:.15);
+        lA.attr('stroke-opacity',a=>(a.source.id===d.id||a.target.id===d.id)?.85:.05).attr('stroke',a=>(a.source.id===d.id||a.target.id===d.id)?'var(--oro)':null);
+      })
+      .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${nombreItem(d.item)}</strong><br>${d.dim.label}: ${fmt(d.n)} obras<br>${vecinos.get(d.id).size-1} vínculos`))
+      .on('mouseleave',()=>{ ocultarTip(); lN.attr('opacity',1); lT.attr('opacity',1); lA.attr('stroke-opacity',.35).attr('stroke',null); })
+      .on('click',(ev,d)=>abrirDetalle(d.dim, d.item, d.n))
+      .call(d3.drag()
+        .on('start',(ev,d)=>{ if(!ev.active) simulacion.alphaTarget(.3).restart(); d.fx=d.x; d.fy=d.y; })
+        .on('drag',(ev,d)=>{ d.fx=ev.x; d.fy=ev.y; })
+        .on('end',(ev,d)=>{ if(!ev.active) simulacion.alphaTarget(0); d.fx=null; d.fy=null; }));
+
+    if (simulacion) simulacion.stop();
+    simulacion = d3.forceSimulation(nodos)
+      .force('link', d3.forceLink(aristas).id(d=>d.id).distance(d=>60+40/Math.sqrt(d.w)).strength(d=>Math.min(1, d.w/ (minW*6))))
+      .force('charge', d3.forceManyBody().strength(-160))
+      .force('center', d3.forceCenter(W/2, H/2))
+      .force('collide', d3.forceCollide(d=>r(d.n)+3))
+      .force('x', d3.forceX(d=> mismo ? W/2 : (d.dim.id===dA.id ? W*.35 : W*.65)).strength(.06))
+      .force('y', d3.forceY(H/2).strength(.05))
+      .on('tick',()=>{
+        lA.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+        lN.attr('cx',d=>d.x).attr('cy',d=>d.y);
+        lT.attr('x',d=>d.x).attr('y',d=>d.y - r(d.n) - 4);
+      });
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches){ simulacion.stop(); for(let i=0;i<300;i++) simulacion.tick(); simulacion.on('tick')(); }
+    cont.replaceChildren(svg.node());
+  } catch(e){ if (turno===turnoRed) cont.innerHTML=`<div class="vacio">No se pudo construir la red: ${e.message}</div>`; }
+}
+
+/* ---------- Panel de detalle ---------- */
+async function abrirDetalle(dim, item, n){
+  const panel = $('detalle');
+  $('dTitulo').textContent = nombreItem(item);
+  const filtroTxt = S.permitidas ? ' dentro de los filtros activos' : '';
+  $('dCuerpo').innerHTML = `<p class="dato">${dim.label}. ${fmt(n)} obras${filtroTxt}.</p>
+    <p class="dato"><a href="https://arca.uniandes.edu.co${dim.ruta(item)}" target="_blank" rel="noopener">Abrir esta ficha en ARCA</a></p>
+    <div class="galeria" id="dGaleria"><span class="dato">Buscando obras de ejemplo…</span></div>`;
+  panel.classList.add('abierto'); panel.setAttribute('aria-hidden','false'); $('dCerrar').focus();
+  const valor = dim.idf==='id' ? item.id : `"${String(item.slug).replace(/"/g,'\\"')}"`;
+  const campos = 'registro titulo imagen{ id }';
+  try {
+    let obras;
+    if (dim.tipo==='m2m'){
+      const d = await gql(`query{ obras_${dim.col}(filter:{ ${dim.key}:{ ${dim.idf}:{ _eq:${valor} } } }, limit:24){ obras_id{ id ${campos} } } }`);
+      obras = (d[`obras_${dim.col}`]||[]).map(x=>x.obras_id).filter(Boolean);
+    } else {
+      const d = await gql(`query{ obras(filter:{ ${dim.campo}:{ slug:{ _eq:${valor} } } }, limit:24){ id ${campos} } }`);
+      obras = d.obras || [];
+    }
+    if (S.permitidas){ const f = obras.filter(o=>S.permitidas.has(o.id)); if (f.length) obras = f; }
+    obras = obras.slice(0,12);
+    const gal = $('dGaleria');
+    if (!obras.length){ gal.innerHTML='<span class="dato">Sin obras con imagen para mostrar.</span>'; return; }
+    gal.replaceChildren(...obras.map(o=>{
+      const a = document.createElement('a');
+      a.href = `https://arca.uniandes.edu.co/obras/${o.registro}`; a.target='_blank'; a.rel='noopener';
+      if (o.imagen?.id){
+        const img = document.createElement('img'); img.loading='lazy'; img.alt=o.titulo||'';
+        // El servidor solo permite presets configurados; "galeria" es el que usa arca.uniandes.edu.co
+        img.src = `${S.api}/assets/${o.imagen.id}?key=galeria`;
+        img.onerror = ()=>{ img.onerror=()=>{ img.style.visibility='hidden'; }; img.src=`${S.api}/assets/${o.imagen.id}`; };
+        a.append(img);
+      }
+      a.append(document.createTextNode(o.titulo || `Registro ${o.registro}`));
+      return a;
+    }));
+  } catch(e){ $('dGaleria').innerHTML = `<span class="dato">No se pudieron traer ejemplos: ${e.message}</span>`; }
+}
+function cerrarDetalle(){ const p=$('detalle'); p.classList.remove('abierto'); p.setAttribute('aria-hidden','true'); }
+
+/* ---------- Panel lateral de filtros (lógica de arca-filtro_viz) ----------
+   País y fecha se comparten con el tablero y se filtran en local; el resto se
+   resuelve en Directus y llega como un conjunto de ids (S.panelIds). */
+const PF = (()=>{
+  const API = 'https://apiarca.uniandes.edu.co';
+  const FECHA_MIN = 1480, FECHA_MAX = 1990;
+
+  const FK_FIELDS = [
+    'pais','ciudad','ubicacion','ciudad_origen',
+    'categoria1','categoria2','categoria3','categoria4','categoria5','categoria6',
+    'relato_visual','donante','cartela_filacteria',
+    'fisiognomica','fisiognomica_imagen','rostro','tipo_gestual',
+    'gesto1','gesto2','gesto3','complejo_gestual',
+  ];
+  const M2M_FIELDS = ['autores','tecnicas','simbolos','caracteristicas','escenarios','objetos','descriptores','personajes'];
+  const FACET_META = {
+    autores:            { collection:'autores',             label:'Autor',               group:'basicos' },
+    tecnicas:           { collection:'tecnicas',            label:'Técnicas',            group:'basicos' },
+    simbolos:           { collection:'simbolos',            label:'Símbolos',            group:'analisis' },
+    caracteristicas:    { collection:'caracteristicas',     label:'Características',     group:'analisis' },
+    escenarios:         { collection:'escenarios',          label:'Escenarios',          group:'analisis' },
+    objetos:            { collection:'objetos',             label:'Objetos',             group:'analisis' },
+    relato_visual:      { collection:'relatos_visuales',    label:'Relato visual',       group:'analisis' },
+    donante:            { collection:'donantes',            label:'Donante',             group:'analisis' },
+    cartela_filacteria: { collection:'cartelas_filacterias',label:'Cartela / Filacteria',group:'analisis' },
+    descriptores:       { collection:'descriptores',        label:'Descriptores',        group:'analisis' },
+    personajes:         { collection:'personajes',          label:'Personaje',           group:'analisis' },
+    fisiognomica:       { collection:'fisiognomicas',       label:'Fisiognómica',        group:'gestos' },
+    fisiognomica_imagen:{ collection:'fisiognomicas_imagen',label:'Fisiognómica imagen', group:'gestos' },
+    rostro:             { collection:'rostros',             label:'Rostro',              group:'gestos' },
+    tipo_gestual:       { collection:'tipos_gestuales',     label:'Tipo gestual',        group:'gestos' },
+    gesto1:             { collection:'gestos',              label:'Gesto nivel 1',       group:'gestos' },
+    gesto2:             { collection:'gestos',              label:'Gesto nivel 2',       group:'gestos' },
+    gesto3:             { collection:'gestos',              label:'Gesto nivel 3',       group:'gestos' },
+    complejo_gestual:   { collection:'complejos_gestuales', label:'Complejo gestual',    group:'gestos' },
+  };
+  const GROUP_FIELDS = {
+    basicos: ['pais','ciudad','ubicacion','ciudad_origen','categoria1','categoria2','categoria3','categoria4','categoria5','categoria6','autores','tecnicas','fecha'],
+    analisis: ['simbolos','descriptores','caracteristicas','escenarios','objetos','relato_visual','donante','cartela_filacteria','personajes'],
+    gestos: ['fisiognomica','fisiognomica_imagen','rostro','tipo_gestual','gesto1','gesto2','gesto3','complejo_gestual'],
+  };
+  const REF_QUERIES = {
+    paises:'id,nombre', ciudades:'id,nombre,pais', ubicaciones:'id,nombre,ciudad,geo',
+    autores:'id,nombre,apellido,count(obras)', tecnicas:'id,nombre,count(obras)',
+    categorias1:'id,nombre', categorias2:'id,nombre,ancestro', categorias3:'id,nombre,ancestro',
+    categorias4:'id,nombre,ancestro', categorias5:'id,nombre,ancestro', categorias6:'id,nombre,ancestro',
+    simbolos:'id,nombre,count(obras)', caracteristicas:'id,nombre,count(obras)', escenarios:'id,nombre,count(obras)',
+    objetos:'id,nombre,count(obras)', relatos_visuales:'id,nombre', donantes:'id,nombre',
+    cartelas_filacterias:'id,nombre', descriptores:'id,nombre,count(obras)', personajes:'id,nombre,count(obras)',
+    gestos:'id,nombre', complejos_gestuales:'id,nombre', tipos_gestuales:'id,nombre',
+    fisiognomicas:'id,nombre', fisiognomicas_imagen:'id,nombre', rostros:'id,nombre',
+  };
+
+  const REF = {}, maps = {};
+  Object.keys(REF_QUERIES).forEach(col => { REF[col] = []; maps[col] = {}; });
+  maps.ciudadesByPais = {}; maps.ubicacionesByCiudad = {};
+
+  const state = { fechaDesde:null, fechaHasta:null, origenPaisUI:null };
+  FK_FIELDS.forEach(f => state[f] = null);
+  M2M_FIELDS.forEach(f => state[f] = []);
+
+  let listo = false, turnoIds = 0, ultimoFiltro = '', espera;
+
+  const norm = s => (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+  const byId = arr => Object.fromEntries(arr.map(x => [x.id, x]));
+  const groupBy = (arr, key) => arr.reduce((acc, x) => { const k = x[key]; if (k == null) return acc; (acc[k] ||= []).push(x); return acc; }, {});
+  const nombreDe = (col, id) => id != null && maps[col] && maps[col][id] ? maps[col][id].nombre : null;
+  const acotar = v => Math.min(FECHA_MAX, Math.max(FECHA_MIN, v));
+
+  async function fetchJSON(url){
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
+
+  async function loadReferenceData(){
+    const entries = Object.entries(REF_QUERIES);
+    const results = await Promise.all(entries.map(([col, fields]) =>
+      fetchJSON(`${API}/items/${col}?limit=-1&fields=${encodeURIComponent(fields)}`).then(j => j.data || []).catch(() => [])
+    ));
+    entries.forEach(([col], i) => { REF[col] = results[i]; maps[col] = byId(results[i]); });
+    maps.ciudadesByPais = groupBy(REF.ciudades, 'pais');
+    maps.ubicacionesByCiudad = groupBy(REF.ubicaciones, 'ciudad');
+    for (let lvl = 2; lvl <= 6; lvl++) maps['categorias' + lvl + 'ByAncestro'] = groupBy(REF['categorias' + lvl], 'ancestro');
+  }
+
+  // ── Filtro de Directus ──
+  function buildFilter(excludeKeys = []){
+    const ex = new Set(excludeKeys);
+    const and = [];
+    FK_FIELDS.forEach(f => { if (!ex.has(f) && state[f] != null) and.push({ [f]: { _eq: state[f] } }); });
+    M2M_FIELDS.forEach(f => {
+      // Dentro de una lista las opciones suman (cualquiera); entre listas se acumulan.
+      if (!ex.has(f) && state[f].length) and.push({ [f]: { _some: { [f + '_id']: { _in: state[f] } } } });
+    });
+    if (!ex.has('ciudad_origen') && !state.ciudad_origen && state.origenPaisUI){
+      const ids = (maps.ciudadesByPais[state.origenPaisUI] || []).map(c => c.id);
+      and.push({ ciudad_origen: { _in: ids.length ? ids : [-1] } });
+    }
+    if (!ex.has('fecha')){
+      if (state.fechaHasta != null) and.push({ fecha_inicial: { _lte: state.fechaHasta } });
+      if (state.fechaDesde != null) and.push({ _or: [
+        { fecha_final: { _gte: state.fechaDesde } },
+        { _and: [{ fecha_final: { _null: true } }, { fecha_inicial: { _gte: state.fechaDesde } }] },
+      ] });
+    }
+    return and.length ? { _and: and } : {};
+  }
+
+  async function fetchGroupCounts(field, excludeKeys = []){
+    const filter = buildFilter(excludeKeys);
+    let url = `${API}/items/obras?aggregate%5Bcount%5D=*&groupBy%5B%5D=${field}&limit=-1`;
+    if (Object.keys(filter).length) url += `&filter=${encodeURIComponent(JSON.stringify(filter))}`;
+    const j = await fetchJSON(url);
+    const map = {};
+    (j.data || []).forEach(row => { if (row[field] != null) map[row[field]] = parseInt(row.count, 10); });
+    return map;
+  }
+
+  // ── Selects genéricos ──
+  const fkSelectEls = {};
+  function populateSelect(select, items, currentValue){
+    const frag = document.createDocumentFragment();
+    const allOpt = document.createElement('option');
+    allOpt.value = ''; allOpt.textContent = '— Todos —';
+    frag.appendChild(allOpt);
+    items.slice().sort((a,b) => (a.nombre||'').localeCompare(b.nombre||'', 'es')).forEach(it => {
+      const opt = document.createElement('option');
+      opt.value = it.id; opt.dataset.base = it.nombre || ('#' + it.id);
+      opt.textContent = opt.dataset.base;
+      frag.appendChild(opt);
+    });
+    select.replaceChildren(frag);
+    select.value = currentValue != null ? String(currentValue) : '';
+  }
+  async function refreshSelectCounts(select, field, excludeKeys, hideZero = false){
+    let counts;
+    try { counts = await fetchGroupCounts(field, excludeKeys); } catch { return; }
+    Array.from(select.options).forEach(opt => {
+      if (!opt.value) return;
+      const n = counts[opt.value] || 0;
+      opt.textContent = `${opt.dataset.base} (${n})`;
+      opt.classList.toggle('cero', n === 0);
+      if (hideZero) opt.hidden = n === 0 && select.value !== opt.value;
+    });
+  }
+  function initGenericFkFacet(field){
+    const select = document.querySelector(`#panelFiltros [data-facet="${field}"] select`);
+    fkSelectEls[field] = select;
+    populateSelect(select, REF[FACET_META[field].collection], null);
+    select.addEventListener('change', () => { state[field] = select.value ? Number(select.value) : null; onFilterChanged(); });
+  }
+
+  // ── Autocompletado (autores, personajes) ──
+  function initTypeahead(field){
+    const meta = FACET_META[field];
+    const container = document.querySelector(`#panelFiltros [data-facet="${field}"]`);
+    const input = container.querySelector('.pf-typeahead');
+    const list = container.querySelector('.pf-lista');
+    const chipsWrap = container.querySelector('.pf-mini');
+    const labelOf = item => field === 'autores'
+      ? ([item.nombre, item.apellido].filter(Boolean).join(' ') || ('#' + item.id))
+      : (item.nombre || ('#' + item.id));
+
+    function renderChips(){
+      chipsWrap.innerHTML = state[field].map(id => {
+        const item = maps[meta.collection][id];
+        return `<span class="chip">${esc(item ? labelOf(item) : '#' + id)}<button data-id="${id}" aria-label="Quitar">×</button></span>`;
+      }).join('');
+      chipsWrap.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+        state[field] = state[field].filter(x => x !== Number(b.dataset.id));
+        renderChips(); onFilterChanged();
+      }));
+    }
+    container._renderChips = renderChips;
+
+    // En personajes se muestran todas las opciones al hacer clic, sin tener que escribir
+    const showAllOnFocus = field === 'personajes';
+    function showList(){
+      const q = norm(input.value);
+      if (!q && !showAllOnFocus){ list.classList.remove('show'); list.innerHTML = ''; return; }
+      let matches = REF[meta.collection].filter(it => !state[field].includes(it.id) && norm(labelOf(it)).includes(q)
+        && (meta.group !== 'basicos' || Number(it.obras_count) > 0));
+      if (q) matches = matches.slice(0, 30);
+      else matches.sort((a,b) => labelOf(a).localeCompare(labelOf(b), 'es'));
+      list.innerHTML = matches.map(it =>
+        `<div data-id="${it.id}"><span>${esc(labelOf(it))}</span>${it.obras_count != null ? `<span class="n">${it.obras_count}</span>` : ''}</div>`
+      ).join('') || '<div class="vacio-f">Sin coincidencias</div>';
+      list.classList.add('show');
+      list.querySelectorAll('div[data-id]').forEach(d => d.addEventListener('mousedown', e => {
+        e.preventDefault();
+        state[field].push(Number(d.dataset.id));
+        input.value = ''; list.classList.remove('show'); list.innerHTML = '';
+        renderChips(); onFilterChanged();
+      }));
+    }
+    input.addEventListener('input', showList);
+    if (showAllOnFocus){
+      input.addEventListener('focus', showList);
+      input.addEventListener('click', () => { if (!list.classList.contains('show')) showList(); });
+    }
+    input.addEventListener('blur', () => setTimeout(() => list.classList.remove('show'), 150));
+    renderChips();
+  }
+
+  // ── Listas de casillas (técnicas, símbolos, …) ──
+  function initChecklist(field){
+    const meta = FACET_META[field];
+    const container = document.querySelector(`#panelFiltros [data-facet="${field}"]`);
+    const box = container.querySelector('.pf-check');
+    const searchInput = container.querySelector('.pf-buscar');
+    const isDropdown = container.classList.contains('desplegable');
+    const chipsWrap = container.querySelector('.pf-mini');
+    const items = REF[meta.collection]
+      .filter(it => meta.group !== 'basicos' || Number(it.obras_count) > 0)
+      .sort((a,b) => (a.nombre||'').localeCompare(b.nombre||'', 'es'));
+    box.innerHTML = items.map(it =>
+      `<label data-name="${esc(norm(it.nombre||''))}"><input type="checkbox" value="${it.id}"> ${esc(it.nombre||'#'+it.id)}${it.obras_count != null ? `<span class="n">${it.obras_count}</span>` : ''}</label>`
+    ).join('');
+
+    // En modo desplegable la lista está oculta, así que lo marcado se muestra como etiquetas
+    function renderChips(){
+      if (!isDropdown || !chipsWrap) return;
+      chipsWrap.innerHTML = state[field].map(id => {
+        const item = maps[meta.collection][id];
+        return `<span class="chip">${esc(item ? (item.nombre || '#' + id) : '#' + id)}<button data-id="${id}" aria-label="Quitar">×</button></span>`;
+      }).join('');
+      chipsWrap.querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+        const id = Number(b.dataset.id);
+        state[field] = state[field].filter(x => x !== id);
+        const cb = box.querySelector(`input[value="${id}"]`);
+        if (cb) cb.checked = false;
+        renderChips(); onFilterChanged();
+      }));
+    }
+    container._renderChips = renderChips;
+
+    box.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => {
+      const id = Number(cb.value);
+      if (cb.checked) state[field].push(id);
+      else state[field] = state[field].filter(x => x !== id);
+      renderChips(); onFilterChanged();
+    }));
+    if (searchInput){
+      searchInput.addEventListener('input', () => {
+        const q = norm(searchInput.value);
+        let visible = 0;
+        box.querySelectorAll('label').forEach(label => {
+          const show = !q || label.dataset.name.includes(q);
+          label.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+        const empty = box.querySelector('.vacio-f');
+        if (!visible && !empty) box.insertAdjacentHTML('beforeend', '<div class="vacio-f">Sin coincidencias</div>');
+        else if (visible && empty) empty.remove();
+        box.classList.add('show');
+      });
+    }
+    if (isDropdown && searchInput){
+      searchInput.addEventListener('focus', () => box.classList.add('show'));
+      searchInput.addEventListener('click', () => box.classList.add('show'));
+      // Se cierra al hacer clic fuera (no en blur, para poder marcar varias casillas seguidas)
+      document.addEventListener('click', e => { if (!container.contains(e.target)) box.classList.remove('show'); });
+      searchInput.addEventListener('keydown', e => { if (e.key === 'Escape'){ e.stopPropagation(); box.classList.remove('show'); searchInput.blur(); } });
+    }
+  }
+  async function refreshChecklistCounts(field){
+    let counts;
+    try { counts = await fetchGroupCounts(field, hierarchyExclusions(FACET_META[field].group, field)); } catch { return; }
+    const box = document.querySelector(`#panelFiltros [data-facet="${field}"] .pf-check`);
+    if (!box) return;
+    box.querySelectorAll('label').forEach(label => {
+      const input = label.querySelector('input');
+      const count = counts[input.value] || 0;
+      const countEl = label.querySelector('.n');
+      if (countEl) countEl.textContent = count;
+      input.disabled = count === 0 && !input.checked;
+      label.style.opacity = input.disabled ? '0.45' : '';
+    });
+  }
+
+  // ── Ubicación actual (país → ciudad → lugar), en ambos sentidos ──
+  const selPais = $('pf-pais'), selCiudad = $('pf-ciudad'), selUbicacion = $('pf-ubicacion'), geoLinkEl = $('pf-geo');
+  function refreshCiudadOptions(preserve){
+    populateSelect(selCiudad, state.pais ? (maps.ciudadesByPais[state.pais] || []) : REF.ciudades, preserve ? state.ciudad : null);
+  }
+  function refreshUbicacionOptions(preserve){
+    populateSelect(selUbicacion, state.ciudad ? (maps.ubicacionesByCiudad[state.ciudad] || []) : REF.ubicaciones, preserve ? state.ubicacion : null);
+  }
+  function refreshGeoLink(){
+    const ub = state.ubicacion ? maps.ubicaciones[state.ubicacion] : null;
+    if (ub && ub.geo && ub.geo.coordinates){
+      const [lon, lat] = ub.geo.coordinates;
+      geoLinkEl.innerHTML = `<a href="https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=14/${lat}/${lon}" target="_blank" rel="noopener">Ver "${esc(ub.nombre||'')}" en el mapa →</a>`;
+    } else geoLinkEl.innerHTML = '';
+  }
+  selPais.addEventListener('change', () => {
+    state.pais = selPais.value ? Number(selPais.value) : null;
+    if (state.ciudad && maps.ciudades[state.ciudad] && maps.ciudades[state.ciudad].pais !== state.pais){ state.ciudad = null; state.ubicacion = null; }
+    refreshCiudadOptions(true); refreshUbicacionOptions(true); refreshGeoLink();
+    onFilterChanged();
+  });
+  selCiudad.addEventListener('change', () => {
+    state.ciudad = selCiudad.value ? Number(selCiudad.value) : null;
+    if (state.ciudad){
+      const c = maps.ciudades[state.ciudad];
+      if (c && c.pais !== state.pais){ state.pais = c.pais; selPais.value = String(c.pais); }
+    }
+    if (state.ubicacion && maps.ubicaciones[state.ubicacion] && maps.ubicaciones[state.ubicacion].ciudad !== state.ciudad) state.ubicacion = null;
+    refreshUbicacionOptions(true); refreshGeoLink();
+    onFilterChanged();
+  });
+  selUbicacion.addEventListener('change', () => {
+    state.ubicacion = selUbicacion.value ? Number(selUbicacion.value) : null;
+    if (state.ubicacion){
+      const u = maps.ubicaciones[state.ubicacion];
+      if (u && u.ciudad && u.ciudad !== state.ciudad){
+        state.ciudad = u.ciudad;
+        const c = maps.ciudades[u.ciudad];
+        if (c){ state.pais = c.pais; selPais.value = String(c.pais); }
+        refreshCiudadOptions(true);
+      }
+    }
+    refreshGeoLink();
+    onFilterChanged();
+  });
+
+  // ── Lugar de origen (país → ciudad) ──
+  const selPaisOrigen = $('pf-pais-origen'), selCiudadOrigen = $('pf-ciudad-origen');
+  function refreshCiudadOrigenOptions(preserve){
+    populateSelect(selCiudadOrigen, state.origenPaisUI ? (maps.ciudadesByPais[state.origenPaisUI] || []) : REF.ciudades, preserve ? state.ciudad_origen : null);
+  }
+  selPaisOrigen.addEventListener('change', () => {
+    state.origenPaisUI = selPaisOrigen.value ? Number(selPaisOrigen.value) : null;
+    if (state.ciudad_origen && maps.ciudades[state.ciudad_origen] && maps.ciudades[state.ciudad_origen].pais !== state.origenPaisUI) state.ciudad_origen = null;
+    refreshCiudadOrigenOptions(true);
+    onFilterChanged();
+  });
+  selCiudadOrigen.addEventListener('change', () => {
+    state.ciudad_origen = selCiudadOrigen.value ? Number(selCiudadOrigen.value) : null;
+    if (state.ciudad_origen){
+      const c = maps.ciudades[state.ciudad_origen];
+      if (c && c.pais !== state.origenPaisUI){ state.origenPaisUI = c.pais; selPaisOrigen.value = String(c.pais); }
+    }
+    onFilterChanged();
+  });
+
+  // ── Fecha (control de rango doble) ──
+  const rangeDesde = $('pf-rango-desde'), rangeHasta = $('pf-rango-hasta');
+  [rangeDesde, rangeHasta].forEach(inp => { inp.min = FECHA_MIN; inp.max = FECHA_MAX; });
+  rangeDesde.value = FECHA_MIN; rangeHasta.value = FECHA_MAX;
+  function syncRangeUI(){
+    const lo = Number(rangeDesde.value), hi = Number(rangeHasta.value);
+    $('pf-val-desde').textContent = lo; $('pf-val-hasta').textContent = hi;
+    $('pf-relleno').style.left = (lo - FECHA_MIN) / (FECHA_MAX - FECHA_MIN) * 100 + '%';
+    $('pf-relleno').style.right = (100 - (hi - FECHA_MIN) / (FECHA_MAX - FECHA_MIN) * 100) + '%';
+  }
+  let fechaTimer;
+  function onRangeInput(e){
+    if (Number(rangeDesde.value) > Number(rangeHasta.value)){
+      if (e.target === rangeDesde) rangeDesde.value = rangeHasta.value; else rangeHasta.value = rangeDesde.value;
+    }
+    syncRangeUI();
+    clearTimeout(fechaTimer);
+    fechaTimer = setTimeout(() => {
+      const lo = Number(rangeDesde.value), hi = Number(rangeHasta.value);
+      state.fechaDesde = lo > FECHA_MIN ? lo : null;
+      state.fechaHasta = hi < FECHA_MAX ? hi : null;
+      onFilterChanged();
+    }, 200);
+  }
+  rangeDesde.addEventListener('input', onRangeInput);
+  rangeHasta.addEventListener('input', onRangeInput);
+  syncRangeUI();
+
+  // ── Clasificación (6 niveles en cascada vía "ancestro") ──
+  const catSelects = [0,1,2,3,4,5].map(i => $('pf-cat-' + i));
+  const catField = i => 'categoria' + (i + 1);
+  const catCollection = i => 'categorias' + (i + 1);
+  function refreshCatOptions(level, preserve){
+    let items;
+    if (level === 0) items = REF.categorias1;
+    else {
+      const parentVal = state[catField(level - 1)];
+      items = parentVal ? (maps['categorias' + (level + 1) + 'ByAncestro'][parentVal] || []) : REF['categorias' + (level + 1)];
+    }
+    populateSelect(catSelects[level], items, preserve ? state[catField(level)] : null);
+  }
+  catSelects.forEach((select, level) => {
+    select.addEventListener('change', () => {
+      state[catField(level)] = select.value ? Number(select.value) : null;
+      // Si se elige un nivel profundo, se completan sus ancestros.
+      if (state[catField(level)]){
+        let cur = state[catField(level)], lvl = level;
+        while (lvl > 0){
+          const item = maps[catCollection(lvl)][cur];
+          if (!item || item.ancestro == null) break;
+          lvl -= 1;
+          state[catField(lvl)] = item.ancestro;
+          cur = item.ancestro;
+        }
+      }
+      for (let l = level + 1; l <= 5; l++) state[catField(l)] = null;
+      for (let l = 0; l <= 5; l++) refreshCatOptions(l, true);
+      onFilterChanged();
+    });
+  });
+
+  // ── Etiquetas de filtros activos y contadores por sección ──
+  function facetSummary(){
+    const parts = [];
+    if (state.autores.length) parts.push(['autores', `Autor (${state.autores.length})`]);
+    if (state.pais || state.ciudad || state.ubicacion){
+      const bits = [nombreDe('ubicaciones', state.ubicacion), nombreDe('ciudades', state.ciudad), nombreDe('paises', state.pais)].filter(Boolean);
+      parts.push(['ubicacion', `Ubicación: ${bits[0] || ''}`]);
+    }
+    if (state.ciudad_origen || state.origenPaisUI){
+      parts.push(['origen', `Origen: ${nombreDe('ciudades', state.ciudad_origen) || nombreDe('paises', state.origenPaisUI)}`]);
+    }
+    if (state.fechaDesde != null || state.fechaHasta != null){
+      parts.push(['fecha', `Fecha: ${state.fechaDesde ?? '…'} – ${state.fechaHasta ?? '…'}`]);
+    }
+    for (let l = 0; l <= 5; l++){
+      const v = state[catField(l)];
+      if (v) parts.push(['cat' + l, `Cat. ${l+1}: ${nombreDe(catCollection(l), v)}`]);
+    }
+    if (state.tecnicas.length) parts.push(['tecnicas', `Técnicas (${state.tecnicas.length})`]);
+    ['simbolos','caracteristicas','escenarios','objetos','descriptores','personajes'].forEach(f => {
+      if (state[f].length) parts.push([f, `${FACET_META[f].label} (${state[f].length})`]);
+    });
+    ['relato_visual','donante','cartela_filacteria','fisiognomica','fisiognomica_imagen','rostro','tipo_gestual','gesto1','gesto2','gesto3','complejo_gestual'].forEach(f => {
+      if (state[f]) parts.push([f, `${FACET_META[f].label}: ${nombreDe(FACET_META[f].collection, state[f])}`]);
+    });
+    return parts;
+  }
+  function limpiarUbicacion(){
+    state.pais = null; state.ciudad = null; state.ubicacion = null;
+    selPais.value = ''; refreshCiudadOptions(false); refreshUbicacionOptions(false); refreshGeoLink();
+  }
+  function limpiarFecha(){
+    state.fechaDesde = null; state.fechaHasta = null;
+    rangeDesde.value = FECHA_MIN; rangeHasta.value = FECHA_MAX; syncRangeUI();
+  }
+  function clearFacet(key){
+    if (key === 'ubicacion') limpiarUbicacion();
+    else if (key === 'origen'){ state.origenPaisUI = null; state.ciudad_origen = null; selPaisOrigen.value = ''; refreshCiudadOrigenOptions(false); }
+    else if (key === 'fecha') limpiarFecha();
+    else if (/^cat\d$/.test(key)){
+      const lvl = Number(key.slice(3));
+      for (let l = lvl; l <= 5; l++) state[catField(l)] = null;
+      for (let l = 0; l <= 5; l++) refreshCatOptions(l, true);
+    } else if (M2M_FIELDS.includes(key)){
+      state[key] = [];
+      const container = document.querySelector(`#panelFiltros [data-facet="${key}"]`);
+      container.querySelectorAll('.pf-check input[type=checkbox]').forEach(cb => cb.checked = false);
+      container._renderChips && container._renderChips();
+    } else if (FK_FIELDS.includes(key)){
+      state[key] = null;
+      if (fkSelectEls[key]) fkSelectEls[key].value = '';
+    }
+    onFilterChanged();
+  }
+  function facetGroupOf(key){
+    if (['autores','ubicacion','origen','fecha','tecnicas'].includes(key) || /^cat\d$/.test(key)) return 'basicos';
+    return FACET_META[key] ? FACET_META[key].group : '';
+  }
+  function updateChips(){
+    const parts = facetSummary();
+    const chipsEl = $('pf-chips');
+    chipsEl.innerHTML = parts.map(([key, label]) =>
+      `<span class="chip">${esc(label)}<button data-key="${key}" aria-label="Quitar filtro">×</button></span>`).join('');
+    chipsEl.querySelectorAll('button').forEach(b => b.addEventListener('click', () => clearFacet(b.dataset.key)));
+    ['basicos','analisis','gestos'].forEach(g => {
+      const n = parts.filter(([k]) => facetGroupOf(k) === g).length;
+      $('pf-cnt-' + g).textContent = n ? `(${n})` : '';
+    });
+    $('cuentaFiltros').textContent = parts.length || '';
+  }
+  // Los conteos de una sección se calculan sin sus propios filtros ni los de secciones posteriores.
+  function hierarchyExclusions(group, field){
+    const groups = ['basicos', 'analisis', 'gestos'];
+    return [field, ...groups.slice(groups.indexOf(group) + 1).flatMap(g => GROUP_FIELDS[g])];
+  }
+
+  // ── Orquestación con el tablero ──
+  function publicar(){
+    S.filtro.pais = state.pais ? { id:String(state.pais), nombre:nombreDe('paises', state.pais) || '' } : null;
+    S.filtro.desde = state.fechaDesde; S.filtro.hasta = state.fechaHasta;  }
+  function onFilterChanged(){
+    publicar();
+    updateChips();
+    clearTimeout(espera);
+    espera = setTimeout(() => { refrescarIds(); refreshOpenSectionCounts(); }, 200);
+  }
+  async function refrescarIds(){
+    const filtro = buildFilter(['pais', 'fecha']);
+    const clave = JSON.stringify(filtro);
+    const turno = ++turnoIds;
+    if (clave === ultimoFiltro){ if (S.obras.length) aplicarFiltros(); return; }
+    if (!Object.keys(filtro).length){
+      S.panelIds = null; ultimoFiltro = clave;
+      if (S.obras.length) aplicarFiltros();
+      return;
+    }
+    if (S.obras.length) $('alcance').textContent = 'Aplicando filtros…';
+    try {
+      const params = new URLSearchParams({ fields:'id', limit:'-1', filter:clave });
+      const j = await fetchJSON(`${API}/items/obras?${params}`);
+      if (turno !== turnoIds) return;
+      S.panelIds = new Set((j.data || []).map(o => String(o.id)));
+      ultimoFiltro = clave;
+      if (S.obras.length) aplicarFiltros();
+    } catch(e){
+      if (turno !== turnoIds) return;
+      console.error(e);
+      estado('No se pudieron aplicar los filtros del panel: ' + e.message, true);
+    }
+  }
+  // Tablero → panel: país (clic en el mapa) y periodo (campos o gráficos).
+  function sincronizar(){
+    if (!listo) return;
+    let cambio = false, refetch = false;
+    const pid = S.filtro.pais ? Number(S.filtro.pais.id) : null;
+    if (pid !== state.pais){
+      state.pais = pid; selPais.value = pid != null ? String(pid) : '';
+      if (state.ciudad && maps.ciudades[state.ciudad]?.pais !== pid){ state.ciudad = null; state.ubicacion = null; refetch = true; }
+      refreshCiudadOptions(true); refreshUbicacionOptions(true); refreshGeoLink();
+      cambio = true;
+    }
+    if (S.filtro.desde !== state.fechaDesde || S.filtro.hasta !== state.fechaHasta){
+      state.fechaDesde = S.filtro.desde; state.fechaHasta = S.filtro.hasta;
+      rangeDesde.value = acotar(state.fechaDesde ?? FECHA_MIN); rangeHasta.value = acotar(state.fechaHasta ?? FECHA_MAX); syncRangeUI();
+      cambio = true;
+    }
+    if (refetch) onFilterChanged();
+    else if (cambio){ updateChips(); refreshOpenSectionCounts(); }
+  }
+
+  function refreshOpenSectionCounts(){
+    if (!listo) return;
+    document.querySelectorAll('#panelFiltros .pf-grupo.open').forEach(group => {
+      const g = group.dataset.group;
+      if (g === 'basicos'){
+        refreshSelectCounts(selPais, 'pais', hierarchyExclusions('basicos', 'pais'), true);
+        refreshSelectCounts(selCiudad, 'ciudad', hierarchyExclusions('basicos', 'ciudad'), true);
+        refreshSelectCounts(selUbicacion, 'ubicacion', hierarchyExclusions('basicos', 'ubicacion'), true);
+        refreshOrigenPaisCounts();
+        refreshSelectCounts(selCiudadOrigen, 'ciudad_origen', hierarchyExclusions('basicos', 'ciudad_origen'), true);
+        for (let l = 0; l <= 5; l++) refreshSelectCounts(catSelects[l], catField(l), hierarchyExclusions('basicos', catField(l)), true);
+        refreshChecklistCounts('tecnicas');
+      }
+      if (g === 'analisis'){
+        ['relato_visual','donante','cartela_filacteria'].forEach(f => refreshSelectCounts(fkSelectEls[f], f, hierarchyExclusions('analisis', f)));
+        ['simbolos','caracteristicas','escenarios','objetos','descriptores'].forEach(refreshChecklistCounts);
+      }
+      if (g === 'gestos'){
+        ['fisiognomica','fisiognomica_imagen','rostro','tipo_gestual','gesto1','gesto2','gesto3','complejo_gestual'].forEach(f =>
+          refreshSelectCounts(fkSelectEls[f], f, hierarchyExclusions('gestos', f), true));
+      }
+    });
+  }
+  async function refreshOrigenPaisCounts(){
+    let counts;
+    try { counts = await fetchGroupCounts('ciudad_origen', hierarchyExclusions('basicos', 'ciudad_origen')); } catch { return; }
+    const byCountry = {};
+    Object.entries(counts).forEach(([cid, n]) => { const c = maps.ciudades[cid]; if (c) byCountry[c.pais] = (byCountry[c.pais] || 0) + n; });
+    Array.from(selPaisOrigen.options).forEach(opt => {
+      if (!opt.value) return;
+      const n = byCountry[opt.value] || 0;
+      opt.textContent = `${opt.dataset.base} (${n})`;
+      opt.classList.toggle('cero', n === 0);
+      opt.hidden = n === 0 && selPaisOrigen.value !== opt.value;
+    });
+  }
+
+  // ── Acordeón ──
+  document.querySelectorAll('#panelFiltros .pf-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const group = btn.closest('.pf-grupo');
+      const willOpen = !group.classList.contains('open');
+      group.classList.toggle('open', willOpen);
+      btn.setAttribute('aria-expanded', willOpen);
+      if (willOpen) refreshOpenSectionCounts();
+    });
+  });
+
+  // ── Abrir, cerrar y reiniciar ──
+  const panel = $('panelFiltros'), velo = $('veloFiltros'), boton = $('abrirFiltros');
+  function abrir(){
+    panel.classList.add('abierto'); velo.classList.add('visible'); boton.classList.add('abierto');
+    panel.setAttribute('aria-hidden', 'false'); boton.setAttribute('aria-expanded', 'true'); boton.setAttribute('aria-label', 'Cerrar filtros');
+    $('pf-cerrar').focus();
+    refreshOpenSectionCounts();
+  }
+  function cerrar(){
+    if (!panel.classList.contains('abierto')) return;
+    panel.classList.remove('abierto'); velo.classList.remove('visible'); boton.classList.remove('abierto');
+    panel.setAttribute('aria-hidden', 'true'); boton.setAttribute('aria-expanded', 'false'); boton.setAttribute('aria-label', 'Abrir filtros');
+    boton.focus();
+  }
+  const alternar = () => panel.classList.contains('abierto') ? cerrar() : abrir();
+  function reiniciar(){
+    FK_FIELDS.forEach(f => state[f] = null);
+    M2M_FIELDS.forEach(f => state[f] = []);
+    state.origenPaisUI = null;
+    limpiarFecha();
+    if (listo){
+      Object.values(fkSelectEls).forEach(s => s.value = '');
+      limpiarUbicacion();
+      selPaisOrigen.value = ''; refreshCiudadOrigenOptions(false);
+      for (let l = 0; l <= 5; l++) refreshCatOptions(l, false);
+      panel.querySelectorAll('.pf-check input[type=checkbox]').forEach(cb => cb.checked = false);
+      panel.querySelectorAll('.pf-buscar, .pf-typeahead').forEach(inp => inp.value = '');
+      panel.querySelectorAll('.pf-check label').forEach(label => label.style.display = '');
+      panel.querySelectorAll('.pf-check .vacio-f').forEach(el => el.remove());
+      panel.querySelectorAll('[data-facet]').forEach(c => c._renderChips && c._renderChips());
+    }
+    onFilterChanged();
+  }
+
+  async function init(){
+    await loadReferenceData();
+    populateSelect(selPais, REF.paises, state.pais);
+    refreshCiudadOptions(true); refreshUbicacionOptions(true);
+    populateSelect(selPaisOrigen, REF.paises, null);
+    refreshCiudadOrigenOptions(false);
+    for (let l = 0; l <= 5; l++) refreshCatOptions(l, false);
+    Object.keys(FACET_META).forEach(field => {
+      const container = document.querySelector(`#panelFiltros [data-facet="${field}"]`);
+      if (container.querySelector('select')) initGenericFkFacet(field);
+      else if (container.querySelector('.pf-typeahead')) initTypeahead(field);
+      else if (container.querySelector('.pf-check')) initChecklist(field);
+    });
+    $('pf-carga').remove();
+    listo = true;
+    sincronizar();
+    updateChips();
+    refreshOpenSectionCounts();
+  }
+
+  return { init, abrir, cerrar, alternar, reiniciar, sincronizar };
+})();
+
+/* ---------- Arranque ---------- */
+function llenarSelect(sel, valor){
+  sel.innerHTML = Object.values(DIMS).map(d=>`<option value="${d.id}"${d.id===valor?' selected':''}>${d.label}</option>`).join('');
+}
+llenarSelect($('rDim'),'personajes'); llenarSelect($('nA'),'personajes'); llenarSelect($('nB'),'simbolos');
+['rDim','rTop'].forEach(id=>$(id).onchange=dibujarRanking);
+['nA','nB','nTop','nMin'].forEach(id=>$(id).onchange=dibujarRed);
+$('dCerrar').onclick = cerrarDetalle;
+$('abrirFiltros').onclick = PF.alternar;
+$('pf-cerrar').onclick = PF.cerrar;
+$('veloFiltros').onclick = PF.cerrar;
+$('pf-reiniciar').onclick = PF.reiniciar;
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ cerrarDetalle(); PF.cerrar(); } });
+PF.init();
+let espera; new ResizeObserver(()=>{ clearTimeout(espera); espera=setTimeout(()=>{ if(S.obras.length){ dibujarMapa(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRed(); } }, 250); }).observe(document.querySelector('.rejilla'));
+if (typeof d3 === 'undefined'){ estado('No cargó la librería D3 (revisa la conexión a internet).', true); }
+else conectar();
+</script>
+</body>
+</html>
