@@ -10,9 +10,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <style>
 :root{
-  --fondo:#1d1411; --panel:#281c17; --panel2:#31241e; --linea:#4a3a31;
-  --texto:#f1e8d8; --tenue:#b5a48c; --oro:#d2a94b; --carmin:#c8465a;
-  --azurita:#6b93d1; --verdigris:#56a791;
+  --fondo:#f1e8d8; --panel:#fbf6ec; --panel2:#e6d9c2; --linea:#c3ae8c;
+  --texto:#2a1d16; --tenue:#6e5a46; --oro:#8a6210; --carmin:#ab2d45;
+  --azurita:#3a64a2; --verdigris:#2b7864;
+  --sobre-oro:#fdf8ee;  /* texto sobre fondos dorados */
   --serif:"IM Fell English", "Iowan Old Style", Georgia, serif;
   --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -39,11 +40,11 @@ h1 i{color:var(--oro)}
 .conexion label{font-size:.8rem;color:var(--tenue)}
 .fila{display:flex;gap:8px}
 .fila input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--linea);border-radius:6px;padding:7px 10px;font-size:.85rem}
-.boton{background:var(--oro);color:#241910;border:0;border-radius:6px;padding:7px 14px;font-weight:600;cursor:pointer}
+.boton{background:var(--oro);color:var(--sobre-oro);border:0;border-radius:6px;padding:7px 14px;font-weight:600;cursor:pointer}
 .boton.sec{background:transparent;color:var(--texto);border:1px solid var(--linea);font-weight:500}
 .boton:disabled{opacity:.5;cursor:default}
 .estado{font-size:.82rem;color:var(--tenue);min-height:1.3em}
-.estado.error{color:#ff9aa8}
+.estado.error{color:#93182c}
 
 .filtros{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:12px 0;border-bottom:1px solid var(--linea)}
 .filtros .grupo{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--tenue)}
@@ -52,14 +53,14 @@ h1 i{color:var(--oro)}
 .chip button{background:none;border:0;color:var(--oro);cursor:pointer;font-size:1rem;line-height:1;padding:0 4px}
 .filtros .alcance{margin-left:auto;font-family:var(--serif);font-size:1.05rem;color:var(--texto)}
 
-.aviso{background:#3a1d22;border:1px solid var(--carmin);border-radius:8px;padding:14px 18px;margin:18px 0;display:none}
+.aviso{background:#f9e6e6;border:1px solid var(--carmin);border-radius:8px;padding:14px 18px;margin:18px 0;display:none}
 .aviso.visible{display:block}
 .aviso h3{margin:0 0 6px;font-family:var(--serif);font-weight:400;font-size:1.3rem}
 .aviso p{margin:6px 0;max-width:75ch}
-.aviso code{background:rgba(0,0,0,.3);padding:1px 5px;border-radius:4px;font-size:.85em}
+.aviso code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:4px;font-size:.85em}
 
 .rejilla{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin-top:22px}
-section.bloque{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:18px 18px 14px;min-width:0;position:relative}
+section.bloque{background:var(--panel);border:1px solid var(--linea);border-radius:10px;padding:18px 18px 14px;min-width:0;position:relative;box-shadow:0 1px 3px rgba(90,68,44,.07)}
 .b-mapa{grid-column:span 7}
 .b-tiempo{grid-column:span 5}
 .b-pulso{grid-column:1/-1}
@@ -96,13 +97,13 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 .cinta-flujo{fill-opacity:.4;stroke-opacity:.6;transition:fill-opacity .12s}
 .cinta-flujo:hover{fill-opacity:.82}
 
-.pais{stroke:var(--fondo);stroke-width:.6;cursor:pointer;transition:opacity .15s;vector-effect:non-scaling-stroke}
+.pais{stroke:#a08862;stroke-width:.6;cursor:pointer;transition:opacity .15s;vector-effect:non-scaling-stroke}
 .pais:hover{opacity:.8}
 .pais.sel{stroke:var(--oro);stroke-width:2}
-.punto{fill:var(--carmin);fill-opacity:.62;stroke:#ffd9df;stroke-width:.6;cursor:pointer;vector-effect:non-scaling-stroke}
+.punto{fill:var(--carmin);fill-opacity:.72;stroke:#fff;stroke-width:.6;cursor:pointer;vector-effect:non-scaling-stroke}
 .punto:hover{fill-opacity:1;stroke-width:1.6}
 .leyenda{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--tenue);margin-top:6px}
-.leyenda .barra{height:8px;width:120px;border-radius:2px;background:linear-gradient(90deg,#3b2b24,var(--oro))}
+.leyenda .barra{height:8px;width:120px;border-radius:2px;background:linear-gradient(90deg,#f3e6c8,var(--oro))}
 .leyenda-escala{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;margin-top:8px;font-size:.73rem;color:var(--tenue)}
 .leyenda-escala .caja{display:flex;align-items:center;gap:5px}
 .leyenda-escala i{width:15px;height:10px;border-radius:2px;display:inline-block}
@@ -142,7 +143,7 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 .etiqueta{font-size:10px;fill:var(--texto);pointer-events:none;paint-order:stroke;stroke:var(--panel);stroke-width:3px}
 .arista{stroke:var(--tenue)}
 
-#tip{position:fixed;pointer-events:none;background:#120c0a;border:1px solid var(--linea);color:var(--texto);padding:6px 10px;border-radius:6px;font-size:.82rem;z-index:50;opacity:0;transition:opacity .1s;max-width:260px}
+#tip{position:fixed;pointer-events:none;background:var(--panel);border:1px solid var(--linea);box-shadow:0 3px 12px rgba(60,44,28,.28);color:var(--texto);padding:6px 10px;border-radius:6px;font-size:.82rem;z-index:50;opacity:0;transition:opacity .1s;max-width:260px}
 
 .detalle{position:fixed;top:0;right:0;height:100%;width:min(420px,100%);background:var(--panel);border-left:1px solid var(--linea);z-index:40;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column}
 .detalle.abierto{transform:none}
@@ -171,7 +172,7 @@ body{padding-left:var(--pestana)}
 .pestana-filtros:focus-visible{outline:2px solid var(--oro);outline-offset:-4px}
 .pestana-filtros .rotulo{font-family:var(--serif);font-size:1.05rem;font-weight:400;color:var(--texto)}
 .pestana-filtros .flecha{color:var(--oro);font-size:1.15rem;line-height:1;transition:transform .25s ease}
-.pestana-filtros .cuenta{background:var(--oro);color:#241910;border-radius:999px;padding:0 7px;font-size:.74rem;font-weight:600;line-height:1.5}
+.pestana-filtros .cuenta{background:var(--oro);color:var(--sobre-oro);border-radius:999px;padding:0 7px;font-size:.74rem;font-weight:600;line-height:1.5}
 .pestana-filtros .cuenta:empty{display:none}
 .pestana-filtros.abierto{left:var(--ancho-panel);box-shadow:none;border-left:0}
 .pestana-filtros.abierto .flecha{transform:rotate(180deg)}
@@ -180,7 +181,7 @@ body{padding-left:var(--pestana)}
   .pestana-filtros .rotulo{font-size:.85rem}
   .pestana-filtros.abierto{display:none}
 }
-.velo{position:fixed;inset:0;background:rgba(10,6,5,.55);z-index:44;opacity:0;pointer-events:none;transition:opacity .25s}
+.velo{position:fixed;inset:0;background:rgba(60,44,28,.45);z-index:44;opacity:0;pointer-events:none;transition:opacity .25s}
 .velo.visible{opacity:1;pointer-events:auto}
 .panel-filtros{position:fixed;top:0;left:0;height:100%;width:var(--ancho-panel);background:var(--panel);border-right:1px solid var(--linea);z-index:45;display:flex;flex-direction:column;transform:translateX(-100%);visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
 .panel-filtros.abierto{transform:none;visibility:visible;transition:transform .25s ease}
@@ -869,12 +870,12 @@ function svgAutonomo(svgEl, titulo){
   const fondo = document.createElementNS('http://www.w3.org/2000/svg','rect');
   fondo.setAttribute('x',0); fondo.setAttribute('y',-pieAlto);
   fondo.setAttribute('width',W); fondo.setAttribute('height',H+pieAlto);
-  fondo.setAttribute('fill', css.getPropertyValue('--panel').trim() || '#281c17');
+  fondo.setAttribute('fill', css.getPropertyValue('--panel').trim() || '#fbf6ec');
   copia.insertBefore(fondo, copia.firstChild);
   const rotulo = document.createElementNS('http://www.w3.org/2000/svg','text');
   rotulo.setAttribute('x', 2); rotulo.setAttribute('y', -14);
   rotulo.setAttribute('font-family','Georgia, serif'); rotulo.setAttribute('font-size', 14);
-  rotulo.setAttribute('fill', css.getPropertyValue('--texto').trim() || '#f1e8d8');
+  rotulo.setAttribute('fill', css.getPropertyValue('--texto').trim() || '#2a1d16');
   rotulo.textContent = `ARCA · ${titulo}${textoFiltros() ? ' · ' + textoFiltros() : ''}`;
   copia.append(rotulo);
   return {texto:'<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(copia), W, H:H+pieAlto};
@@ -890,7 +891,7 @@ function exportarPNG(svgEl, titulo){
     const c = document.createElement('canvas');
     c.width = W*escala; c.height = H*escala;
     const ctx = c.getContext('2d');
-    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--panel').trim() || '#281c17';
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--panel').trim() || '#fbf6ec';
     ctx.fillRect(0,0,c.width,c.height);
     ctx.drawImage(img, 0, 0, c.width, c.height);
     c.toBlob(b => b && descargar(b, nombreArchivo(titulo,'png')), 'image/png');
@@ -980,9 +981,9 @@ function corregirOrientacion(f){
   }
   return f;
 }
-// Rampa multitono (morado → rojo → naranja → amarillo): distingue muchos más
-// niveles que un degradado de un solo color sobre fondo oscuro.
-const RAMPA_MAPA = t => d3.interpolateInferno(0.24 + 0.68*t);
+// Rampa multitono (amarillo → naranja → café) de claro a oscuro: sobre un fondo
+// beige, más obras tiene que leerse como más oscuro, no al revés.
+const RAMPA_MAPA = t => d3.interpolateYlOrBr(0.18 + 0.79*t);
 
 function dibujarMapa(){
   const cont = $('mapa');
@@ -1027,7 +1028,7 @@ function dibujarMapa(){
   const glosa = porOrigen ? 'obras creadas aquí' : 'obras conservadas aquí';
   lienzo.append('g').selectAll('path').data(feats).join('path')
     .attr('class', d=>'pais'+(paisSel===String(d.properties.id)?' sel':''))
-    .attr('d', ruta).attr('fill', d=>{ const n=porPais.get(d.properties.id)||0; return n?escala(n):'#2e221c'; })
+    .attr('d', ruta).attr('fill', d=>{ const n=porPais.get(d.properties.id)||0; return n?escala(n):'#ded2ba'; })
     .attr('tabindex',0)
     .on('mousemove', (ev,d)=>mostrarTip(ev, `<strong>${d.properties.nombre}</strong><br>${fmt(porPais.get(d.properties.id)||0)} ${glosa}<br><em>Clic para filtrar el tablero</em>`))
     .on('mouseleave', ocultarTip)
@@ -1094,7 +1095,7 @@ function dibujarMapa(){
     `<span class="caja" style="color:var(--texto)">${porOrigen?'Obras por país de origen':'Obras por país de conservación'}:</span>`
     + colores.map(c => { const [a,b] = escala.invertExtent(c);
       return `<span class="caja"><i style="background:${c}"></i>${fmt(Math.round(a))}–${fmt(Math.round(b))}</span>`; }).join('')
-    + `<span class="caja" style="margin-left:6px"><i style="background:#2e221c;border:1px solid var(--linea)"></i>sin obras</span>`
+    + `<span class="caja" style="margin-left:6px"><i style="background:#ded2ba;border:1px solid var(--linea)"></i>sin obras</span>`
     + (porOrigen ? '' : `<span class="caja"><i style="background:var(--carmin);border-radius:50%;width:10px;height:10px"></i>lugar de conservación (tamaño = nº de obras)</span>`);
 
   S.datos.mapa = {filas:[
@@ -1129,12 +1130,12 @@ function dibujarTiempo(){
   if (S.filtro.pais){
     svg.append('g').selectAll('rect').data(decs).join('rect')
       .attr('x',d=>x(d)).attr('width',x.bandwidth()).attr('y',d=>y(total.get(d)||0)).attr('height',d=>y(0)-y(total.get(d)||0))
-      .attr('fill','#4a3a31').style('pointer-events','none');
+      .attr('fill','#d6c7ab').style('pointer-events','none');
   }
   const seleccionada = d => S.filtro.desde===d && S.filtro.hasta===d+9;
   svg.append('g').selectAll('rect').data(decs).join('rect')
     .attr('x',d=>x(d)).attr('width',x.bandwidth()).attr('y',d=>y(filtr.get(d)||0)).attr('height',d=>y(0)-y(filtr.get(d)||0))
-    .attr('fill',d=>enRango(d)?'var(--oro)':'#7a6547').style('cursor','pointer')
+    .attr('fill',d=>enRango(d)?'var(--oro)':'#c2aa7e').style('cursor','pointer')
     .attr('stroke',d=>seleccionada(d)?'var(--texto)':null).attr('stroke-width',d=>seleccionada(d)?1.5:null)
     .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d}–${d+9}</strong><br>${fmt(filtr.get(d)||0)} obras${S.filtro.pais?` en ${S.filtro.pais.nombre} (de ${fmt(total.get(d)||0)})`:''}<br><em>${seleccionada(d)?'Clic para quitar este periodo':'Clic para filtrar esta década'}</em>`))
     .on('mouseleave', ocultarTip)
@@ -1163,12 +1164,12 @@ function dibujarAtlas(){
   const W=cont.clientWidth||700, m={t:18,r:10,b:34,l:Math.min(142,W*.28)}, fila=25, H=m.t+cats.length*fila+m.b;
   const x=d3.scaleBand(periodos,[m.l,W-m.r]).padding(.04), y=d3.scaleBand(cats,[m.t,H-m.b]).padding(.04);
   const maxP=d3.max(celdas,d=>d.total?d.n/d.total:0)||1;
-  const color=d3.scaleSequentialSqrt([0,maxP],d3.interpolateRgb('#342720','#d2a94b'));
+  const color=d3.scaleSequentialSqrt([0,maxP],d3.interpolateRgb('#f0e4c8','#6b3d06'));
   const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Composición iconográfica por cuartos de siglo');
   const celdaSel = d => catActiva!=null && String(idCat.get(d.cat))===String(catActiva) && S.filtro.desde===d.p && S.filtro.hasta===d.p+24;
   svg.append('g').selectAll('rect').data(celdas).join('rect').attr('class','celda-calor')
     .attr('x',d=>x(d.p)).attr('y',d=>y(d.cat)).attr('width',x.bandwidth()).attr('height',y.bandwidth())
-    .attr('rx',2).attr('fill',d=>d.n?color(d.n/d.total):'#2d211c')
+    .attr('rx',2).attr('fill',d=>d.n?color(d.n/d.total):'#ece0c9')
     .attr('stroke',d=>celdaSel(d)?'var(--texto)':null).attr('stroke-width',d=>celdaSel(d)?2:null)
     .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.cat}</strong><br>${d.p}–${d.p+24}: ${fmt(d.n)} obras<br>${d.total?(d.n/d.total*100).toFixed(1):0} % del periodo<br><em>${celdaSel(d)?'Clic para quitar este filtro':'Clic para filtrar tema y periodo'}</em>`))
     .on('mouseleave',ocultarTip)
@@ -1215,7 +1216,7 @@ function dibujarFlujos(){
   const W=cont.clientWidth||500, H=Math.max(390,Math.max(izq.length,der.length)*39), xL=Math.min(145,W*.32), xR=Math.max(W-145,W*.68), gap=6;
   const total=movidas.length, escala=Math.min((H-28-gap*(izq.length-1))/total,(H-28-gap*(der.length-1))/total);
   const colocar = lista => { let y=14; const m=new Map(); for(const [nombre,n] of lista){ m.set(nombre,{nombre,n,y,h:Math.max(2,n*escala),off:0}); y+=Math.max(2,n*escala)+gap; } return m; };
-  const nodosL=colocar(izq), nodosR=colocar(der), paleta=d3.scaleOrdinal(izq.map(d=>d[0]),['#d2a94b','#c8465a','#6b93d1','#56a791','#d07f53','#9672bd','#a9a15b','#8b796c']);
+  const nodosL=colocar(izq), nodosR=colocar(der), paleta=d3.scaleOrdinal(izq.map(d=>d[0]),['#8a6210','#ab2d45','#3a64a2','#2b7864','#a55628','#6d4b9a','#7a7230','#63524a']);
   const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Flujos entre país de origen y país de conservación');
   const cintas=svg.append('g').selectAll('path').data(enlaces).join('path').attr('class','cinta-flujo').attr('fill',d=>paleta(d.a)).attr('stroke',d=>paleta(d.a))
     .attr('d',d=>{ const a=nodosL.get(d.a),b=nodosR.get(d.b),h=Math.max(1,d.n*escala),sy=a.y+a.off,ty=b.y+b.off,mid=(xL+xR)/2; a.off+=h;b.off+=h; return `M${xL},${sy}C${mid},${sy} ${mid},${ty} ${xR},${ty}L${xR},${ty+h}C${mid},${ty+h} ${mid},${sy+h} ${xL},${sy+h}Z`; })
@@ -1460,7 +1461,7 @@ async function dibujarComparativo(){
     const y = d => m.t + d.i*altoFila;
     const medio = d => y(d) + alto/2;
     const paleta = d3.scaleOrdinal(d3.range(filas.length),
-      ['#6b93d1','#d07f53','#56a791','#c8465a','#9672bd','#8b796c','#d2a94b','#5f9ea0','#b0688a','#7f9c4a','#c98a4b','#6f7fb3']);
+      ['#3a64a2','#a55628','#2b7864','#ab2d45','#6d4b9a','#63524a','#8a6210','#33767a','#8a3f62','#58722a','#96601f','#47558a']);
 
     const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img')
       .attr('aria-label',`Comparación entre ${dA.label} y ${dB.label}`);
@@ -1553,7 +1554,7 @@ async function dibujarAutores(){
     const r = d3.scaleSqrt([0, d3.max(lista, a=>a.n)], [3, 9]);
     const origenes = [...new Set(lista.map(a=>a.origen))].sort((a,b)=>a.localeCompare(b,'es'));
     const color = d3.scaleOrdinal(origenes,
-      ['#6b93d1','#d07f53','#56a791','#c8465a','#9672bd','#d2a94b','#8b796c','#5f9ea0','#b0688a','#7f9c4a']);
+      ['#3a64a2','#a55628','#2b7864','#ab2d45','#6d4b9a','#8a6210','#63524a','#33767a','#8a3f62','#58722a']);
 
     const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Autores por periodo de actividad');
     const ejeArriba = d3.axisTop(x).ticks(Math.max(3, Math.round(W/90))).tickFormat(d3.format('d')).tickSizeOuter(0);
