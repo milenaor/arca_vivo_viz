@@ -92,12 +92,37 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 .cinta-flujo{fill-opacity:.4;stroke-opacity:.6;transition:fill-opacity .12s}
 .cinta-flujo:hover{fill-opacity:.82}
 
-.pais{stroke:var(--fondo);stroke-width:.6;cursor:pointer;transition:opacity .15s}
+.pais{stroke:var(--fondo);stroke-width:.6;cursor:pointer;transition:opacity .15s;vector-effect:non-scaling-stroke}
 .pais:hover{opacity:.8}
 .pais.sel{stroke:var(--oro);stroke-width:2}
-.punto{fill:var(--carmin);fill-opacity:.55;stroke:#ffd9df;stroke-width:.5}
+.punto{fill:var(--carmin);fill-opacity:.62;stroke:#ffd9df;stroke-width:.6;cursor:pointer;vector-effect:non-scaling-stroke}
+.punto:hover{fill-opacity:1;stroke-width:1.6}
 .leyenda{display:flex;align-items:center;gap:8px;font-size:.75rem;color:var(--tenue);margin-top:6px}
 .leyenda .barra{height:8px;width:120px;border-radius:2px;background:linear-gradient(90deg,#3b2b24,var(--oro))}
+.leyenda-escala{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;margin-top:8px;font-size:.73rem;color:var(--tenue)}
+.leyenda-escala .caja{display:flex;align-items:center;gap:5px}
+.leyenda-escala i{width:15px;height:10px;border-radius:2px;display:inline-block}
+
+/* ---------- Herramientas por bloque (exportar) y controles del mapa ---------- */
+.herramientas{position:absolute;top:15px;right:14px;display:flex;gap:6px;z-index:3}
+.herramientas button,.mapa-ctl button{background:var(--panel2);border:1px solid var(--linea);color:var(--tenue);border-radius:6px;padding:3px 9px;font-size:.72rem;cursor:pointer;white-space:nowrap}
+.herramientas button:hover,.mapa-ctl button:hover{color:var(--oro);border-color:var(--oro)}
+.mapa-ctl{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 9px}
+.mapa-ctl .sep{width:1px;background:var(--linea);margin:2px 3px}
+.mapa-ctl button.destacado{color:var(--oro);border-color:var(--oro)}
+@media (min-width:640px){.bloque h2{padding-right:180px}}
+@media (max-width:639px){.herramientas{position:static;margin-bottom:8px;flex-wrap:wrap}}
+
+/* ---------- Barra de filtros activos (siempre visible) ---------- */
+.barra-activa{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  background:var(--panel);border:1px solid var(--linea);border-left:4px solid var(--oro);border-radius:10px;padding:10px 14px}
+.barra-activa[hidden]{display:none}
+.barra-activa .rot{font-size:.83rem;color:var(--tenue)}
+.barra-activa .chip{font-size:.8rem}
+.barra-activa .acciones{margin-left:auto;display:flex;gap:8px}
+.barra-activa .boton{padding:5px 12px;font-size:.8rem}
+.controles .ayuda{flex-basis:100%;font-size:.77rem;color:var(--tenue);margin:0 0 2px;max-width:70ch}
+.controles select optgroup{background:var(--panel);color:var(--oro);font-style:normal}
 
 .lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;max-height:560px;overflow:auto}
 .lista li button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;width:100%;padding:5px 6px;border-radius:5px;cursor:pointer}
@@ -121,6 +146,8 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 .detalle h3{font-family:var(--serif);font-weight:400;font-size:1.6rem;margin:0;line-height:1.1;flex:1}
 .detalle .cuerpo{padding:14px 20px 30px;overflow:auto}
 .detalle .dato{color:var(--tenue);font-size:.88rem;margin:0 0 12px}
+.detalle .acciones{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.detalle .acciones .boton{font-size:.82rem;padding:6px 12px}
 .galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
 .galeria a{display:block;text-decoration:none;color:var(--texto);font-size:.72rem;line-height:1.25}
 .galeria img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;background:var(--panel2);display:block;margin-bottom:4px}
@@ -233,55 +260,74 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
 
 
   <div class="rejilla">
-    <section class="bloque b-pulso">
+    <div class="barra-activa" id="barraActiva" hidden>
+      <span class="rot">Filtros activos:</span>
+      <span id="chipsActivos" style="display:flex;flex-wrap:wrap;gap:6px"></span>
+      <span class="acciones">
+        <button class="boton sec" id="quitarTodo">Quitar todos los filtros</button>
+      </span>
+    </div>
+
+    <section class="bloque b-pulso" data-bloque="pulso" data-titulo="Pulso de la colección">
       <h2>Pulso de la colección</h2>
       <p class="nota">Una lectura crítica del conjunto visible: escala, cronología, precisión documental y desplazamiento geográfico.</p>
       <div class="pulso" id="pulso"><div class="vacio">Esperando datos.</div></div>
     </section>
 
-    <section class="bloque b-mapa">
+    <section class="bloque b-mapa" data-bloque="mapa" data-titulo="Geografía de las obras">
       <h2>Geografía de las obras</h2>
-      <p class="nota">Color: pinturas por país según el periodo. Círculos: lugares donde se conservan. Toca un país para filtrar todo el tablero.</p>
+      <p class="nota">Color: pinturas por país según el periodo. Círculos: lugares donde se conservan; toca un círculo para ver las obras registradas allí. Toca un país para filtrar todo el tablero. Arrastra el mapa para moverlo y usa la rueda o los botones para acercar.</p>
+      <div class="mapa-ctl">
+        <button id="mapaMas" title="Acercar">＋</button>
+        <button id="mapaMenos" title="Alejar">－</button>
+        <span class="sep"></span>
+        <button id="mapaAmerica">América</button>
+        <button id="mapaMundo">Mundo</button>
+        <span class="sep"></span>
+        <button id="mapaObras" class="destacado">Ver obras del filtro</button>
+      </div>
       <div class="lienzo" id="mapa"><div class="vacio">Conecta la API para dibujar el mapa.</div></div>
-      <div class="leyenda"><span>menos</span><span class="barra"></span><span>más obras</span></div>
+      <div class="leyenda-escala" id="mapaLeyenda"></div>
     </section>
 
-    <section class="bloque b-tiempo">
+    <section class="bloque b-tiempo" data-bloque="tiempo" data-titulo="Producción por década">
       <h2>Producción por década</h2>
-      <p class="nota">Según la fecha inicial registrada. Toca una década para usarla como periodo; en gris, el total sin el filtro de país.</p>
+      <p class="nota">Según la fecha inicial registrada. Toca una década para usarla como periodo y vuelve a tocarla para quitarlo; en gris, el total sin el filtro de país.</p>
       <div class="lienzo" id="tiempo"><div class="vacio">Esperando datos.</div></div>
     </section>
 
-    <section class="bloque b-atlas">
+    <section class="bloque b-atlas" data-bloque="atlas" data-titulo="Atlas iconográfico en el tiempo">
       <h2>Atlas iconográfico en el tiempo</h2>
-      <p class="nota">Composición temática por cuartos de siglo, usando el punto medio de cada intervalo de datación. El color expresa la proporción dentro de cada periodo; toca una celda para filtrar esos 25 años.</p>
+      <p class="nota">Composición temática por cuartos de siglo, usando el punto medio de cada intervalo de datación. Toca una celda para filtrar ese tema en esos 25 años, o el nombre de un tema para filtrar solo por él. Vuelve a tocar para quitar el filtro.</p>
       <div class="lienzo" id="atlas"><div class="vacio">Esperando datos.</div></div>
     </section>
 
-    <section class="bloque b-flujos">
+    <section class="bloque b-flujos" data-bloque="flujos" data-titulo="Trayectorias de las obras">
       <h2>Trayectorias de las obras</h2>
-      <p class="nota">País de origen registrado a la izquierda y país de conservación actual a la derecha. Se muestran únicamente desplazamientos entre países.</p>
+      <p class="nota">País de origen registrado a la izquierda y país de conservación actual a la derecha. Se muestran únicamente desplazamientos entre países; toca una cinta para filtrar ese trayecto.</p>
       <div class="lienzo" id="flujos"><div class="vacio">Esperando datos.</div></div>
     </section>
 
-    <section class="bloque b-ranking">
+    <section class="bloque b-ranking" data-bloque="ranking" data-titulo="Lo más representado">
       <h2>Lo más representado</h2>
       <p class="nota">Conteo de obras por término dentro de los filtros activos.</p>
       <div class="controles">
-        <label>Dimensión<select id="rDim"></select></label>
-        <label>Mostrar<select id="rTop"><option>15</option><option selected>30</option><option>60</option></select></label>
+        <p class="ayuda"><b>Campo a observar:</b> elige de qué tabla de ARCA quieres el ranking (escenarios, relatos visuales, gestos, símbolos…). La lista se agrupa igual que el panel de filtros. <b>Términos:</b> cuántos resultados mostrar.</p>
+        <label>Campo a observar<select id="rDim"></select></label>
+        <label>Términos a mostrar<select id="rTop"><option>15</option><option selected>30</option><option>60</option></select></label>
       </div>
       <div class="lienzo" id="ranking"><div class="vacio">Esperando datos.</div></div>
       <div class="cargando" id="rCarga"></div>
     </section>
 
-    <section class="bloque b-red">
-      <h2>Relaciones entre bases de datos</h2>
+    <section class="bloque b-red" data-bloque="red" data-titulo="Relaciones entre campos">
+      <h2>Relaciones entre campos</h2>
       <p class="nota">Dos términos se unen cuando aparecen en la misma pintura; el grosor es el número de obras compartidas. Arrastra, acerca con la rueda y toca un nodo para ver ejemplos.</p>
       <div class="controles">
-        <label>Base A<select id="nA"></select></label>
-        <label>Base B<select id="nB"></select></label>
-        <label>Nodos por base<select id="nTop"><option>15</option><option selected>25</option><option>40</option></select></label>
+        <p class="ayuda">Cruza dos campos de la base: cada nodo es un término y cada línea, las obras en que ambos aparecen juntos. Elige el mismo campo en los dos selectores para ver cómo se relaciona consigo mismo.</p>
+        <label>Campo A<select id="nA"></select></label>
+        <label>Campo B<select id="nB"></select></label>
+        <label>Nodos por campo<select id="nTop"><option>15</option><option selected>25</option><option>40</option></select></label>
         <label>Obras mínimas por vínculo<select id="nMin"><option>2</option><option selected>5</option><option>10</option><option>25</option></select></label>
       </div>
       <div class="lienzo" id="red"><div class="vacio">Esperando datos.</div></div>
@@ -444,33 +490,41 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
 
 <script>
 /* ---------- Configuración de dimensiones (según el esquema de ARCA) ---------- */
+const GRUPOS = {basicos:'Datos básicos', analisis:'Datos de análisis', gestos:'Datos de gestos'};
 const DIMS = {
-  autores:        {label:'Autores', tipo:'m2m', col:'autores', key:'autores_id', campos:'id nombre apellido', idf:'id', ruta:o=>`/autores/${o.id}`},
-  personajes:     {label:'Personajes', tipo:'m2m', col:'personajes', key:'personajes_id', campos:'nombre slug', idf:'slug'},
-  simbolos:       {label:'Símbolos', tipo:'m2m', col:'simbolos', key:'simbolos_id', campos:'nombre slug', idf:'slug'},
-  objetos:        {label:'Objetos', tipo:'m2m', col:'objetos', key:'objetos_id', campos:'nombre slug', idf:'slug'},
-  escenarios:     {label:'Escenarios', tipo:'m2m', col:'escenarios', key:'escenarios_id', campos:'nombre slug', idf:'slug'},
-  tecnicas:       {label:'Técnicas', tipo:'m2m', col:'tecnicas', key:'tecnicas_id', campos:'nombre slug', idf:'slug'},
-  descriptores:   {label:'Descriptores', tipo:'m2m', col:'descriptores', key:'descriptores_id', campos:'nombre slug', idf:'slug'},
-  caracteristicas:{label:'Características', tipo:'m2m', col:'caracteristicas', key:'caracteristicas_id', campos:'nombre slug', idf:'slug'},
-  categoria1:     {label:'Categoría, nivel 1', tipo:'m2o', campo:'categoria1', col:'categorias1'},
-  categoria2:     {label:'Categoría, nivel 2', tipo:'m2o', campo:'categoria2', col:'categorias2'},
-  categoria3:     {label:'Categoría, nivel 3', tipo:'m2o', campo:'categoria3', col:'categorias3'},
-  categoria4:     {label:'Categoría, nivel 4', tipo:'m2o', campo:'categoria4', col:'categorias4'},
-  categoria5:     {label:'Categoría, nivel 5', tipo:'m2o', campo:'categoria5', col:'categorias5'},
-  categoria6:     {label:'Categoría, nivel 6', tipo:'m2o', campo:'categoria6', col:'categorias6'},
-  relato_visual:  {label:'Relato visual', tipo:'m2o', campo:'relato_visual', col:'relatos_visuales'},
-  donante:        {label:'Donantes', tipo:'m2o', campo:'donante', col:'donantes'},
-  tipo_gestual:   {label:'Tipo gestual', tipo:'m2o', campo:'tipo_gestual', col:'tipos_gestuales'},
-  complejo_gestual:{label:'Complejo gestual', tipo:'m2o', campo:'complejo_gestual', col:'complejos_gestuales'},
-  gesto1:         {label:'Gesto principal', tipo:'m2o', campo:'gesto1', col:'gestos', conteo:'obras_gesto_1_func'},
-  rostro:         {label:'Rostro', tipo:'m2o', campo:'rostro', col:'rostros'},
-  cartela_filacteria:{label:'Cartela o filacteria', tipo:'m2o', campo:'cartela_filacteria', col:'cartelas_filacterias'},
-  fisiognomica:   {label:'Fisiognómica', tipo:'m2o', campo:'fisiognomica', col:'fisiognomicas'},
+  autores:        {label:'Autores', grupo:'basicos', tipo:'m2m', col:'autores', key:'autores_id', campos:'id nombre apellido', idf:'id', ruta:o=>`/autores/${o.id}`},
+  tecnicas:       {label:'Técnicas', grupo:'basicos', tipo:'m2m', col:'tecnicas', key:'tecnicas_id', campos:'id nombre slug', idf:'slug'},
+  categoria1:     {label:'Clasificación, nivel 1', grupo:'basicos', tipo:'m2o', campo:'categoria1', col:'categorias1'},
+  categoria2:     {label:'Clasificación, nivel 2', grupo:'basicos', tipo:'m2o', campo:'categoria2', col:'categorias2'},
+  categoria3:     {label:'Clasificación, nivel 3', grupo:'basicos', tipo:'m2o', campo:'categoria3', col:'categorias3'},
+  categoria4:     {label:'Clasificación, nivel 4', grupo:'basicos', tipo:'m2o', campo:'categoria4', col:'categorias4'},
+  categoria5:     {label:'Clasificación, nivel 5', grupo:'basicos', tipo:'m2o', campo:'categoria5', col:'categorias5'},
+  categoria6:     {label:'Clasificación, nivel 6', grupo:'basicos', tipo:'m2o', campo:'categoria6', col:'categorias6'},
+
+  personajes:     {label:'Personaje central / tema', grupo:'analisis', tipo:'m2m', col:'personajes', key:'personajes_id', campos:'id nombre slug', idf:'slug'},
+  simbolos:       {label:'Símbolos', grupo:'analisis', tipo:'m2m', col:'simbolos', key:'simbolos_id', campos:'id nombre slug', idf:'slug'},
+  objetos:        {label:'Objetos', grupo:'analisis', tipo:'m2m', col:'objetos', key:'objetos_id', campos:'id nombre slug', idf:'slug'},
+  escenarios:     {label:'Escenarios', grupo:'analisis', tipo:'m2m', col:'escenarios', key:'escenarios_id', campos:'id nombre slug', idf:'slug'},
+  descriptores:   {label:'Descriptores', grupo:'analisis', tipo:'m2m', col:'descriptores', key:'descriptores_id', campos:'id nombre slug', idf:'slug'},
+  caracteristicas:{label:'Características particulares', grupo:'analisis', tipo:'m2m', col:'caracteristicas', key:'caracteristicas_id', campos:'id nombre slug', idf:'slug'},
+  relato_visual:  {label:'Relato visual', grupo:'analisis', tipo:'m2o', campo:'relato_visual', col:'relatos_visuales'},
+  donante:        {label:'Donantes', grupo:'analisis', tipo:'m2o', campo:'donante', col:'donantes'},
+  cartela_filacteria:{label:'Cartela o filacteria', grupo:'analisis', tipo:'m2o', campo:'cartela_filacteria', col:'cartelas_filacterias'},
+
+  fisiognomica:   {label:'Fisiognómica: postura del cuerpo', grupo:'gestos', tipo:'m2o', campo:'fisiognomica', col:'fisiognomicas'},
+  fisiognomica_imagen:{label:'Fisiognómica: cuerpo y proporciones', grupo:'gestos', tipo:'m2o', campo:'fisiognomica_imagen', col:'fisiognomicas_imagen'},
+  rostro:         {label:'Rostro', grupo:'gestos', tipo:'m2o', campo:'rostro', col:'rostros'},
+  tipo_gestual:   {label:'Tipo gestual (relación gesto-objeto)', grupo:'gestos', tipo:'m2o', campo:'tipo_gestual', col:'tipos_gestuales'},
+  gesto1:         {label:'Gesto — nivel 1', grupo:'gestos', tipo:'m2o', campo:'gesto1', col:'gestos', conteo:'obras_gesto_1_func'},
+  gesto2:         {label:'Gesto — nivel 2', grupo:'gestos', tipo:'m2o', campo:'gesto2', col:'gestos', conteo:'obras_gesto_2_func'},
+  gesto3:         {label:'Gesto — nivel 3', grupo:'gestos', tipo:'m2o', campo:'gesto3', col:'gestos', conteo:'obras_gesto_3_func'},
+  complejo_gestual:{label:'Complejo gestual', grupo:'gestos', tipo:'m2o', campo:'complejo_gestual', col:'complejos_gestuales'},
 };
 for (const [k,d] of Object.entries(DIMS)) {
   d.id = k;
-  if (d.tipo === 'm2o') { d.campos = 'nombre slug'; d.idf = 'slug'; }
+  if (d.tipo === 'm2o') { d.campos = 'id nombre slug'; d.idf = 'slug'; }
+  // Campo equivalente en el panel lateral de filtros (para filtrar desde las gráficas)
+  d.faceta = d.tipo === 'm2m' ? d.col : d.campo;
   if (!d.ruta) d.ruta = o => `/${d.col}/${o.slug}`;
 }
 const nombreItem = o => o ? ([o.nombre, o.apellido].filter(Boolean).join(' ') || '(sin nombre)') : null;
@@ -479,7 +533,8 @@ const nombreItem = o => o ? ([o.nombre, o.apellido].filter(Boolean).join(' ') ||
 const S = {
   api:'', obras:[], obraPais:new Map(), paises:[], ubic:[], total:0,
   filtro:{pais:null, desde:null, hasta:null}, permitidas:null, panelIds:null,
-  dimCache:new Map(), indexCache:new Map(), pendientes:new Map()
+  dimCache:new Map(), indexCache:new Map(), pendientes:new Map(),
+  datos:{}, mapaVista:null, mapaCtl:null
 };
 const fmt = n => new Intl.NumberFormat('es-CO').format(n);
 const $ = id => document.getElementById(id);
@@ -532,10 +587,11 @@ async function conectar(){
     S.paises = (g.paises||[]).filter(p=>p.geo);
     S.ubic = (g.ubicaciones||[]).filter(u=>u.geo && u.geo.coordinates);
 
-    const filas = await paginar('obras', 'id registro fecha_inicial fecha_final fecha_periodo categoria1{ nombre slug } ciudad_origen{ pais{ id nombre } } ubicacion{ id ciudad{ pais{ id nombre } } }', S.total,
+    const filas = await paginar('obras', 'id registro fecha_inicial fecha_final fecha_periodo categoria1{ id nombre slug } ciudad_origen{ pais{ id nombre } } ubicacion{ id ciudad{ pais{ id nombre } } }', S.total,
       (n,t)=>estado(`Leyendo obras ${fmt(n)}${t?` de ${fmt(t)}`:''}…`));
     S.obras = filas.map(o=>({
       id:o.id, fi:o.fecha_inicial, ff:o.fecha_final, periodo:o.fecha_periodo,
+      registro:o.registro,
       ub:o.ubicacion?.id ?? null,
       pais:o.ubicacion?.ciudad?.pais?.id ?? null,
       conserva:o.ubicacion?.ciudad?.pais ?? null,
@@ -577,6 +633,7 @@ function aplicarFiltros(){
   const activo = f.pais || f.desde!=null || f.hasta!=null || S.panelIds;
   S.permitidas = activo ? new Set(S.obras.filter(o=>pasaPanel(o) && pasaPeriodo(o) && (!f.pais || o.pais===f.pais.id)).map(o=>o.id)) : null;
   PF.sincronizar();
+  pintarBarraActiva();
   const n = S.permitidas ? S.permitidas.size : S.total;
   $('alcance').textContent = activo ? `${fmt(n)} de ${fmt(S.total)} obras en el filtro` : `${fmt(S.total)} obras`;
   dibujarPulso(); dibujarMapa(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRanking(); dibujarRed();
@@ -592,6 +649,115 @@ const tip = $('tip');
 function mostrarTip(ev, html){ tip.innerHTML=html; tip.style.opacity=1; moverTip(ev); }
 function moverTip(ev){ const x=Math.min(ev.clientX+14, innerWidth-270); tip.style.left=x+'px'; tip.style.top=(ev.clientY+14)+'px'; }
 function ocultarTip(){ tip.style.opacity=0; }
+
+/* ---------- Exportación de gráficas (PNG, SVG y datos en CSV) ---------- */
+// Propiedades que hay que fijar en línea: el SVG exportado sale del documento y
+// pierde la hoja de estilos (y con ella las variables de color del tema).
+const PROPS_SVG = ['fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray',
+  'opacity','font-size','font-family','font-weight','text-anchor','dominant-baseline','paint-order','rx','ry'];
+
+function descargar(blob, nombre){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+}
+const nombreArchivo = (titulo, ext) => `ARCA · ${titulo}${S.permitidas?' (filtrado)':''} · ${new Date().toISOString().slice(0,10)}.${ext}`
+  .replace(/[\\/:*?"<>|]/g,'-');
+
+function svgAutonomo(svgEl, titulo){
+  const copia = svgEl.cloneNode(true);
+  const originales = svgEl.querySelectorAll('*'), copias = copia.querySelectorAll('*');
+  originales.forEach((el, i) => {
+    const cs = getComputedStyle(el), k = copias[i];
+    for (const p of PROPS_SVG){
+      // 'none' sí se copia: los ejes de D3 dependen de fill:none para no rellenarse.
+      const v = cs.getPropertyValue(p);
+      if (v && v !== 'normal') k.style.setProperty(p, v);
+    }
+  });
+  const vb = (svgEl.getAttribute('viewBox')||'0 0 800 600').split(/\s+/).map(Number);
+  const W = vb[2], H = vb[3], pieAlto = 34;
+  copia.setAttribute('viewBox', `0 ${-pieAlto} ${W} ${H+pieAlto}`);
+  copia.setAttribute('width', W); copia.setAttribute('height', H+pieAlto);
+  copia.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  const css = getComputedStyle(document.body);
+  const fondo = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  fondo.setAttribute('x',0); fondo.setAttribute('y',-pieAlto);
+  fondo.setAttribute('width',W); fondo.setAttribute('height',H+pieAlto);
+  fondo.setAttribute('fill', css.getPropertyValue('--panel').trim() || '#281c17');
+  copia.insertBefore(fondo, copia.firstChild);
+  const rotulo = document.createElementNS('http://www.w3.org/2000/svg','text');
+  rotulo.setAttribute('x', 2); rotulo.setAttribute('y', -14);
+  rotulo.setAttribute('font-family','Georgia, serif'); rotulo.setAttribute('font-size', 14);
+  rotulo.setAttribute('fill', css.getPropertyValue('--texto').trim() || '#f1e8d8');
+  rotulo.textContent = `ARCA · ${titulo}${textoFiltros() ? ' · ' + textoFiltros() : ''}`;
+  copia.append(rotulo);
+  return {texto:'<?xml version="1.0" encoding="UTF-8"?>\n' + new XMLSerializer().serializeToString(copia), W, H:H+pieAlto};
+}
+function exportarSVG(svgEl, titulo){
+  const {texto} = svgAutonomo(svgEl, titulo);
+  descargar(new Blob([texto], {type:'image/svg+xml;charset=utf-8'}), nombreArchivo(titulo,'svg'));
+}
+function exportarPNG(svgEl, titulo){
+  const {texto, W, H} = svgAutonomo(svgEl, titulo), escala = 2;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = W*escala; c.height = H*escala;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--panel').trim() || '#281c17';
+    ctx.fillRect(0,0,c.width,c.height);
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(b => b && descargar(b, nombreArchivo(titulo,'png')), 'image/png');
+  };
+  img.onerror = () => estado('No se pudo convertir la gráfica a PNG; prueba con SVG.', true);
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(texto);
+}
+function exportarCSV(bloque, titulo){
+  const d = S.datos[bloque];
+  if (!d || !d.filas.length){ estado('Todavía no hay datos para exportar en «'+titulo+'».', true); return; }
+  const cols = Object.keys(d.filas[0]);
+  const celda = v => { const s = v==null ? '' : String(v); return /[";\n]/.test(s) ? '"' + s.split('"').join('""') + '"' : s; };
+  const lineas = [
+    `# ARCA · ${titulo}`,
+    `# ${textoFiltros() || 'sin filtros activos'} · ${new Date().toLocaleString('es-CO')}`,
+    cols.join(';'),
+    ...d.filas.map(f => cols.map(c => celda(f[c])).join(';'))
+  ];
+  // BOM para que Excel reconozca los acentos
+  descargar(new Blob(['﻿' + lineas.join('\n')], {type:'text/csv;charset=utf-8'}), nombreArchivo(titulo,'csv'));
+}
+function montarHerramientas(){
+  document.querySelectorAll('section.bloque[data-bloque]').forEach(sec => {
+    const bloque = sec.dataset.bloque, titulo = sec.dataset.titulo;
+    const barra = document.createElement('div');
+    barra.className = 'herramientas';
+    const svgs = bloque !== 'pulso' && bloque !== 'ranking';
+    barra.innerHTML = (svgs ? '<button data-t="png" title="Descargar imagen PNG">PNG</button><button data-t="svg" title="Descargar vector SVG">SVG</button>' : '')
+      + '<button data-t="csv" title="Descargar los datos de esta gráfica">CSV</button>';
+    barra.querySelectorAll('button').forEach(b => b.onclick = () => {
+      if (b.dataset.t === 'csv') return exportarCSV(bloque, titulo);
+      const svg = sec.querySelector('.lienzo svg');
+      if (!svg) return estado('Esta gráfica todavía no está dibujada.', true);
+      (b.dataset.t === 'png' ? exportarPNG : exportarSVG)(svg, titulo);
+    });
+    sec.prepend(barra);
+  });
+}
+
+/* ---------- Barra de filtros activos ---------- */
+function textoFiltros(){
+  return (typeof PF !== 'undefined' && PF.resumen ? PF.resumen() : []).map(p => p[1]).join(' · ');
+}
+function pintarBarraActiva(){
+  const partes = (typeof PF !== 'undefined' && PF.resumen) ? PF.resumen() : [];
+  const barra = $('barraActiva'), cont = $('chipsActivos');
+  barra.hidden = !partes.length;
+  cont.innerHTML = partes.map(([k,l]) =>
+    `<span class="chip">${l.replace(/&/g,'&amp;').replace(/</g,'&lt;')}<button data-key="${k}" aria-label="Quitar este filtro">×</button></span>`).join('');
+  cont.querySelectorAll('button').forEach(b => b.onclick = () => PF.quitar(b.dataset.key));
+}
 
 /* ---------- Indicadores de lectura ---------- */
 function dibujarPulso(){
@@ -610,6 +776,7 @@ function dibujarPulso(){
     [comparables.length?`${(movidas/comparables.length*100).toFixed(1)} %`:'—','fuera del país de origen',`${fmt(movidas)} de ${fmt(comparables.length)} comparables · ${fmt(categorias.size)} temas mayores`]
   ];
   $('pulso').innerHTML = tarjetas.map(([v,r,e])=>`<div class="metrica"><span class="valor">${v}</span><span class="rotulo">${r}</span><span class="explica">${e}</span></div>`).join('');
+  S.datos.pulso = {filas: tarjetas.map(([v,r,e])=>({indicador:r, valor:v, detalle:e}))};
 }
 
 /* ---------- Mapa ---------- */
@@ -622,10 +789,14 @@ function corregirOrientacion(f){
   }
   return f;
 }
+// Rampa multitono (morado → rojo → naranja → amarillo): distingue muchos más
+// niveles que un degradado de un solo color sobre fondo oscuro.
+const RAMPA_MAPA = t => d3.interpolateInferno(0.24 + 0.68*t);
+
 function dibujarMapa(){
   const cont = $('mapa');
   if (!S.paises.length){ cont.innerHTML='<div class="vacio">La API no devolvió geometrías de países.</div>'; return; }
-  const W = cont.clientWidth || 700, H = Math.max(360, Math.min(620, W*0.9));
+  const W = cont.clientWidth || 700, H = Math.max(380, Math.min(620, W*0.78));
   const feats = S.paises.map(p=>corregirOrientacion({type:'Feature', properties:p, geometry:JSON.parse(JSON.stringify(p.geo))}));
   const proy = d3.geoMercator().fitExtent([[10,10],[W-10,H-10]], {type:'FeatureCollection', features:feats});
   const ruta = d3.geoPath(proy);
@@ -636,26 +807,87 @@ function dibujarMapa(){
     if (o.pais!=null) porPais.set(o.pais,(porPais.get(o.pais)||0)+1);
     if (o.ub!=null && (!S.filtro.pais || o.pais===S.filtro.pais.id)) porUb.set(o.ub,(porUb.get(o.ub)||0)+1);
   }
-  const max = d3.max([...porPais.values()]) || 1;
-  const color = d3.scaleSequentialSqrt([0,max], d3.interpolateRgb('#3b2b24','#d2a94b'));
+  // Escala por cuantiles: reparte el color entre los valores que existen, de modo
+  // que los países con pocas obras no queden todos del mismo tono oscuro.
+  const valores = [...porPais.values()].filter(v=>v>0);
+  const nBins = Math.max(1, Math.min(7, new Set(valores).size));
+  const colores = d3.range(nBins).map(i => RAMPA_MAPA(nBins===1 ? 1 : i/(nBins-1)));
+  const escala = d3.scaleQuantile().domain(valores.length?valores:[0]).range(colores);
   const maxU = d3.max([...porUb.values()]) || 1;
   const radio = d3.scaleSqrt([0,maxU],[0,Math.max(10, W/40)]);
 
-  const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Mapa de obras por país');
-  svg.append('g').selectAll('path').data(feats).join('path')
+  const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img')
+    .attr('aria-label','Mapa de obras por país').style('cursor','grab');
+  const lienzo = svg.append('g');
+  let arrastro = false;
+
+  lienzo.append('g').selectAll('path').data(feats).join('path')
     .attr('class', d=>'pais'+(S.filtro.pais?.id===d.properties.id?' sel':''))
-    .attr('d', ruta).attr('fill', d=>{ const n=porPais.get(d.properties.id)||0; return n?color(n):'#2e221c'; })
+    .attr('d', ruta).attr('fill', d=>{ const n=porPais.get(d.properties.id)||0; return n?escala(n):'#2e221c'; })
     .attr('tabindex',0)
-    .on('mousemove', (ev,d)=>mostrarTip(ev, `<strong>${d.properties.nombre}</strong><br>${fmt(porPais.get(d.properties.id)||0)} obras`))
+    .on('mousemove', (ev,d)=>mostrarTip(ev, `<strong>${d.properties.nombre}</strong><br>${fmt(porPais.get(d.properties.id)||0)} obras conservadas<br><em>Clic para filtrar el tablero</em>`))
     .on('mouseleave', ocultarTip)
-    .on('click keydown', (ev,d)=>{ if(ev.type==='keydown' && ev.key!=='Enter') return; const p=d.properties; S.filtro.pais = S.filtro.pais?.id===p.id?null:{id:p.id,nombre:p.nombre}; ocultarTip(); aplicarFiltros(); });
+    .on('click keydown', (ev,d)=>{
+      if (ev.type==='keydown' && ev.key!=='Enter') return;
+      if (arrastro) return;                       // venía de mover el mapa, no es una selección
+      const p=d.properties;
+      S.filtro.pais = S.filtro.pais?.id===p.id ? null : {id:p.id, nombre:p.nombre};
+      ocultarTip(); aplicarFiltros();
+    });
 
   const puntos = S.ubic.map(u=>({u, n:porUb.get(u.id)||0, xy:proy(u.geo.coordinates)})).filter(p=>p.n && p.xy).sort((a,b)=>b.n-a.n);
-  svg.append('g').selectAll('circle').data(puntos).join('circle')
+  const gPuntos = lienzo.append('g');
+  gPuntos.selectAll('circle').data(puntos).join('circle')
     .attr('class','punto').attr('cx',d=>d.xy[0]).attr('cy',d=>d.xy[1]).attr('r',d=>Math.max(1.5,radio(d.n)))
-    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d.u.nombre}</strong><br>${fmt(d.n)} obras`))
-    .on('mouseleave', ocultarTip);
+    .attr('tabindex',0)
+    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d.u.nombre}</strong><br>${fmt(d.n)} obras aquí<br><em>Clic para ver las obras</em>`))
+    .on('mouseleave', ocultarTip)
+    .on('click keydown',(ev,d)=>{
+      if (ev.type==='keydown' && ev.key!=='Enter') return;
+      if (arrastro) return;
+      ocultarTip();
+      abrirObras(d.u.nombre, {ubicacion:{_eq:d.u.id}}, `Lugar de conservación · ${fmt(d.n)} obras con los filtros activos.`);
+    });
+
+  // ── Zoom y desplazamiento dentro del marco ──
+  const zoom = d3.zoom().scaleExtent([0.6, 20])
+    .on('start', ()=>{ arrastro = false; svg.style('cursor','grabbing'); })
+    .on('zoom', ev => {
+      if (ev.sourceEvent && /mouse|touch|pointer/.test(ev.sourceEvent.type) && ev.sourceEvent.type.includes('move')) arrastro = true;
+      lienzo.attr('transform', ev.transform);
+      // los círculos crecerían tanto como el mapa: se compensa el aumento
+      gPuntos.selectAll('circle').attr('r', d => Math.max(1.5, radio(d.n)) / Math.sqrt(ev.transform.k));
+      S.mapaVista = ev.transform;
+    })
+    .on('end', ()=>svg.style('cursor','grab'));
+  svg.call(zoom).on('dblclick.zoom', null);
+
   cont.replaceChildren(svg.node());
+
+  // Vista por omisión centrada en América: el resto del mundo sigue ahí, a un clic.
+  const enAmerica = f => { const c = d3.geoCentroid(f); return c[0] > -170 && c[0] < -28; };
+  const vistaDe = pred => {
+    const sel = feats.filter(pred);
+    if (!sel.length) return d3.zoomIdentity;
+    const [[x0,y0],[x1,y1]] = ruta.bounds({type:'FeatureCollection', features:sel});
+    const k = Math.max(0.6, Math.min(12, 0.92 / Math.max((x1-x0)/W, (y1-y0)/H)));
+    return d3.zoomIdentity.translate(W/2 - k*(x0+x1)/2, H/2 - k*(y0+y1)/2).scale(k);
+  };
+  const tAmerica = vistaDe(enAmerica);
+  S.mapaCtl = {svg, zoom, america:tAmerica, mundo:d3.zoomIdentity};
+  svg.call(zoom.transform, S.mapaVista || tAmerica);
+
+  // Leyenda escalonada con los cortes reales de la escala
+  $('mapaLeyenda').innerHTML =
+    colores.map(c => { const [a,b] = escala.invertExtent(c);
+      return `<span class="caja"><i style="background:${c}"></i>${fmt(Math.round(a))}–${fmt(Math.round(b))}</span>`; }).join('')
+    + `<span class="caja" style="margin-left:6px"><i style="background:#2e221c;border:1px solid var(--linea)"></i>sin obras</span>`
+    + `<span class="caja"><i style="background:var(--carmin);border-radius:50%;width:10px;height:10px"></i>lugar de conservación (tamaño = nº de obras)</span>`;
+
+  S.datos.mapa = {filas:[
+    ...S.paises.map(p=>({tipo:'País', nombre:p.nombre, obras:porPais.get(p.id)||0})).filter(f=>f.obras).sort((a,b)=>b.obras-a.obras),
+    ...puntos.map(p=>({tipo:'Lugar', nombre:p.u.nombre, obras:p.n}))
+  ]};
 }
 
 /* ---------- Línea de tiempo ---------- */
@@ -685,16 +917,19 @@ function dibujarTiempo(){
       .attr('x',d=>x(d)).attr('width',x.bandwidth()).attr('y',d=>y(total.get(d)||0)).attr('height',d=>y(0)-y(total.get(d)||0))
       .attr('fill','#4a3a31').style('pointer-events','none');
   }
+  const seleccionada = d => S.filtro.desde===d && S.filtro.hasta===d+9;
   svg.append('g').selectAll('rect').data(decs).join('rect')
     .attr('x',d=>x(d)).attr('width',x.bandwidth()).attr('y',d=>y(filtr.get(d)||0)).attr('height',d=>y(0)-y(filtr.get(d)||0))
     .attr('fill',d=>enRango(d)?'var(--oro)':'#7a6547').style('cursor','pointer')
-    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d}–${d+9}</strong><br>${fmt(filtr.get(d)||0)} obras${S.filtro.pais?` en ${S.filtro.pais.nombre} (de ${fmt(total.get(d)||0)})`:''}`))
+    .attr('stroke',d=>seleccionada(d)?'var(--texto)':null).attr('stroke-width',d=>seleccionada(d)?1.5:null)
+    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d}–${d+9}</strong><br>${fmt(filtr.get(d)||0)} obras${S.filtro.pais?` en ${S.filtro.pais.nombre} (de ${fmt(total.get(d)||0)})`:''}<br><em>${seleccionada(d)?'Clic para quitar este periodo':'Clic para filtrar esta década'}</em>`))
     .on('mouseleave', ocultarTip)
     .on('click',(ev,d)=>{
-      const mismo = S.filtro.desde===d && S.filtro.hasta===d+9;
+      const mismo = seleccionada(d);
       ocultarTip(); fijarPeriodo(mismo?null:d, mismo?null:d+9);
     });
   cont.replaceChildren(svg.node());
+  S.datos.tiempo = {filas: decs.map(d=>({decada:`${d}-${d+9}`, obras_en_filtro:filtr.get(d)||0, obras_sin_filtro_de_pais:total.get(d)||0}))};
 }
 
 /* ---------- Composición iconográfica ---------- */
@@ -704,6 +939,8 @@ function dibujarAtlas(){
   const inicio=1450, fin=1900, paso=25, periodos=d3.range(inicio,fin,paso);
   const periodo = o => Math.floor(((o.fi+(o.ff??o.fi))/2)/paso)*paso;
   const validas = obras.filter(o=>periodo(o)>=inicio && periodo(o)<fin);
+  const idCat = new Map(validas.map(o=>[o.categoria.nombre, o.categoria.id]));
+  const catActiva = PF.valor('categoria1');
   const totCat = d3.rollup(validas,v=>v.length,o=>o.categoria.nombre);
   const cats = [...totCat].sort((a,b)=>b[1]-a[1]).map(d=>d[0]);
   const porCelda = d3.rollup(validas,v=>v.length,o=>o.categoria.nombre,o=>periodo(o));
@@ -714,17 +951,36 @@ function dibujarAtlas(){
   const maxP=d3.max(celdas,d=>d.total?d.n/d.total:0)||1;
   const color=d3.scaleSequentialSqrt([0,maxP],d3.interpolateRgb('#342720','#d2a94b'));
   const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Composición iconográfica por cuartos de siglo');
+  const celdaSel = d => catActiva!=null && String(idCat.get(d.cat))===String(catActiva) && S.filtro.desde===d.p && S.filtro.hasta===d.p+24;
   svg.append('g').selectAll('rect').data(celdas).join('rect').attr('class','celda-calor')
     .attr('x',d=>x(d.p)).attr('y',d=>y(d.cat)).attr('width',x.bandwidth()).attr('height',y.bandwidth())
     .attr('rx',2).attr('fill',d=>d.n?color(d.n/d.total):'#2d211c')
-    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.cat}</strong><br>${d.p}–${d.p+24}: ${fmt(d.n)} obras<br>${d.total?(d.n/d.total*100).toFixed(1):0} % del periodo`))
+    .attr('stroke',d=>celdaSel(d)?'var(--texto)':null).attr('stroke-width',d=>celdaSel(d)?2:null)
+    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.cat}</strong><br>${d.p}–${d.p+24}: ${fmt(d.n)} obras<br>${d.total?(d.n/d.total*100).toFixed(1):0} % del periodo<br><em>${celdaSel(d)?'Clic para quitar este filtro':'Clic para filtrar tema y periodo'}</em>`))
     .on('mouseleave',ocultarTip)
-    .on('click',(ev,d)=>{ ocultarTip(); fijarPeriodo(d.p, d.p+24); });
+    .on('click',(ev,d)=>{
+      ocultarTip();
+      // Segundo clic sobre la misma celda: se deshace tema y periodo a la vez.
+      if (celdaSel(d)) return PF.fijarVarias({categoria1:null, fechaDesde:null, fechaHasta:null});
+      PF.fijarVarias({categoria1: idCat.has(d.cat) ? Number(idCat.get(d.cat)) : null, fechaDesde: d.p, fechaHasta: d.p+24});
+    });
   svg.append('g').selectAll('text').data(cats).join('text').attr('x',m.l-7).attr('y',d=>y(d)+y.bandwidth()/2)
-    .attr('text-anchor','end').attr('dominant-baseline','middle').attr('fill','var(--texto)').attr('font-size',10).text(d=>d);
+    .attr('text-anchor','end').attr('dominant-baseline','middle')
+    .attr('fill',d=>String(idCat.get(d))===String(catActiva)?'var(--oro)':'var(--texto)').attr('font-size',10)
+    .style('cursor','pointer').attr('tabindex',0).text(d=>d)
+    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d}</strong><br>${fmt(totCat.get(d)||0)} obras<br><em>Clic para filtrar solo por este tema</em>`))
+    .on('mouseleave',ocultarTip)
+    .on('click keydown',(ev,d)=>{
+      if (ev.type==='keydown' && ev.key!=='Enter') return;
+      ocultarTip();
+      const mismo = String(idCat.get(d))===String(catActiva);
+      PF.fijarFaceta('categoria1', mismo || !idCat.has(d) ? null : Number(idCat.get(d)));
+    });
   svg.append('g').attr('transform',`translate(0,${H-m.b})`).call(d3.axisBottom(x).tickValues(periodos.filter(p=>p%50===0)).tickFormat(d=>d).tickSizeOuter(0))
     .call(g=>g.selectAll('text').attr('fill','var(--tenue)').attr('font-size',9)).call(g=>g.selectAll('line,path').attr('stroke','var(--linea)'));
   cont.replaceChildren(svg.node());
+  S.datos.atlas = {filas: celdas.map(d=>({tema:d.cat, periodo:`${d.p}-${d.p+24}`, obras:d.n, total_del_periodo:d.total,
+    porcentaje_del_periodo: d.total ? +(d.n/d.total*100).toFixed(2) : 0}))};
 }
 
 /* ---------- Origen y conservación ---------- */
@@ -732,6 +988,8 @@ function dibujarFlujos(){
   const cont=$('flujos');
   const movidas=obrasVisibles().filter(o=>o.origen&&o.conserva&&o.origen.id!==o.conserva.id);
   if (!movidas.length){ cont.innerHTML='<div class="vacio">No hay desplazamientos internacionales documentados para este filtro.</div>'; return; }
+  const idPais = new Map();
+  movidas.forEach(o=>{ idPais.set(o.origen.nombre, o.origen.id); idPais.set(o.conserva.nombre, o.conserva.id); });
   const marginal = campo => [...d3.rollup(movidas,v=>v.length,o=>o[campo].nombre)].sort((a,b)=>b[1]-a[1]);
   const topO=new Set(marginal('origen').slice(0,7).map(d=>d[0])), topD=new Set(marginal('conserva').slice(0,7).map(d=>d[0]));
   const pares=d3.rollup(movidas,v=>v.length,o=>topO.has(o.origen.nombre)?o.origen.nombre:'Otros orígenes',o=>topD.has(o.conserva.nombre)?o.conserva.nombre:'Otros destinos');
@@ -747,12 +1005,24 @@ function dibujarFlujos(){
   const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Flujos entre país de origen y país de conservación');
   const cintas=svg.append('g').selectAll('path').data(enlaces).join('path').attr('class','cinta-flujo').attr('fill',d=>paleta(d.a)).attr('stroke',d=>paleta(d.a))
     .attr('d',d=>{ const a=nodosL.get(d.a),b=nodosR.get(d.b),h=Math.max(1,d.n*escala),sy=a.y+a.off,ty=b.y+b.off,mid=(xL+xR)/2; a.off+=h;b.off+=h; return `M${xL},${sy}C${mid},${sy} ${mid},${ty} ${xR},${ty}L${xR},${ty+h}C${mid},${ty+h} ${mid},${sy+h} ${xL},${sy+h}Z`; })
-    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.a} → ${d.b}</strong><br>${fmt(d.n)} obras`)).on('mouseleave',ocultarTip);
+    .on('mousemove',(ev,d)=>{
+      const filtrable = idPais.has(d.a) || idPais.has(d.b);
+      mostrarTip(ev,`<strong>${d.a} → ${d.b}</strong><br>${fmt(d.n)} obras${filtrable?'<br><em>Clic para filtrar este trayecto</em>':''}`);
+    })
+    .on('mouseleave',ocultarTip)
+    .style('cursor',d=>(idPais.has(d.a)||idPais.has(d.b))?'pointer':'default')
+    .on('click',(ev,d)=>{
+      const o = idPais.get(d.a), c = idPais.get(d.b);
+      if (o==null && c==null) return;            // los grupos "Otros" no son un país concreto
+      ocultarTip();
+      PF.fijarVarias({origenPaisUI: o!=null?Number(o):undefined, pais: c!=null?Number(c):undefined});
+    });
   const dibujarLado=(mapa,x,ancla) => { const ns=[...mapa.values()]; svg.append('g').selectAll('rect').data(ns).join('rect').attr('class','nodo-flujo').attr('x',x-4).attr('y',d=>d.y).attr('width',8).attr('height',d=>d.h); svg.append('g').selectAll('text').data(ns).join('text').attr('class','etiqueta-flujo').attr('x',x+(ancla==='start'?9:-9)).attr('y',d=>d.y+d.h/2).attr('text-anchor',ancla).attr('dominant-baseline','middle').text(d=>`${d.nombre} · ${fmt(d.n)}`); };
   dibujarLado(nodosL,xL,'end'); dibujarLado(nodosR,xR,'start');
   svg.append('text').attr('x',xL).attr('y',10).attr('text-anchor','end').attr('fill','var(--tenue)').attr('font-size',9).text('ORIGEN');
   svg.append('text').attr('x',xR).attr('y',10).attr('text-anchor','start').attr('fill','var(--tenue)').attr('font-size',9).text('CONSERVACIÓN');
   cont.replaceChildren(svg.node());
+  S.datos.flujos = {filas: enlaces.map(e=>({pais_de_origen:e.a, pais_de_conservacion:e.b, obras:e.n}))};
 }
 
 /* ---------- Carga de dimensiones ---------- */
@@ -822,6 +1092,8 @@ async function dibujarRanking(){
       li.append(b); ul.append(li);
     });
     cont.replaceChildren(ul);
+    S.datos.ranking = {filas: lista.map(({item,n})=>({campo:dim.label, termino:nombreItem(item), obras:n,
+      porcentaje_del_filtro:+(n/base*100).toFixed(2)}))};
   } catch(e){ if (turno===turnoRanking) cont.innerHTML=`<div class="vacio">No se pudo leer ${dim.label.toLowerCase()}: ${e.message}</div>`; }
 }
 
@@ -916,46 +1188,90 @@ async function dibujarRed(){
       });
     if (matchMedia('(prefers-reduced-motion: reduce)').matches){ simulacion.stop(); for(let i=0;i<300;i++) simulacion.tick(); simulacion.on('tick')(); }
     cont.replaceChildren(svg.node());
+    const nom = id => { const i = info.get(id); return i ? `${i.dim.label}: ${nombreItem(i.item)}` : id; };
+    S.datos.red = {filas: aristas.map(a=>({
+      termino_a: nom(typeof a.source==='object' ? a.source.id : a.source),
+      termino_b: nom(typeof a.target==='object' ? a.target.id : a.target),
+      obras_compartidas: a.w}))};
   } catch(e){ if (turno===turnoRed) cont.innerHTML=`<div class="vacio">No se pudo construir la red: ${e.message}</div>`; }
 }
 
-/* ---------- Panel de detalle ---------- */
-async function abrirDetalle(dim, item, n){
+/* ---------- Panel de detalle y galerías ---------- */
+async function pedirJSON(url){
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+// Une el filtro completo del tablero (panel + país + fecha) con una condición extra.
+function filtroConsulta(extra){
+  const base = PF.filtroActual();
+  const partes = [];
+  if (Object.keys(base).length) partes.push(base);
+  if (extra && Object.keys(extra).length) partes.push(extra);
+  return partes.length ? {_and: partes} : {};
+}
+// Condición Directus que aísla un término de una dimensión.
+function condicionDim(dim, item){
+  if (dim.tipo === 'm2m') return { [dim.col]: { _some: { [dim.key]: { _eq: item.id } } } };
+  return { [dim.campo]: { _eq: item.id } };
+}
+function abrirPanelDetalle(titulo){
   const panel = $('detalle');
-  $('dTitulo').textContent = nombreItem(item);
-  const filtroTxt = S.permitidas ? ' dentro de los filtros activos' : '';
-  $('dCuerpo').innerHTML = `<p class="dato">${dim.label}. ${fmt(n)} obras${filtroTxt}.</p>
-    <p class="dato"><a href="https://arca.uniandes.edu.co${dim.ruta(item)}" target="_blank" rel="noopener">Abrir esta ficha en ARCA</a></p>
-    <div class="galeria" id="dGaleria"><span class="dato">Buscando obras de ejemplo…</span></div>`;
+  $('dTitulo').textContent = titulo;
   panel.classList.add('abierto'); panel.setAttribute('aria-hidden','false'); $('dCerrar').focus();
-  const valor = dim.idf==='id' ? item.id : `"${String(item.slug).replace(/"/g,'\\"')}"`;
-  const campos = 'registro titulo imagen{ id }';
-  try {
-    let obras;
-    if (dim.tipo==='m2m'){
-      const d = await gql(`query{ obras_${dim.col}(filter:{ ${dim.key}:{ ${dim.idf}:{ _eq:${valor} } } }, limit:24){ obras_id{ id ${campos} } } }`);
-      obras = (d[`obras_${dim.col}`]||[]).map(x=>x.obras_id).filter(Boolean);
-    } else {
-      const d = await gql(`query{ obras(filter:{ ${dim.campo}:{ slug:{ _eq:${valor} } } }, limit:24){ id ${campos} } }`);
-      obras = d.obras || [];
+}
+function pintarGaleria(obras, cont){
+  if (!obras.length){ cont.innerHTML = '<span class="dato">No hay obras que cumplan a la vez este término y los filtros activos.</span>'; return; }
+  cont.replaceChildren(...obras.map(o => {
+    const a = document.createElement('a');
+    a.href = `https://arca.uniandes.edu.co/obras/${o.registro}`; a.target='_blank'; a.rel='noopener';
+    const idImg = typeof o.imagen === 'string' ? o.imagen : o.imagen?.id;
+    if (idImg){
+      const img = document.createElement('img'); img.loading='lazy'; img.alt = o.titulo || '';
+      // El servidor solo permite presets configurados; "galeria" es el que usa arca.uniandes.edu.co
+      img.src = `${S.api}/assets/${idImg}?key=galeria`;
+      img.onerror = ()=>{ img.onerror = ()=>{ img.style.visibility='hidden'; }; img.src = `${S.api}/assets/${idImg}`; };
+      a.append(img);
     }
-    if (S.permitidas){ const f = obras.filter(o=>S.permitidas.has(o.id)); if (f.length) obras = f; }
-    obras = obras.slice(0,12);
-    const gal = $('dGaleria');
-    if (!obras.length){ gal.innerHTML='<span class="dato">Sin obras con imagen para mostrar.</span>'; return; }
-    gal.replaceChildren(...obras.map(o=>{
-      const a = document.createElement('a');
-      a.href = `https://arca.uniandes.edu.co/obras/${o.registro}`; a.target='_blank'; a.rel='noopener';
-      if (o.imagen?.id){
-        const img = document.createElement('img'); img.loading='lazy'; img.alt=o.titulo||'';
-        // El servidor solo permite presets configurados; "galeria" es el que usa arca.uniandes.edu.co
-        img.src = `${S.api}/assets/${o.imagen.id}?key=galeria`;
-        img.onerror = ()=>{ img.onerror=()=>{ img.style.visibility='hidden'; }; img.src=`${S.api}/assets/${o.imagen.id}`; };
-        a.append(img);
-      }
-      a.append(document.createTextNode(o.titulo || `Registro ${o.registro}`));
-      return a;
-    }));
+    a.append(document.createTextNode(o.titulo || `Registro ${o.registro}`));
+    return a;
+  }));
+}
+// Trae obras del servidor aplicando el filtro del tablero, no un recorte local.
+async function traerObras(extra, limite=24){
+  const params = new URLSearchParams({limit:String(limite), fields:'id,registro,titulo,imagen', meta:'filter_count', sort:'-id'});
+  const f = filtroConsulta(extra);
+  if (Object.keys(f).length) params.set('filter', JSON.stringify(f));
+  const j = await pedirJSON(`${S.api}/items/obras?${params}`);
+  return {obras: j.data || [], total: j.meta?.filter_count ?? (j.data||[]).length};
+}
+async function abrirObras(titulo, extra, subtitulo){
+  abrirPanelDetalle(titulo);
+  $('dCuerpo').innerHTML = `<p class="dato">${subtitulo||''}</p><div class="galeria" id="dGaleria"><span class="dato">Buscando obras…</span></div>`;
+  try {
+    const {obras, total} = await traerObras(extra);
+    $('dCuerpo').querySelector('.dato').innerHTML = `${subtitulo||''} <b>${fmt(total)}</b> obras en total; se muestran las primeras ${Math.min(obras.length,24)}.`;
+    pintarGaleria(obras, $('dGaleria'));
+  } catch(e){ $('dGaleria').innerHTML = `<span class="dato">No se pudieron traer las obras: ${e.message}</span>`; }
+}
+async function abrirDetalle(dim, item, n){
+  abrirPanelDetalle(nombreItem(item));
+  const filtroTxt = S.permitidas ? ' dentro de los filtros activos' : '';
+  const activo = PF.tieneFaceta(dim.faceta, item.id);
+  $('dCuerpo').innerHTML = `<p class="dato">${dim.label}. ${fmt(n)} obras${filtroTxt}.</p>
+    <div class="acciones">
+      <button class="boton" id="dFiltrar">${activo ? 'Quitar este término del filtro' : 'Filtrar el tablero por este término'}</button>
+      <a class="boton sec" href="https://arca.uniandes.edu.co${dim.ruta(item)}" target="_blank" rel="noopener" style="text-decoration:none">Ver ficha en ARCA</a>
+    </div>
+    <div class="galeria" id="dGaleria"><span class="dato">Buscando obras de ejemplo…</span></div>`;
+  $('dFiltrar').onclick = () => { PF.alternarFaceta(dim.faceta, item.id); cerrarDetalle(); };
+  try {
+    // El término y los filtros del tablero se combinan en la misma consulta: así la
+    // galería siempre corresponde a lo que está seleccionado en el tablero.
+    const {obras, total} = await traerObras(condicionDim(dim, item), 12);
+    const p = $('dCuerpo').querySelector('.dato');
+    p.innerHTML = `${dim.label}. <b>${fmt(total)}</b> obras${filtroTxt}.`;
+    pintarGaleria(obras, $('dGaleria'));
   } catch(e){ $('dGaleria').innerHTML = `<span class="dato">No se pudieron traer ejemplos: ${e.message}</span>`; }
 }
 function cerrarDetalle(){ const p=$('detalle'); p.classList.remove('abierto'); p.setAttribute('aria-hidden','true'); }
@@ -1438,11 +1754,87 @@ const PF = (()=>{
       $('pf-cnt-' + g).textContent = n ? `(${n})` : '';
     });
     $('cuentaFiltros').textContent = parts.length || '';
+    pintarBarraActiva();
   }
   // Los conteos de una sección se calculan sin sus propios filtros ni los de secciones posteriores.
   function hierarchyExclusions(group, field){
     const groups = ['basicos', 'analisis', 'gestos'];
     return [field, ...groups.slice(groups.indexOf(group) + 1).flatMap(g => GROUP_FIELDS[g])];
+  }
+
+  // ── Cambios pedidos desde las gráficas del tablero ──
+  // Escribe un valor en el estado y deja la interfaz del panel coherente.
+  function aplicarValor(field, value){
+    if (field === 'pais'){
+      state.pais = value ?? null;
+      selPais.value = state.pais != null ? String(state.pais) : '';
+      if (state.ciudad && maps.ciudades[state.ciudad] && maps.ciudades[state.ciudad].pais !== state.pais){ state.ciudad = null; state.ubicacion = null; }
+      refreshCiudadOptions(true); refreshUbicacionOptions(true); refreshGeoLink();
+      return;
+    }
+    if (field === 'origenPaisUI'){
+      state.origenPaisUI = value ?? null;
+      selPaisOrigen.value = state.origenPaisUI != null ? String(state.origenPaisUI) : '';
+      if (state.ciudad_origen && maps.ciudades[state.ciudad_origen] && maps.ciudades[state.ciudad_origen].pais !== state.origenPaisUI) state.ciudad_origen = null;
+      refreshCiudadOrigenOptions(true);
+      return;
+    }
+    if (field === 'fechaDesde' || field === 'fechaHasta'){
+      state[field] = value ?? null;
+      rangeDesde.value = acotar(state.fechaDesde ?? FECHA_MIN);
+      rangeHasta.value = acotar(state.fechaHasta ?? FECHA_MAX);
+      syncRangeUI();
+      return;
+    }
+    if (/^categoria[1-6]$/.test(field)){
+      const lvl = Number(field.slice(9)) - 1;
+      state[field] = value ?? null;
+      if (state[field]){                                  // completa los ancestros del nivel elegido
+        let cur = state[field], l = lvl;
+        while (l > 0){
+          const item = maps[catCollection(l)][cur];
+          if (!item || item.ancestro == null) break;
+          l -= 1; state[catField(l)] = item.ancestro; cur = item.ancestro;
+        }
+      }
+      for (let l = lvl + 1; l <= 5; l++) state[catField(l)] = null;
+      for (let l = 0; l <= 5; l++) refreshCatOptions(l, true);
+      return;
+    }
+    if (M2M_FIELDS.includes(field)){
+      const arr = value == null ? [] : (Array.isArray(value) ? value.map(Number) : [Number(value)]);
+      state[field] = arr;
+      const cont = document.querySelector(`#panelFiltros [data-facet="${field}"]`);
+      if (cont){
+        cont.querySelectorAll('.pf-check input[type=checkbox]').forEach(cb => cb.checked = arr.includes(Number(cb.value)));
+        cont._renderChips && cont._renderChips();
+      }
+      return;
+    }
+    if (FK_FIELDS.includes(field)){
+      state[field] = value ?? null;
+      if (fkSelectEls[field]) fkSelectEls[field].value = value != null ? String(value) : '';
+    }
+  }
+  function fijarVarias(obj){
+    Object.entries(obj).forEach(([k,v]) => { if (v !== undefined) aplicarValor(k, v); });
+    onFilterChanged();
+  }
+  const fijarFaceta = (field, value) => fijarVarias({[field]: value});
+  function tieneFaceta(field, id){
+    if (!field || id == null) return false;
+    if (M2M_FIELDS.includes(field)) return state[field].includes(Number(id));
+    return state[field] != null && String(state[field]) === String(id);
+  }
+  function alternarFaceta(field, id){
+    if (!field || id == null) return;
+    if (M2M_FIELDS.includes(field)){
+      const n = Number(id);
+      aplicarValor(field, state[field].includes(n) ? state[field].filter(x => x !== n) : [...state[field], n]);
+      onFilterChanged();
+      return;
+    }
+    fijarFaceta(field, tieneFaceta(field, id) ? null : Number(id));
   }
 
   // ── Orquestación con el tablero ──
@@ -1601,16 +1993,36 @@ const PF = (()=>{
     refreshOpenSectionCounts();
   }
 
-  return { init, abrir, cerrar, alternar, reiniciar, sincronizar };
+  return { init, abrir, cerrar, alternar, reiniciar, sincronizar,
+           resumen: facetSummary, quitar: clearFacet, valor: f => state[f],
+           filtroActual: () => buildFilter([]),
+           fijarVarias, fijarFaceta, alternarFaceta, tieneFaceta };
 })();
 
 /* ---------- Arranque ---------- */
+// Los campos se agrupan igual que el panel de filtros para que se reconozcan.
 function llenarSelect(sel, valor){
-  sel.innerHTML = Object.values(DIMS).map(d=>`<option value="${d.id}"${d.id===valor?' selected':''}>${d.label}</option>`).join('');
+  sel.innerHTML = Object.entries(GRUPOS).map(([g, rotulo]) => {
+    const opciones = Object.values(DIMS).filter(d => d.grupo === g)
+      .map(d => `<option value="${d.id}"${d.id===valor?' selected':''}>${d.label}</option>`).join('');
+    return `<optgroup label="${rotulo}">${opciones}</optgroup>`;
+  }).join('');
 }
 llenarSelect($('rDim'),'personajes'); llenarSelect($('nA'),'personajes'); llenarSelect($('nB'),'simbolos');
 ['rDim','rTop'].forEach(id=>$(id).onchange=dibujarRanking);
 ['nA','nB','nTop','nMin'].forEach(id=>$(id).onchange=dibujarRed);
+montarHerramientas();
+
+// Controles del mapa
+const conMapa = fn => { if (S.mapaCtl) fn(S.mapaCtl); };
+$('mapaMas').onclick   = ()=>conMapa(m=>m.svg.transition().duration(250).call(m.zoom.scaleBy, 1.6));
+$('mapaMenos').onclick = ()=>conMapa(m=>m.svg.transition().duration(250).call(m.zoom.scaleBy, 1/1.6));
+$('mapaAmerica').onclick = ()=>conMapa(m=>m.svg.transition().duration(450).call(m.zoom.transform, m.america));
+$('mapaMundo').onclick   = ()=>conMapa(m=>m.svg.transition().duration(450).call(m.zoom.transform, m.mundo));
+$('mapaObras').onclick = ()=>abrirObras(
+  S.filtro.pais ? `Obras en ${S.filtro.pais.nombre}` : 'Obras del filtro actual', {},
+  'Obras registradas que cumplen todos los filtros activos.');
+$('quitarTodo').onclick = PF.reiniciar;
 $('dCerrar').onclick = cerrarDetalle;
 $('abrirFiltros').onclick = PF.alternar;
 $('pf-cerrar').onclick = PF.cerrar;
