@@ -67,7 +67,11 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 .b-flujos{grid-column:span 5}
 .b-ranking{grid-column:span 5}
 .b-red{grid-column:span 7}
+.b-comparativo{grid-column:1/-1}
+.b-detalle{grid-column:1/-1}
 @media (max-width:1000px){.b-mapa,.b-tiempo,.b-atlas,.b-flujos,.b-ranking,.b-red{grid-column:1/-1}}
+/* Con el panel de filtros anclado se pierden 340 px: hasta 1340 los bloques van a lo ancho. */
+@media (min-width:1150px) and (max-width:1340px){.b-mapa,.b-tiempo,.b-atlas,.b-flujos,.b-ranking,.b-red{grid-column:1/-1}}
 .bloque h2{font-family:var(--serif);font-weight:400;font-size:1.55rem;margin:0;line-height:1.1}
 .bloque .nota{color:var(--tenue);font-size:.84rem;margin:4px 0 12px;max-width:60ch}
 .controles{display:flex;flex-wrap:wrap;gap:8px 12px;margin-bottom:10px;align-items:center}
@@ -183,6 +187,16 @@ body{padding-left:var(--pestana)}
 .panel-filtros .cab{padding:18px 20px 12px;border-bottom:1px solid var(--linea);display:flex;gap:10px;align-items:center}
 .panel-filtros h3{font-family:var(--serif);font-weight:400;font-size:1.6rem;margin:0;line-height:1.1;flex:1}
 .panel-filtros .cuerpo{padding:14px 20px 40px;overflow:auto;flex:1}
+/* Panel anclado: en pantallas anchas los filtros están siempre a la vista.
+   La prueba con usuarios mostró que la pestaña desplegable no se descubría. */
+@media (min-width:1150px){
+  :root{--ancho-panel:340px}
+  body{padding-left:var(--ancho-panel)}
+  .pestana-filtros{display:none}
+  .velo{display:none}
+  .panel-filtros{transform:none;visibility:visible;transition:none;box-shadow:none}
+  #pf-cerrar{display:none}
+}
 .pf-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .pf-chips:empty{display:none}
 .pf-chips .chip,.pf-mini .chip{font-size:.78rem;padding:2px 4px 2px 10px}
@@ -234,6 +248,43 @@ label.faceta-rotulo select{margin-top:4px}
 .pf-mini{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
 .pf-mini:empty{display:none}
 
+/* ---------- Detalle de obras y autores ---------- */
+.par-detalle{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px;align-items:start}
+@media (max-width:1000px){.par-detalle{grid-template-columns:1fr}}
+@media (min-width:1150px) and (max-width:1340px){.par-detalle{grid-template-columns:1fr}}
+.par-detalle h3{font-family:var(--serif);font-weight:400;font-size:1.15rem;margin:0 0 8px;color:var(--texto)}
+.autores-lienzo{max-height:520px;overflow:auto}
+.autores-leyenda{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.73rem;color:var(--tenue);margin-top:8px}
+.autores-leyenda i{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
+.barra-autor{fill:var(--linea)}
+.punto-autor{stroke:var(--panel);stroke-width:1;cursor:pointer}
+.punto-autor:hover{stroke:var(--texto);stroke-width:2}
+.nombre-autor{font-size:10px;fill:var(--texto);cursor:pointer}
+.nombre-autor:hover{fill:var(--oro)}
+
+.tabla-obras{width:100%;border-collapse:collapse;font-size:.82rem}
+.tabla-obras th,.tabla-obras td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--linea);vertical-align:top}
+.tabla-obras th{position:sticky;top:0;background:var(--panel2);color:var(--tenue);font-weight:500;font-size:.76rem;z-index:1}
+.tabla-obras th.ord{cursor:pointer;white-space:nowrap}
+.tabla-obras th.ord:hover{color:var(--oro)}
+.tabla-obras th .fl{color:var(--oro)}
+.tabla-obras tbody tr:hover{background:var(--panel2)}
+.tabla-obras .tit{color:var(--texto);max-width:24ch}
+.tabla-obras .sec{color:var(--tenue)}
+.tabla-obras a{white-space:nowrap}
+.envoltorio-tabla{max-height:520px;overflow:auto;border:1px solid var(--linea);border-radius:8px}
+.paginador{display:flex;align-items:center;gap:10px;margin-top:9px;font-size:.8rem;color:var(--tenue);flex-wrap:wrap}
+.paginador button{background:var(--panel2);border:1px solid var(--linea);color:var(--texto);border-radius:6px;padding:4px 11px;font-size:.8rem;cursor:pointer}
+.paginador button:disabled{opacity:.4;cursor:default}
+.paginador button:not(:disabled):hover{border-color:var(--oro);color:var(--oro)}
+
+/* ---------- Análisis comparativo ---------- */
+.eje-comp{font-size:10px;fill:var(--tenue)}
+.rotulo-comp{font-size:11px;fill:var(--texto);font-weight:500}
+.barra-comp{cursor:pointer}
+.barra-comp:hover{opacity:.82}
+.cifra-comp{font-size:10px;font-variant-numeric:tabular-nums;pointer-events:none}
+
 footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -255,7 +306,9 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
   <div class="aviso" id="aviso">
     <h3>No fue posible leer la API</h3>
     <p id="avisoTexto"></p>
-    <p>Si el mensaje dice <code>Failed to fetch</code>, lo más probable es que el servidor no autorice solicitudes desde este origen (CORS). Hay tres salidas: pedir al equipo de ARCA que agregue el dominio donde publiques este archivo a <code>CORS_ORIGIN</code> en Directus, servirlo desde un dominio ya autorizado, o usar un proxy propio y escribir su dirección arriba.</p>
+    <p>El servidor de ARCA responde con lentitud irregular: la misma consulta puede tardar 3 segundos o más de 40. Cuando se pasa del límite, el navegador corta la conexión y muestra <code>Failed to fetch</code>. Casi siempre basta con reintentar.</p>
+    <p><button class="boton" id="reintentar">Reintentar la conexión</button></p>
+    <p style="font-size:.86rem;color:var(--tenue)">Si falla una y otra vez, comprueba tu conexión a internet. No es un problema de permisos de origen: la API acepta solicitudes desde cualquier dominio, incluido un archivo abierto localmente.</p>
   </div>
 
 
@@ -278,6 +331,13 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
       <h2>Geografía de las obras</h2>
       <p class="nota">Color: pinturas por país según el periodo. Círculos: lugares donde se conservan; toca un círculo para ver las obras registradas allí. Toca un país para filtrar todo el tablero. Arrastra el mapa para moverlo y usa la rueda o los botones para acercar.</p>
       <div class="mapa-ctl">
+        <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--tenue)">Contar por
+          <select id="mapaModo" style="background:var(--panel2);border:1px solid var(--linea);color:var(--texto);border-radius:6px;padding:3px 7px;font-size:.75rem">
+            <option value="ubicacion" selected>Ubicación actual</option>
+            <option value="origen">Lugar de origen</option>
+          </select>
+        </label>
+        <span class="sep"></span>
         <button id="mapaMas" title="Acercar">＋</button>
         <button id="mapaMenos" title="Alejar">－</button>
         <span class="sep"></span>
@@ -334,6 +394,59 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
       <div class="red-leyenda" id="redLeyenda"></div>
       <div class="cargando" id="nCarga"></div>
     </section>
+
+    <section class="bloque b-comparativo" data-bloque="comparativo" data-titulo="Análisis comparativo">
+      <h2>Análisis comparativo</h2>
+      <p class="nota">Para cada valor del campo de la izquierda: cuántas obras tiene (barra izquierda) y cuántos términos distintos del campo de la derecha aparecen en esas obras (barra derecha). Sirve para ver si un grupo pequeño concentra, aun así, casi todo el repertorio.</p>
+      <div class="controles">
+        <label>Agrupar por<select id="cA"></select></label>
+        <label>Comparar contra<select id="cB"></select></label>
+        <label>Filas<select id="cTop"><option>6</option><option selected>12</option><option>25</option></select></label>
+      </div>
+      <div class="lienzo" id="comparativo"><div class="vacio">Esperando datos.</div></div>
+      <div class="cargando" id="cCarga"></div>
+    </section>
+
+    <section class="bloque b-detalle" data-bloque="detalle" data-titulo="Detalle de obras y autores">
+      <h2>Detalle de obras y autores</h2>
+      <p class="nota">Las obras concretas detrás de los filtros activos, y los autores con periodo de actividad documentado.</p>
+      <div class="par-detalle">
+        <div>
+          <h3>Autores en el tiempo</h3>
+          <div class="controles">
+            <label>Autores<select id="aTop"><option>15</option><option selected>30</option><option>60</option></select></label>
+            <label>Ordenar por<select id="aOrden">
+              <option value="obras" selected>Nº de obras</option>
+              <option value="desde">Año de inicio</option>
+            </select></label>
+          </div>
+          <div class="lienzo autores-lienzo" id="autores"><div class="vacio">Esperando datos.</div></div>
+          <div class="autores-leyenda" id="autoresLeyenda"></div>
+          <div class="cargando" id="aCarga"></div>
+        </div>
+        <div>
+          <h3>Obras registradas</h3>
+          <div class="envoltorio-tabla">
+            <table class="tabla-obras" id="tablaObras">
+              <thead><tr>
+                <th class="ord" data-orden="titulo">Título</th>
+                <th>Autor</th>
+                <th>Ubicación actual</th>
+                <th class="ord" data-orden="fecha_inicial">Fecha de creación</th>
+                <th>Lugar origen</th>
+                <th></th>
+              </tr></thead>
+              <tbody><tr><td colspan="6" class="sec">Esperando datos.</td></tr></tbody>
+            </table>
+          </div>
+          <div class="paginador">
+            <button id="tbAnt" disabled>‹ Anteriores</button>
+            <button id="tbSig" disabled>Siguientes ›</button>
+            <span id="tbRango"></span>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
   <footer>
@@ -363,9 +476,15 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
     <div class="pf-chips" id="pf-chips"></div>
     <p class="pf-pista" id="pf-carga">Cargando opciones de filtro…</p>
 
-    <section class="pf-grupo g-basicos" data-group="basicos">
-      <button class="pf-toggle" aria-expanded="false"><span class="flecha">↓</span><span class="titulo">Datos básicos</span><span class="cnt" id="pf-cnt-basicos"></span><span class="chev">▾</span></button>
+    <section class="pf-grupo g-basicos open" data-group="basicos">
+      <button class="pf-toggle" aria-expanded="true"><span class="flecha">↓</span><span class="titulo">Datos básicos</span><span class="cnt" id="pf-cnt-basicos"></span><span class="chev">▾</span></button>
       <div class="pf-cuerpo-grupo">
+        <div class="faceta">
+          <span class="faceta-rotulo">Buscar nombre de obra</span>
+          <p class="pf-pista">Busca dentro del título; no distingue mayúsculas ni acentos parciales.</p>
+          <input type="text" id="pf-titulo" placeholder="Ej.: Adoración de los reyes…" autocomplete="off">
+        </div>
+
         <div class="faceta">
           <span class="faceta-rotulo">Ubicación actual</span>
           <p class="pf-pista">Elige país, ciudad o lugar; los demás campos se ajustan solos.</p>
@@ -534,15 +653,35 @@ const S = {
   api:'', obras:[], obraPais:new Map(), paises:[], ubic:[], total:0,
   filtro:{pais:null, desde:null, hasta:null}, permitidas:null, panelIds:null,
   dimCache:new Map(), indexCache:new Map(), pendientes:new Map(),
-  datos:{}, mapaVista:null, mapaCtl:null
+  datos:{}, mapaVista:null, mapaCtl:null, mapaModo:'ubicacion',
+  autoresInfo:null, tablaPag:0, tablaOrden:'titulo', tablaAsc:true
 };
 const fmt = n => new Intl.NumberFormat('es-CO').format(n);
 const $ = id => document.getElementById(id);
 const estado = (t, error=false) => { const e=$('estado'); e.textContent=t; e.classList.toggle('error', error); };
 
 /* ---------- API ---------- */
+// La API de ARCA responde lento y de forma irregular: sin límite propio, una
+// petición atascada deja el tablero colgado y el navegador acaba lanzando
+// "Failed to fetch". Con tope de tiempo y reintentos, un tropiezo no tumba la carga.
+async function pedirRed(url, opciones = {}, {intentos = 3, limite = 75000} = {}){
+  let ultimo;
+  for (let i = 0; i < intentos; i++){
+    const ctrl = new AbortController();
+    const reloj = setTimeout(()=>ctrl.abort(), limite);
+    try {
+      return await fetch(url, {...opciones, signal: ctrl.signal});
+    } catch(e){
+      ultimo = ctrl.signal.aborted
+        ? new Error(`la API no respondió en ${Math.round(limite/1000)} s`)
+        : new Error('no se pudo contactar la API (conexión interrumpida)');
+      if (i < intentos - 1) await new Promise(r => setTimeout(r, 1000*(i+1)));
+    } finally { clearTimeout(reloj); }
+  }
+  throw ultimo;
+}
 async function gql(query){
-  const r = await fetch(`${S.api}/graphql`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query})});
+  const r = await pedirRed(`${S.api}/graphql`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query})});
   if (!r.ok) throw new Error(`La API respondió ${r.status} ${r.statusText}`);
   const j = await r.json();
   if (j.errors && !j.data) throw new Error(j.errors.map(e=>e.message).join('; '));
@@ -553,17 +692,41 @@ async function contar(coleccion){
   try { const d = await gql(`query{ ${coleccion}_aggregated { count { id } } }`); return d[`${coleccion}_aggregated`]?.[0]?.count?.id ?? null; }
   catch { return null; }
 }
-async function paginar(coleccion, campos, total, alAvanzar, L=2000){
-  const out = []; let off = 0, orden = 'sort:["id"],';
+async function paginar(coleccion, campos, total, alAvanzar, L=2000, paralelo=4){
+  const pedir = async (orden, off) =>
+    (await gql(`query{ ${coleccion}(${orden} limit:${L}, offset:${off}) { ${campos} } }`))[coleccion] || [];
+  let orden = 'sort:["id"],', primera;
+  // Si la colección no admite ordenar por id, se reintenta sin orden.
+  try { primera = await pedir(orden, 0); }
+  catch(e){ orden = ''; primera = await pedir(orden, 0); }
+  alAvanzar && alAvanzar(primera.length, total);
+  if (primera.length < L || (total && primera.length >= total)) return primera;
+
+  if (total){
+    // El servidor tarda casi lo mismo por página venga de donde venga, así que
+    // pedir varias a la vez baja el arranque de decenas de segundos a unos pocos.
+    const paginas = Math.ceil(total / L), trozos = new Array(paginas);
+    trozos[0] = primera;
+    let hechas = primera.length;
+    for (let i = 1; i < paginas; i += paralelo){
+      const lote = [];
+      for (let p = i; p < Math.min(i + paralelo, paginas); p++) lote.push(p);
+      await Promise.all(lote.map(async p => {
+        trozos[p] = await pedir(orden, p*L);
+        hechas += trozos[p].length;
+        alAvanzar && alAvanzar(hechas, total);
+      }));
+    }
+    return trozos.flat();
+  }
+  // Sin total conocido hay que avanzar en serie hasta que una página venga vacía.
+  const out = primera.slice(); let off = primera.length;
   while (true){
-    let d;
-    try { d = await gql(`query{ ${coleccion}(${orden} limit:${L}, offset:${off}) { ${campos} } }`); }
-    catch(e){ if (orden){ orden=''; continue; } throw e; }
-    const filas = d[coleccion] || [];
+    const filas = await pedir(orden, off);
     if (!filas.length) break;
     out.push(...filas); off += filas.length;
     alAvanzar && alAvanzar(out.length, total);
-    if (total ? out.length >= total : filas.length < L) break;
+    if (filas.length < L) break;
   }
   return out;
 }
@@ -580,12 +743,17 @@ async function conectar(){
     S.total = obras || 0;
 
     estado('Cargando geografía…');
+    // Se cargan todos los países con geometría, no solo los que conservan obras:
+    // el mapa por lugar de origen necesita dibujar España, Italia y demás.
     const g = await gql(`query{
-      paises(filter:{obras_func:{count:{_neq:0}}}, limit:-1){ id nombre slug geo obras_func{count} }
-      ubicaciones(limit:-1){ id nombre geo obras_func{count} }
+      paises(limit:-1){ id nombre slug geo }
+      ubicaciones(limit:-1){ id nombre geo }
     }`);
     S.paises = (g.paises||[]).filter(p=>p.geo);
     S.ubic = (g.ubicaciones||[]).filter(u=>u.geo && u.geo.coordinates);
+    // Las geometrías se corrigen y se guardan una sola vez: redibujar el mapa no
+    // debe volver a clonar y reorientar cientos de polígonos.
+    S.feats = S.paises.map(p=>corregirOrientacion({type:'Feature', properties:p, geometry:p.geo}));
 
     const filas = await paginar('obras', 'id registro fecha_inicial fecha_final fecha_periodo categoria1{ id nombre slug } ciudad_origen{ pais{ id nombre } } ubicacion{ id ciudad{ pais{ id nombre } } }', S.total,
       (n,t)=>estado(`Leyendo obras ${fmt(n)}${t?` de ${fmt(t)}`:''}…`));
@@ -637,6 +805,22 @@ function aplicarFiltros(){
   const n = S.permitidas ? S.permitidas.size : S.total;
   $('alcance').textContent = activo ? `${fmt(n)} de ${fmt(S.total)} obras en el filtro` : `${fmt(S.total)} obras`;
   dibujarPulso(); dibujarMapa(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRanking(); dibujarRed();
+  if (vistos.has('comparativo')) dibujarComparativo();
+  if (vistos.has('detalle')) dibujarAutores();
+  S.tablaPag = 0; dibujarTabla();
+}
+/* Los bloques que exigen descargar tablas enteras solo se calculan la primera vez
+   que el usuario llega a ellos; después siguen el ritmo de los filtros. */
+const vistos = new Set();
+function observarBloque(id, dibujar){
+  const sec = document.querySelector(`section[data-bloque="${id}"]`);
+  if (!sec || !('IntersectionObserver' in window)){ vistos.add(id); return; }
+  const io = new IntersectionObserver(entradas => {
+    if (!entradas.some(e => e.isIntersecting)) return;
+    io.disconnect(); vistos.add(id);
+    if (S.obras.length) dibujar();
+  }, {rootMargin:'300px'});
+  io.observe(sec);
 }
 // Periodo elegido desde los gráficos (décadas y atlas)
 function fijarPeriodo(desde, hasta){
@@ -714,16 +898,23 @@ function exportarPNG(svgEl, titulo){
   img.onerror = () => estado('No se pudo convertir la gráfica a PNG; prueba con SVG.', true);
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(texto);
 }
-function exportarCSV(bloque, titulo){
+async function exportarCSV(bloque, titulo){
   const d = S.datos[bloque];
-  if (!d || !d.filas.length){ estado('Todavía no hay datos para exportar en «'+titulo+'».', true); return; }
-  const cols = Object.keys(d.filas[0]);
+  if (!d){ estado('Todavía no hay datos para exportar en «'+titulo+'».', true); return; }
+  // Algunos bloques solo tienen a la vista una página: los datos se piden al exportar.
+  let filas = d.filas;
+  if (d.cargar){
+    estado(`Preparando la exportación de «${titulo}»…`);
+    try { filas = await d.cargar(); } catch(e){ estado('No se pudo preparar la exportación: '+e.message, true); return; }
+  }
+  if (!filas || !filas.length){ estado('Todavía no hay datos para exportar en «'+titulo+'».', true); return; }
+  const cols = Object.keys(filas[0]);
   const celda = v => { const s = v==null ? '' : String(v); return /[";\n]/.test(s) ? '"' + s.split('"').join('""') + '"' : s; };
   const lineas = [
     `# ARCA · ${titulo}`,
     `# ${textoFiltros() || 'sin filtros activos'} · ${new Date().toLocaleString('es-CO')}`,
     cols.join(';'),
-    ...d.filas.map(f => cols.map(c => celda(f[c])).join(';'))
+    ...filas.map(f => cols.map(c => celda(f[c])).join(';'))
   ];
   // BOM para que Excel reconozca los acentos
   descargar(new Blob(['﻿' + lineas.join('\n')], {type:'text/csv;charset=utf-8'}), nombreArchivo(titulo,'csv'));
@@ -795,17 +986,29 @@ const RAMPA_MAPA = t => d3.interpolateInferno(0.24 + 0.68*t);
 
 function dibujarMapa(){
   const cont = $('mapa');
-  if (!S.paises.length){ cont.innerHTML='<div class="vacio">La API no devolvió geometrías de países.</div>'; return; }
+  if (!S.feats || !S.feats.length){ cont.innerHTML='<div class="vacio">La API no devolvió geometrías de países.</div>'; return; }
   const W = cont.clientWidth || 700, H = Math.max(380, Math.min(620, W*0.78));
-  const feats = S.paises.map(p=>corregirOrientacion({type:'Feature', properties:p, geometry:JSON.parse(JSON.stringify(p.geo))}));
-  const proy = d3.geoMercator().fitExtent([[10,10],[W-10,H-10]], {type:'FeatureCollection', features:feats});
+  const feats = S.feats;
+  // La proyección se ajusta solo a los países que aparecen en la colección; los
+  // demás se dibujan como contexto y quedan recortados por el marco.
+  const conObras = new Set();
+  for (const o of S.obras){ if (o.pais!=null) conObras.add(o.pais); if (o.origen?.id!=null) conObras.add(o.origen.id); }
+  const encuadre = feats.filter(f=>conObras.has(f.properties.id));
+  const proy = d3.geoMercator().fitExtent([[10,10],[W-10,H-10]],
+    {type:'FeatureCollection', features: encuadre.length ? encuadre : feats});
   const ruta = d3.geoPath(proy);
 
+  // El mapa puede leerse por dónde está hoy la obra o por dónde se hizo.
+  const porOrigen = S.mapaModo === 'origen';
+  const paisDe = o => porOrigen ? (o.origen?.id ?? null) : o.pais;
+  const paisSel = porOrigen ? (PF.valor('origenPaisUI') != null ? String(PF.valor('origenPaisUI')) : null)
+                            : (S.filtro.pais?.id ?? null);
   const porPais = new Map(), porUb = new Map();
   for (const o of S.obras){
     if (!pasaPeriodo(o) || !pasaPanel(o)) continue;
-    if (o.pais!=null) porPais.set(o.pais,(porPais.get(o.pais)||0)+1);
-    if (o.ub!=null && (!S.filtro.pais || o.pais===S.filtro.pais.id)) porUb.set(o.ub,(porUb.get(o.ub)||0)+1);
+    const p = paisDe(o);
+    if (p!=null) porPais.set(p,(porPais.get(p)||0)+1);
+    if (!porOrigen && o.ub!=null && (!S.filtro.pais || o.pais===S.filtro.pais.id)) porUb.set(o.ub,(porUb.get(o.ub)||0)+1);
   }
   // Escala por cuantiles: reparte el color entre los valores que existen, de modo
   // que los países con pocas obras no queden todos del mismo tono oscuro.
@@ -821,18 +1024,21 @@ function dibujarMapa(){
   const lienzo = svg.append('g');
   let arrastro = false;
 
+  const glosa = porOrigen ? 'obras creadas aquí' : 'obras conservadas aquí';
   lienzo.append('g').selectAll('path').data(feats).join('path')
-    .attr('class', d=>'pais'+(S.filtro.pais?.id===d.properties.id?' sel':''))
+    .attr('class', d=>'pais'+(paisSel===String(d.properties.id)?' sel':''))
     .attr('d', ruta).attr('fill', d=>{ const n=porPais.get(d.properties.id)||0; return n?escala(n):'#2e221c'; })
     .attr('tabindex',0)
-    .on('mousemove', (ev,d)=>mostrarTip(ev, `<strong>${d.properties.nombre}</strong><br>${fmt(porPais.get(d.properties.id)||0)} obras conservadas<br><em>Clic para filtrar el tablero</em>`))
+    .on('mousemove', (ev,d)=>mostrarTip(ev, `<strong>${d.properties.nombre}</strong><br>${fmt(porPais.get(d.properties.id)||0)} ${glosa}<br><em>Clic para filtrar el tablero</em>`))
     .on('mouseleave', ocultarTip)
     .on('click keydown', (ev,d)=>{
       if (ev.type==='keydown' && ev.key!=='Enter') return;
       if (arrastro) return;                       // venía de mover el mapa, no es una selección
       const p=d.properties;
+      ocultarTip();
+      if (porOrigen) return PF.fijarFaceta('origenPaisUI', paisSel===String(p.id) ? null : Number(p.id));
       S.filtro.pais = S.filtro.pais?.id===p.id ? null : {id:p.id, nombre:p.nombre};
-      ocultarTip(); aplicarFiltros();
+      aplicarFiltros();
     });
 
   const puntos = S.ubic.map(u=>({u, n:porUb.get(u.id)||0, xy:proy(u.geo.coordinates)})).filter(p=>p.n && p.xy).sort((a,b)=>b.n-a.n);
@@ -865,7 +1071,13 @@ function dibujarMapa(){
   cont.replaceChildren(svg.node());
 
   // Vista por omisión centrada en América: el resto del mundo sigue ahí, a un clic.
-  const enAmerica = f => { const c = d3.geoCentroid(f); return c[0] > -170 && c[0] < -28; };
+  // Solo países americanos presentes en la colección: así Groenlandia no estira
+  // la vista hacia el norte en una proyección Mercator.
+  const enAmerica = f => {
+    if (!conObras.has(f.properties.id)) return false;
+    const c = d3.geoCentroid(f);
+    return c[0] > -170 && c[0] < -28 && c[1] > -60 && c[1] < 52;
+  };
   const vistaDe = pred => {
     const sel = feats.filter(pred);
     if (!sel.length) return d3.zoomIdentity;
@@ -879,13 +1091,15 @@ function dibujarMapa(){
 
   // Leyenda escalonada con los cortes reales de la escala
   $('mapaLeyenda').innerHTML =
-    colores.map(c => { const [a,b] = escala.invertExtent(c);
+    `<span class="caja" style="color:var(--texto)">${porOrigen?'Obras por país de origen':'Obras por país de conservación'}:</span>`
+    + colores.map(c => { const [a,b] = escala.invertExtent(c);
       return `<span class="caja"><i style="background:${c}"></i>${fmt(Math.round(a))}–${fmt(Math.round(b))}</span>`; }).join('')
     + `<span class="caja" style="margin-left:6px"><i style="background:#2e221c;border:1px solid var(--linea)"></i>sin obras</span>`
-    + `<span class="caja"><i style="background:var(--carmin);border-radius:50%;width:10px;height:10px"></i>lugar de conservación (tamaño = nº de obras)</span>`;
+    + (porOrigen ? '' : `<span class="caja"><i style="background:var(--carmin);border-radius:50%;width:10px;height:10px"></i>lugar de conservación (tamaño = nº de obras)</span>`);
 
   S.datos.mapa = {filas:[
-    ...S.paises.map(p=>({tipo:'País', nombre:p.nombre, obras:porPais.get(p.id)||0})).filter(f=>f.obras).sort((a,b)=>b.obras-a.obras),
+    ...S.paises.map(p=>({tipo: porOrigen?'País de origen':'País de conservación', nombre:p.nombre, obras:porPais.get(p.id)||0}))
+      .filter(f=>f.obras).sort((a,b)=>b.obras-a.obras),
     ...puntos.map(p=>({tipo:'Lugar', nombre:p.u.nombre, obras:p.n}))
   ]};
 }
@@ -1035,7 +1249,8 @@ async function cargarDim(dim, indicador){
     if (dim.tipo==='m2m'){
       const col = `obras_${dim.col}`;
       const total = await contar(col);
-      const crudo = await paginar(col, `obras_id{ id } ${dim.key}{ ${dim.campos} }`, total, aviso, 5000);
+      // 2.000 por página: medido contra la API, pedir 5.000 de golpe tarda más del triple.
+      const crudo = await paginar(col, `obras_id{ id } ${dim.key}{ ${dim.campos} }`, total, aviso, 2000);
       filas = crudo.filter(r=>r.obras_id && r[dim.key]).map(r=>({o:r.obras_id.id, it:r[dim.key]}));
     } else {
       const crudo = await paginar('obras', `id ${dim.campo}{ ${dim.campos} }`, S.total, aviso, 5000);
@@ -1196,9 +1411,248 @@ async function dibujarRed(){
   } catch(e){ if (turno===turnoRed) cont.innerHTML=`<div class="vacio">No se pudo construir la red: ${e.message}</div>`; }
 }
 
+/* ---------- Análisis comparativo ---------- */
+let turnoComp = 0;
+async function dibujarComparativo(){
+  if (!S.obras.length) return;
+  const turno = ++turnoComp;
+  const dA = DIMS[$('cA').value], dB = DIMS[$('cB').value], top = +$('cTop').value, cont = $('comparativo');
+  if (dA.id === dB.id){ cont.innerHTML='<div class="vacio">Elige dos campos distintos para compararlos.</div>'; return; }
+  try {
+    const [fA, fB] = await Promise.all([cargarDim(dA,$('cCarga')), cargarDim(dB,$('cCarga'))]);
+    if (turno !== turnoComp) return;
+    const kf = it => String(it.id ?? it.slug);
+    const visible = o => !S.permitidas || S.permitidas.has(o);
+
+    // Obra → términos del campo B, y universo de B dentro del filtro
+    const bPorObra = new Map(), universoB = new Set();
+    for (const r of fB){
+      if (!visible(r.o)) continue;
+      const k = kf(r.it); universoB.add(k);
+      let s = bPorObra.get(r.o); if (!s){ s = new Set(); bPorObra.set(r.o, s); }
+      s.add(k);
+    }
+    // Valor de A → obras
+    const grupos = new Map();
+    for (const r of fA){
+      if (!visible(r.o)) continue;
+      const k = kf(r.it);
+      let g = grupos.get(k); if (!g){ g = {item:r.it, obras:new Set()}; grupos.set(k, g); }
+      g.obras.add(r.o);
+    }
+    const totalObras = S.permitidas ? S.permitidas.size : S.total;
+    const totalB = universoB.size;
+    if (!grupos.size || !totalB){ cont.innerHTML='<div class="vacio">No hay datos suficientes para comparar estos dos campos con los filtros actuales.</div>'; return; }
+
+    const filas = [...grupos.values()].map(g => {
+      const bs = new Set();
+      for (const o of g.obras){ const s = bPorObra.get(o); if (s) for (const k of s) bs.add(k); }
+      return {item:g.item, nombre:nombreItem(g.item), nObras:g.obras.size, nB:bs.size};
+    }).sort((a,b)=>b.nObras-a.nObras).slice(0, top);
+    filas.forEach((d,i)=>{ d.i = i; });   // la fila se sitúa por posición, no por nombre: hay términos homónimos
+
+    const W = cont.clientWidth || 800, altoFila = 27, m = {t:34, r:10, b:12, l:Math.min(160, W*0.2)};
+    const H = m.t + filas.length*altoFila + m.b;
+    const ancho = (W - m.l - m.r - 14) / 2, eje = m.l + ancho + 7;
+    const xI = d3.scaleLinear([0, d3.max(filas,d=>d.nObras) || 1], [0, ancho]);
+    const xD = d3.scaleLinear([0, totalB], [0, ancho]);
+    const alto = altoFila - 7;
+    const y = d => m.t + d.i*altoFila;
+    const medio = d => y(d) + alto/2;
+    const paleta = d3.scaleOrdinal(d3.range(filas.length),
+      ['#6b93d1','#d07f53','#56a791','#c8465a','#9672bd','#8b796c','#d2a94b','#5f9ea0','#b0688a','#7f9c4a','#c98a4b','#6f7fb3']);
+
+    const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img')
+      .attr('aria-label',`Comparación entre ${dA.label} y ${dB.label}`);
+    svg.append('text').attr('x', eje-10).attr('y', 16).attr('text-anchor','end').attr('class','rotulo-comp').text('Obras');
+    svg.append('text').attr('x', eje).attr('y', 16).attr('text-anchor','middle').attr('class','eje-comp').text('VS');
+    svg.append('text').attr('x', eje+10).attr('y', 16).attr('text-anchor','start').attr('class','rotulo-comp').text(dB.label);
+    svg.append('text').attr('x', 0).attr('y', 16).attr('text-anchor','start').attr('class','eje-comp').text(dA.label);
+    svg.append('line').attr('x1',eje).attr('x2',eje).attr('y1',m.t-6).attr('y2',H-m.b).attr('stroke','var(--linea)');
+
+    const g = svg.append('g').selectAll('g').data(filas).join('g');
+    g.append('text').attr('x', m.l-8).attr('y', medio).attr('text-anchor','end')
+      .attr('dominant-baseline','middle').attr('class','rotulo-comp').text(d=>d.nombre);
+
+    const etiqueta = (sel, anchoBarra, dentro, fuera, texto) => sel.each(function(d){
+      const cabe = anchoBarra(d) > 74;
+      d3.select(this).append('text').attr('class','cifra-comp')
+        .attr('x', cabe ? dentro(d) : fuera(d))
+        .attr('y', medio(d)).attr('dominant-baseline','middle')
+        .attr('text-anchor', cabe ? 'middle' : (fuera(d) < eje ? 'end' : 'start'))
+        .attr('fill', cabe ? '#fff' : 'var(--tenue)')
+        .text(texto(d));
+    });
+
+    g.append('rect').attr('class','barra-comp')
+      .attr('x', d=>eje - xI(d.nObras)).attr('y', y)
+      .attr('width', d=>xI(d.nObras)).attr('height', alto).attr('rx',2)
+      .attr('fill', d=>paleta(d.i))
+      .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.nombre}</strong><br>${fmt(d.nObras)} obras · ${(d.nObras/totalObras*100).toFixed(2)} % del filtro<br><em>Clic para filtrar por este valor</em>`))
+      .on('mouseleave',ocultarTip)
+      .on('click',(ev,d)=>{ ocultarTip(); PF.alternarFaceta(dA.faceta, d.item.id); });
+    etiqueta(g, d=>xI(d.nObras), d=>eje - xI(d.nObras)/2, d=>eje - xI(d.nObras) - 5,
+      d=>`${fmt(d.nObras)} – ${(d.nObras/totalObras*100).toFixed(2)}%`);
+
+    g.append('rect').attr('class','barra-comp')
+      .attr('x', eje).attr('y', y)
+      .attr('width', d=>xD(d.nB)).attr('height', alto).attr('rx',2)
+      .attr('fill', d=>paleta(d.i)).attr('fill-opacity',.85)
+      .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.nombre}</strong><br>${fmt(d.nB)} de ${fmt(totalB)} ${dB.label.toLowerCase()} distintos · ${(d.nB/totalB*100).toFixed(2)} %`))
+      .on('mouseleave',ocultarTip);
+    etiqueta(g, d=>xD(d.nB), d=>eje + xD(d.nB)/2, d=>eje + xD(d.nB) + 5,
+      d=>`${fmt(d.nB)} – ${(d.nB/totalB*100).toFixed(2)}%`);
+
+    cont.replaceChildren(svg.node());
+    S.datos.comparativo = {filas: filas.map(d=>({
+      [dA.label]: d.nombre, obras:d.nObras, porcentaje_de_obras:+(d.nObras/totalObras*100).toFixed(2),
+      [`${dA.label} — ${dB.label} distintos`]: d.nB, [`porcentaje_de_${dB.label.toLowerCase()}`]: +(d.nB/totalB*100).toFixed(2)
+    }))};
+  } catch(e){ if (turno===turnoComp) cont.innerHTML=`<div class="vacio">No se pudo comparar: ${e.message}</div>`; }
+}
+
+/* ---------- Autores en el tiempo ---------- */
+let turnoAutores = 0;
+async function dibujarAutores(){
+  if (!S.obras.length) return;
+  const turno = ++turnoAutores;
+  const cont = $('autores'), top = +$('aTop').value, orden = $('aOrden').value;
+  try {
+    if (!S.autoresInfo){
+      const j = await pedirJSON(`${S.api}/items/autores?limit=-1&fields=id,desde,hasta`);
+      S.autoresInfo = new Map((j.data||[]).map(a=>[String(a.id), a]));
+    }
+    const pares = await cargarDim(DIMS.autores, $('aCarga'));
+    if (turno !== turnoAutores) return;
+    const porAutor = new Map();
+    for (const r of pares){
+      if (S.permitidas && !S.permitidas.has(r.o)) continue;
+      const k = String(r.it.id);
+      let g = porAutor.get(k); if (!g){ g = {item:r.it, obras:[]}; porAutor.set(k, g); }
+      g.obras.push(r.o);
+    }
+    const obraPorId = new Map(S.obras.map(o=>[o.id, o]));
+    // Solo se pueden situar en el tiempo los autores con periodo de actividad registrado.
+    let lista = [...porAutor.entries()].map(([k,g]) => {
+      const info = S.autoresInfo.get(k) || {};
+      const cuenta = new Map();
+      for (const id of g.obras){ const nom = obraPorId.get(id)?.origen?.nombre; if (nom) cuenta.set(nom, (cuenta.get(nom)||0)+1); }
+      const origen = [...cuenta].sort((a,b)=>b[1]-a[1])[0]?.[0] || 'Sin lugar de origen';
+      return {item:g.item, nombre:nombreItem(g.item), n:g.obras.length, desde:info.desde, hasta:info.hasta, origen};
+    }).filter(a => a.desde != null || a.hasta != null);
+    const conFecha = lista.length, sinFecha = porAutor.size - conFecha;
+    if (!lista.length){ cont.innerHTML='<div class="vacio">Ningún autor del filtro tiene periodo de actividad registrado.</div>'; $('autoresLeyenda').innerHTML=''; return; }
+
+    lista.sort((a,b)=> orden === 'obras' ? b.n - a.n : (a.desde ?? a.hasta) - (b.desde ?? b.hasta));
+    lista = lista.slice(0, top).sort((a,b)=> (a.desde ?? a.hasta) - (b.desde ?? b.hasta));
+
+    const W = cont.clientWidth || 460, altoFila = 22, m = {t:24, r:10, b:24, l:8};
+    const H = m.t + lista.length*altoFila + m.b;
+    const años = lista.flatMap(a => [a.desde, a.hasta].filter(v => v != null));
+    const x = d3.scaleLinear(d3.extent(años), [m.l, W-m.r]).nice();
+    const r = d3.scaleSqrt([0, d3.max(lista, a=>a.n)], [3, 9]);
+    const origenes = [...new Set(lista.map(a=>a.origen))].sort((a,b)=>a.localeCompare(b,'es'));
+    const color = d3.scaleOrdinal(origenes,
+      ['#6b93d1','#d07f53','#56a791','#c8465a','#9672bd','#d2a94b','#8b796c','#5f9ea0','#b0688a','#7f9c4a']);
+
+    const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Autores por periodo de actividad');
+    const ejeArriba = d3.axisTop(x).ticks(Math.max(3, Math.round(W/90))).tickFormat(d3.format('d')).tickSizeOuter(0);
+    const ejeAbajo = d3.axisBottom(x).ticks(Math.max(3, Math.round(W/90))).tickFormat(d3.format('d')).tickSizeOuter(0);
+    [[ejeArriba, m.t-6],[ejeAbajo, H-m.b+6]].forEach(([ax, ty]) =>
+      svg.append('g').attr('transform',`translate(0,${ty})`).call(ax)
+        .call(g=>g.selectAll('text').attr('fill','var(--tenue)').attr('font-size',9))
+        .call(g=>g.selectAll('line,path').attr('stroke','var(--linea)')));
+
+    const fila = svg.append('g').selectAll('g').data(lista).join('g')
+      .attr('transform',(d,i)=>`translate(0,${m.t + i*altoFila + altoFila/2})`)
+      .style('cursor','pointer')
+      .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.nombre}</strong><br>${d.desde ?? '¿?'}–${d.hasta ?? '¿?'}<br>${fmt(d.n)} obras en el filtro<br>Origen: ${d.origen}<br><em>Clic para ver sus obras</em>`))
+      .on('mouseleave',ocultarTip)
+      .on('click',(ev,d)=>{ ocultarTip(); abrirDetalle(DIMS.autores, d.item, d.n); });
+    fila.filter(d=>d.desde!=null && d.hasta!=null && d.hasta>d.desde).append('rect').attr('class','barra-autor')
+      .attr('x',d=>x(d.desde)).attr('y',-1.5).attr('width',d=>Math.max(1,x(d.hasta)-x(d.desde))).attr('height',3).attr('rx',1.5);
+    fila.append('circle').attr('class','punto-autor')
+      .attr('cx',d=>x(d.hasta ?? d.desde)).attr('cy',0).attr('r',d=>r(d.n)).attr('fill',d=>color(d.origen));
+    fila.append('text').attr('class','nombre-autor').attr('dominant-baseline','middle')
+      .attr('x',d=>{ const px = x(d.hasta ?? d.desde); return px > W*0.62 ? x(d.desde ?? d.hasta) - r(d.n) - 5 : px + r(d.n) + 5; })
+      .attr('text-anchor',d=> x(d.hasta ?? d.desde) > W*0.62 ? 'end' : 'start')
+      .text(d=>d.nombre);
+
+    cont.replaceChildren(svg.node());
+    $('autoresLeyenda').innerHTML = origenes.map(o=>`<span><i style="background:${color(o)}"></i>${o}</span>`).join('')
+      + `<span style="width:100%">Se muestran ${fmt(lista.length)} de ${fmt(conFecha)} autores con periodo registrado${sinFecha?`; otros ${fmt(sinFecha)} autores del filtro no lo tienen`:''}.</span>`;
+  } catch(e){ if (turno===turnoAutores) cont.innerHTML=`<div class="vacio">No se pudieron leer los autores: ${e.message}</div>`; }
+}
+
+/* ---------- Tabla de obras ---------- */
+const TAM_PAG = 25;
+const CAMPOS_TABLA = 'id,registro,titulo,fecha_inicial,fecha_final,fecha_periodo,ubicacion.nombre,ciudad_origen.pais.nombre,autores.autores_id.nombre,autores.autores_id.apellido';
+function fechaTexto(o){
+  const a = o.fecha_inicial, b = o.fecha_final;
+  if (a == null && b == null) return 's.f.';
+  if (a != null && b != null && a !== b) return `${a}–${b}`;
+  return String(a ?? b);
+}
+const autoresTexto = o => (o.autores||[]).map(a=>nombreItem(a.autores_id)).filter(Boolean).join(', ') || 'Anónimo';
+async function consultarObras(limite, salto){
+  const params = new URLSearchParams({limit:String(limite), offset:String(salto), fields:CAMPOS_TABLA,
+    meta:'filter_count', sort:(S.tablaAsc?'':'-') + S.tablaOrden});
+  const f = filtroConsulta({});
+  if (Object.keys(f).length) params.set('filter', JSON.stringify(f));
+  const j = await pedirJSON(`${S.api}/items/obras?${params}`);
+  return {filas: j.data || [], total: j.meta?.filter_count ?? (j.data||[]).length};
+}
+let turnoTabla = 0;
+async function dibujarTabla(){
+  if (!S.obras.length) return;
+  const turno = ++turnoTabla;
+  const cuerpo = $('tablaObras').tBodies[0];
+  cuerpo.innerHTML = '<tr><td colspan="6" class="sec">Consultando obras…</td></tr>';
+  try {
+    const {filas, total} = await consultarObras(TAM_PAG, S.tablaPag*TAM_PAG);
+    if (turno !== turnoTabla) return;
+    if (!filas.length){
+      cuerpo.innerHTML = '<tr><td colspan="6" class="sec">Ninguna obra coincide con los filtros activos.</td></tr>';
+      $('tbRango').textContent = '0 obras'; $('tbAnt').disabled = true; $('tbSig').disabled = true;
+      return;
+    }
+    cuerpo.replaceChildren(...filas.map(o => {
+      const tr = document.createElement('tr');
+      const celdas = [
+        ['tit', o.titulo || `Registro ${o.registro}`],
+        ['sec', autoresTexto(o)],
+        ['sec', o.ubicacion?.nombre || '—'],
+        ['sec', fechaTexto(o)],
+        ['sec', o.ciudad_origen?.pais?.nombre || '—'],
+      ];
+      for (const [cls, txt] of celdas){
+        const td = document.createElement('td'); td.className = cls; td.textContent = txt; tr.append(td);
+      }
+      const td = document.createElement('td');
+      const a = document.createElement('a');
+      a.href = `https://arca.uniandes.edu.co/obras/${o.registro}`; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Ver';
+      td.append(a); tr.append(td);
+      return tr;
+    }));
+    const desde = S.tablaPag*TAM_PAG + 1, hasta = Math.min(total, desde + filas.length - 1);
+    $('tbRango').textContent = `${fmt(desde)}–${fmt(hasta)} de ${fmt(total)} obras`;
+    $('tbAnt').disabled = S.tablaPag === 0;
+    $('tbSig').disabled = hasta >= total;
+    // La exportación va al servidor: la tabla solo tiene a la vista una página.
+    S.datos.detalle = {filas:[], cargar: async () => {
+      const {filas:todas} = await consultarObras(2000, 0);
+      return todas.map(o=>({titulo:o.titulo||'', autor:autoresTexto(o), ubicacion_actual:o.ubicacion?.nombre||'',
+        fecha_de_creacion:fechaTexto(o), lugar_origen:o.ciudad_origen?.pais?.nombre||'', registro:o.registro,
+        ficha:`https://arca.uniandes.edu.co/obras/${o.registro}`}));
+    }};
+  } catch(e){
+    if (turno === turnoTabla) cuerpo.innerHTML = `<tr><td colspan="6" class="sec">No se pudo leer la tabla: ${e.message}</td></tr>`;
+  }
+}
+
 /* ---------- Panel de detalle y galerías ---------- */
 async function pedirJSON(url){
-  const r = await fetch(url);
+  const r = await pedirRed(url);
   if (!r.ok) throw new Error('HTTP ' + r.status);
   return r.json();
 }
@@ -1313,7 +1767,7 @@ const PF = (()=>{
     complejo_gestual:   { collection:'complejos_gestuales', label:'Complejo gestual',    group:'gestos' },
   };
   const GROUP_FIELDS = {
-    basicos: ['pais','ciudad','ubicacion','ciudad_origen','categoria1','categoria2','categoria3','categoria4','categoria5','categoria6','autores','tecnicas','fecha'],
+    basicos: ['pais','ciudad','ubicacion','ciudad_origen','categoria1','categoria2','categoria3','categoria4','categoria5','categoria6','autores','tecnicas','fecha','titulo'],
     analisis: ['simbolos','descriptores','caracteristicas','escenarios','objetos','relato_visual','donante','cartela_filacteria','personajes'],
     gestos: ['fisiognomica','fisiognomica_imagen','rostro','tipo_gestual','gesto1','gesto2','gesto3','complejo_gestual'],
   };
@@ -1333,7 +1787,7 @@ const PF = (()=>{
   Object.keys(REF_QUERIES).forEach(col => { REF[col] = []; maps[col] = {}; });
   maps.ciudadesByPais = {}; maps.ubicacionesByCiudad = {};
 
-  const state = { fechaDesde:null, fechaHasta:null, origenPaisUI:null };
+  const state = { fechaDesde:null, fechaHasta:null, origenPaisUI:null, titulo:'' };
   FK_FIELDS.forEach(f => state[f] = null);
   M2M_FIELDS.forEach(f => state[f] = []);
 
@@ -1347,7 +1801,7 @@ const PF = (()=>{
   const acotar = v => Math.min(FECHA_MAX, Math.max(FECHA_MIN, v));
 
   async function fetchJSON(url){
-    const r = await fetch(url);
+    const r = await pedirRed(url);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.json();
   }
@@ -1376,6 +1830,7 @@ const PF = (()=>{
       const ids = (maps.ciudadesByPais[state.origenPaisUI] || []).map(c => c.id);
       and.push({ ciudad_origen: { _in: ids.length ? ids : [-1] } });
     }
+    if (!ex.has('titulo') && state.titulo) and.push({ titulo: { _icontains: state.titulo } });
     if (!ex.has('fecha')){
       if (state.fechaHasta != null) and.push({ fecha_inicial: { _lte: state.fechaHasta } });
       if (state.fechaDesde != null) and.push({ _or: [
@@ -1624,6 +2079,19 @@ const PF = (()=>{
     onFilterChanged();
   });
 
+  // ── Búsqueda por título ──
+  const entradaTitulo = $('pf-titulo');
+  let tituloTimer;
+  entradaTitulo.addEventListener('input', () => {
+    clearTimeout(tituloTimer);
+    tituloTimer = setTimeout(() => {
+      const v = entradaTitulo.value.trim();
+      if (v === state.titulo) return;
+      state.titulo = v;
+      onFilterChanged();
+    }, 350);
+  });
+
   // ── Fecha (control de rango doble) ──
   const rangeDesde = $('pf-rango-desde'), rangeHasta = $('pf-rango-hasta');
   [rangeDesde, rangeHasta].forEach(inp => { inp.min = FECHA_MIN; inp.max = FECHA_MAX; });
@@ -1688,6 +2156,7 @@ const PF = (()=>{
   // ── Etiquetas de filtros activos y contadores por sección ──
   function facetSummary(){
     const parts = [];
+    if (state.titulo) parts.push(['titulo', `Título contiene: “${state.titulo}”`]);
     if (state.autores.length) parts.push(['autores', `Autor (${state.autores.length})`]);
     if (state.pais || state.ciudad || state.ubicacion){
       const bits = [nombreDe('ubicaciones', state.ubicacion), nombreDe('ciudades', state.ciudad), nombreDe('paises', state.pais)].filter(Boolean);
@@ -1721,7 +2190,8 @@ const PF = (()=>{
     rangeDesde.value = FECHA_MIN; rangeHasta.value = FECHA_MAX; syncRangeUI();
   }
   function clearFacet(key){
-    if (key === 'ubicacion') limpiarUbicacion();
+    if (key === 'titulo'){ state.titulo = ''; entradaTitulo.value = ''; }
+    else if (key === 'ubicacion') limpiarUbicacion();
     else if (key === 'origen'){ state.origenPaisUI = null; state.ciudad_origen = null; selPaisOrigen.value = ''; refreshCiudadOrigenOptions(false); }
     else if (key === 'fecha') limpiarFecha();
     else if (/^cat\d$/.test(key)){
@@ -1740,7 +2210,7 @@ const PF = (()=>{
     onFilterChanged();
   }
   function facetGroupOf(key){
-    if (['autores','ubicacion','origen','fecha','tecnicas'].includes(key) || /^cat\d$/.test(key)) return 'basicos';
+    if (['autores','ubicacion','origen','fecha','tecnicas','titulo'].includes(key) || /^cat\d$/.test(key)) return 'basicos';
     return FACET_META[key] ? FACET_META[key].group : '';
   }
   function updateChips(){
@@ -1765,6 +2235,7 @@ const PF = (()=>{
   // ── Cambios pedidos desde las gráficas del tablero ──
   // Escribe un valor en el estado y deja la interfaz del panel coherente.
   function aplicarValor(field, value){
+    if (field === 'titulo'){ state.titulo = value || ''; entradaTitulo.value = state.titulo; return; }
     if (field === 'pais'){
       state.pais = value ?? null;
       selPais.value = state.pais != null ? String(state.pais) : '';
@@ -1941,13 +2412,31 @@ const PF = (()=>{
 
   // ── Abrir, cerrar y reiniciar ──
   const panel = $('panelFiltros'), velo = $('veloFiltros'), boton = $('abrirFiltros');
+  // En pantallas anchas el panel vive anclado: abrir y cerrar no aplican.
+  const anclado = matchMedia('(min-width:1150px)');
+  const estaAnclado = () => anclado.matches;
+  function sincronizarAnclaje(){
+    if (estaAnclado()){
+      panel.classList.remove('abierto'); velo.classList.remove('visible'); boton.classList.remove('abierto');
+      panel.setAttribute('aria-hidden','false');
+      boton.setAttribute('aria-expanded','true');
+    } else {
+      const abiertoAhora = panel.classList.contains('abierto');
+      panel.setAttribute('aria-hidden', abiertoAhora ? 'false' : 'true');
+      boton.setAttribute('aria-expanded', String(abiertoAhora));
+    }
+  }
+  anclado.addEventListener('change', ()=>{ sincronizarAnclaje(); if (listo) refreshOpenSectionCounts(); });
+  sincronizarAnclaje();
   function abrir(){
+    if (estaAnclado()) return;
     panel.classList.add('abierto'); velo.classList.add('visible'); boton.classList.add('abierto');
     panel.setAttribute('aria-hidden', 'false'); boton.setAttribute('aria-expanded', 'true'); boton.setAttribute('aria-label', 'Cerrar filtros');
     $('pf-cerrar').focus();
     refreshOpenSectionCounts();
   }
   function cerrar(){
+    if (estaAnclado()) return;
     if (!panel.classList.contains('abierto')) return;
     panel.classList.remove('abierto'); velo.classList.remove('visible'); boton.classList.remove('abierto');
     panel.setAttribute('aria-hidden', 'true'); boton.setAttribute('aria-expanded', 'false'); boton.setAttribute('aria-label', 'Abrir filtros');
@@ -1958,6 +2447,7 @@ const PF = (()=>{
     FK_FIELDS.forEach(f => state[f] = null);
     M2M_FIELDS.forEach(f => state[f] = []);
     state.origenPaisUI = null;
+    state.titulo = ''; entradaTitulo.value = '';
     limpiarFecha();
     if (listo){
       Object.values(fkSelectEls).forEach(s => s.value = '');
@@ -1990,6 +2480,7 @@ const PF = (()=>{
     listo = true;
     sincronizar();
     updateChips();
+    sincronizarAnclaje();
     refreshOpenSectionCounts();
   }
 
@@ -2009,9 +2500,30 @@ function llenarSelect(sel, valor){
   }).join('');
 }
 llenarSelect($('rDim'),'personajes'); llenarSelect($('nA'),'personajes'); llenarSelect($('nB'),'simbolos');
+llenarSelect($('cA'),'categoria1'); llenarSelect($('cB'),'gesto1');
 ['rDim','rTop'].forEach(id=>$(id).onchange=dibujarRanking);
 ['nA','nB','nTop','nMin'].forEach(id=>$(id).onchange=dibujarRed);
+['cA','cB','cTop'].forEach(id=>$(id).onchange=dibujarComparativo);
+['aTop','aOrden'].forEach(id=>$(id).onchange=dibujarAutores);
 montarHerramientas();
+observarBloque('comparativo', dibujarComparativo);
+observarBloque('detalle', dibujarAutores);
+
+// Tabla de obras: paginación y ordenamiento
+$('tbAnt').onclick = ()=>{ if (S.tablaPag>0){ S.tablaPag--; dibujarTabla(); } };
+$('tbSig').onclick = ()=>{ S.tablaPag++; dibujarTabla(); };
+function pintarCabecerasTabla(){
+  document.querySelectorAll('#tablaObras th.ord').forEach(th => {
+    const activa = th.dataset.orden === S.tablaOrden;
+    th.innerHTML = th.textContent.replace(/ [↑↓]$/,'') + (activa ? `<span class="fl"> ${S.tablaAsc?'↑':'↓'}</span>` : '');
+  });
+}
+document.querySelectorAll('#tablaObras th.ord').forEach(th => th.onclick = ()=>{
+  if (S.tablaOrden === th.dataset.orden) S.tablaAsc = !S.tablaAsc;
+  else { S.tablaOrden = th.dataset.orden; S.tablaAsc = true; }
+  S.tablaPag = 0; pintarCabecerasTabla(); dibujarTabla();
+});
+pintarCabecerasTabla();
 
 // Controles del mapa
 const conMapa = fn => { if (S.mapaCtl) fn(S.mapaCtl); };
@@ -2019,10 +2531,12 @@ $('mapaMas').onclick   = ()=>conMapa(m=>m.svg.transition().duration(250).call(m.
 $('mapaMenos').onclick = ()=>conMapa(m=>m.svg.transition().duration(250).call(m.zoom.scaleBy, 1/1.6));
 $('mapaAmerica').onclick = ()=>conMapa(m=>m.svg.transition().duration(450).call(m.zoom.transform, m.america));
 $('mapaMundo').onclick   = ()=>conMapa(m=>m.svg.transition().duration(450).call(m.zoom.transform, m.mundo));
+$('mapaModo').onchange = ()=>{ S.mapaModo = $('mapaModo').value; S.mapaVista = null; dibujarMapa(); };
 $('mapaObras').onclick = ()=>abrirObras(
   S.filtro.pais ? `Obras en ${S.filtro.pais.nombre}` : 'Obras del filtro actual', {},
   'Obras registradas que cumplen todos los filtros activos.');
 $('quitarTodo').onclick = PF.reiniciar;
+$('reintentar').onclick = ()=>{ $('aviso').classList.remove('visible'); conectar(); };
 $('dCerrar').onclick = cerrarDetalle;
 $('abrirFiltros').onclick = PF.alternar;
 $('pf-cerrar').onclick = PF.cerrar;
@@ -2030,7 +2544,7 @@ $('veloFiltros').onclick = PF.cerrar;
 $('pf-reiniciar').onclick = PF.reiniciar;
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ cerrarDetalle(); PF.cerrar(); } });
 PF.init();
-let espera; new ResizeObserver(()=>{ clearTimeout(espera); espera=setTimeout(()=>{ if(S.obras.length){ dibujarMapa(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRed(); } }, 250); }).observe(document.querySelector('.rejilla'));
+let espera; new ResizeObserver(()=>{ clearTimeout(espera); espera=setTimeout(()=>{ if(S.obras.length){ dibujarMapa(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRed(); if(vistos.has('comparativo')) dibujarComparativo(); if(vistos.has('detalle')) dibujarAutores(); } }, 250); }).observe(document.querySelector('.rejilla'));
 if (typeof d3 === 'undefined'){ estado('No cargó la librería D3 (revisa la conexión a internet).', true); }
 else conectar();
 </script>
