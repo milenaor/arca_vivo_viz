@@ -1101,7 +1101,7 @@ function dibujarPulso(){
   const paises = new Set(obras.map(o=>o.conserva?.id).filter(Boolean));
   // Pintores y autoría salen de la tabla de autores, que se descarga una sola vez.
   const pares = S.dimCache.get('autores');
-  let pintores = ['…','número de pintores','cargando autores…'], autoria = ['…','anónimas vs. firmadas','cargando autores…'];
+  let pintores = ['…','número de pintores','cargando autores…'], autoria = ['…','anónimas / firmadas','cargando autores…'];
   if (pares){
     const visible = o => !S.permitidas || S.permitidas.has(o);
     const nombrados = new Set(), firmadas = new Set();
@@ -1111,8 +1111,8 @@ function dibujarPulso(){
     }
     const anonimas = n - firmadas.size;
     pintores = [fmt(nombrados.size),'número de pintores','autores identificados (sin contar «Anónimo»)'];
-    autoria = [`${(anonimas/n*100).toFixed(1)} %`,'anónimas vs. firmadas',
-      `${fmt(anonimas)} anónimas · ${fmt(firmadas.size)} firmadas (con autor identificado)`];
+    autoria = [`${fmt(anonimas)} / ${fmt(firmadas.size)}`,'anónimas / firmadas',
+      'firmadas: obras con autor identificado'];
   } else if (!S.pulsoAutores){
     S.pulsoAutores = true;
     cargarDim(DIMS.autores).then(dibujarPulso).catch(e=>{
