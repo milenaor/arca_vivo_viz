@@ -1499,6 +1499,11 @@ const enumerar = l => {
   return l.slice(0,-1).join(', ') + (/^h?i(?![aeiouáéó])/i.test(suena) ? ' e ' : ' y ') + ultimo;
 };
 const delFiltro = () => S.permitidas ? 'del filtro' : 'de la colección';
+// «Con los filtros del panel (Tema: Ángeles · Fecha: 1700–1799), » o nada si no hay filtros
+const conFiltros = () => {
+  const partes = PF.resumen().map(([, rot]) => escHTML(rot));
+  return partes.length ? `Con ${partes.length === 1 ? 'el filtro' : 'los filtros'} del panel (<b>${partes.join(' · ')}</b>), ` : '';
+};
 const leer = (id, html) => { const e = $(id); if (e) e.innerHTML = html; };
 
 /* ---------- Origen y conservación ---------- */
@@ -1760,6 +1765,8 @@ async function dibujarRed(){
     const prep = (filas, d, sel) => {
       const todos = contarFilas(filas);
       const frec = sel.size ? todos.filter(x=>sel.has(kf(x.item))) : todos.slice(0, top);
+      // Los términos elegidos en el panel de filtros entran siempre, aunque no estén entre los más frecuentes
+      if (!sel.size) todos.forEach(x => { if (!frec.includes(x) && PF.tieneFaceta(d.faceta, x.item.id)) frec.push(x); });
       const claves = new Set(frec.map(x=>kf(x.item)));
       const porObra = new Map();
       for (const r of filas){
@@ -1809,6 +1816,7 @@ async function dibujarRed(){
       let txt = hayEleccion
         ? `La red muestra solo los términos que elegiste de ${campos}, en las obras ${delFiltro()}: ${negrita(nodos.length)} términos y ${negrita(aristas.length)} ${aristas.length===1?'vínculo':'vínculos'} de al menos ${fmt(minW)} obras en común.`
         : `La red cruza ${campos} en las obras ${delFiltro()}: muestra ${negrita(nodos.length)} términos y ${negrita(aristas.length)} vínculos de al menos ${fmt(minW)} obras en común.`;
+      if (S.permitidas) txt = conFiltros() + `la red usa solo esas ${nObras(S.permitidas.size)}. ` + txt.charAt(0).toUpperCase() + txt.slice(1);
       if (a1){
         txt += ` La pareja que más aparece junta es ${nom(a1.source)} con ${nom(a1.target)}: comparten ${nObras(a1.w)}.`;
         if (a2) txt += ` Le sigue ${nom(a2.source)} con ${nom(a2.target)} (${negrita(a2.w)}).`;
@@ -1835,9 +1843,12 @@ async function dibujarRed(){
     const lH = g.append('g').selectAll('line').data(aristas).join('line').attr('class','arista-toque')
       .attr('stroke','transparent').attr('stroke-width',d=>Math.max(10, grosor(d.w)+6)).style('cursor','pointer');
     const lN = g.append('g').selectAll('circle').data(nodos).join('circle').attr('class','nodo')
-      .attr('r',d=>r(d.n)).attr('fill',colorNodo);
+      .attr('r',d=>r(d.n)).attr('fill',colorNodo)
+      // Anillo dorado: término elegido en el panel de filtros
+      .style('stroke',d=>PF.tieneFaceta(d.dim.faceta, d.item.id) ? 'var(--oro)' : null)
+      .style('stroke-width',d=>PF.tieneFaceta(d.dim.faceta, d.item.id) ? '4px' : null);
     // Con términos elegidos se rotulan todos; si no, solo los más frecuentes
-    const umbralEtiqueta = hayEleccion ? 0 : d3.quantile(nodos.map(d=>d.n).sort(d3.ascending), .6);
+    const umbralEtiqueta = hayEleccion ? 0 : d3.quantile(nodos.map(d=>d.n).sort(d3.ascending), .3);
     const lT = g.append('g').selectAll('text').data(nodos.filter(d=>d.n>=umbralEtiqueta)).join('text').attr('class','etiqueta')
       .attr('text-anchor','middle').text(d=>nombreItem(d.item));
 
