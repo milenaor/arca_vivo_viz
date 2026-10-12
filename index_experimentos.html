@@ -31,6 +31,24 @@ header.cabeza::before{content:"";position:absolute;top:0;bottom:-1px;left:calc(-
 header.cabeza{--texto:#f1e8d8;--tenue:#b5a48c;--oro:#d2a94b;--linea:#4a3a31;color:var(--texto);
   position:sticky;top:0;z-index:30;
   display:grid;grid-template-columns:1fr auto;gap:6px 32px;align-items:end;border-bottom:1px solid var(--linea);padding:14px 0 12px;margin-top:-28px}
+/* Buscador del encabezado: entiende la consulta con reglas y diccionarios de ARCA (sin LLM) */
+.buscador{grid-column:1/-1;position:relative;display:flex;gap:8px;margin-top:6px}
+.buscador input{flex:1;min-width:0;background:#2b201a;border:1px solid #6a5444;border-radius:8px;padding:9px 13px;font-size:.92rem;color:#f1e8d8}
+.buscador input::placeholder{color:#a8977f}
+.buscador input:focus{outline:2px solid #d2a94b;outline-offset:1px;border-color:#d2a94b}
+.buscador .boton{background:#d2a94b;color:#241910}
+.b-vista{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:35;background:#fbf6ec;color:#2a1d16;border:1px solid #c3ae8c;border-radius:10px;
+  box-shadow:0 10px 26px rgba(20,12,8,.35);padding:12px 14px;font-size:.84rem;line-height:1.45}
+.b-vista[hidden]{display:none}
+.b-vista .rot{color:#6e5a46;font-size:.76rem;margin:0 0 6px}
+.b-vista .ents{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.b-ent{display:inline-flex;align-items:center;gap:6px;background:#e6d9c2;border:1px solid #8a6210;border-radius:999px;padding:3px 5px 3px 10px;font-size:.8rem}
+.b-ent .tipo{color:#6e5a46;font-size:.72rem}
+.b-ent button{all:unset;cursor:pointer;padding:0 5px;border-radius:999px;color:#6e5a46}
+.b-ent button:hover,.b-ent button:focus-visible{background:#c3ae8c;color:#2a1d16}
+.b-ent .rol{font-size:.7rem;text-decoration:underline}
+.b-vista .nota-b{color:#6e5a46;font-size:.76rem;margin:0}
+.b-vista .nota-b b{color:#2a1d16}
 h1{font-family:var(--serif);font-weight:400;color:var(--oro);font-size:clamp(2rem,4vw,2.9rem);line-height:.95;margin:0;letter-spacing:-.01em}
 h1 i{color:var(--oro)}
 .subtitulo,.resumen{font-family:var(--serif);font-size:clamp(.98rem,1.5vw,1.12rem);line-height:1.3;margin:0;color:var(--texto)}
@@ -356,6 +374,11 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
       <div class="alcance" id="alcance"></div>
       <div class="estado" id="estado" role="status">Sin conectar</div>
     </div>
+    <form class="buscador" id="buscador" role="search" autocomplete="off">
+      <input type="search" id="bTexto" placeholder="Busca en lenguaje natural: «Virgen de Guadalupe con corona, pintada en México en el siglo XVIII»" aria-label="Buscar y filtrar" aria-describedby="bVista">
+      <button type="submit" class="boton" id="bAplicar">Aplicar</button>
+      <div class="b-vista" id="bVista" aria-live="polite" hidden></div>
+    </form>
   </header>
 
   <div class="aviso" id="aviso">
@@ -3756,7 +3779,329 @@ const PF = (()=>{
   return { init, reiniciar, sincronizar,
            resumen: facetSummary, quitar: clearFacet, valor: f => state[f],
            filtroActual: () => buildFilter([]),
+           // Vocabulario de referencia (para el buscador del encabezado); null hasta que cargue
+           referencias: () => listo ? {REF, maps} : null,
            fijarVarias, fijarFaceta, alternarFaceta, tieneFaceta };
+})();
+
+/* ---------- Buscador del encabezado ----------
+   Convierte una consulta en filtros sin usar un modelo de lenguaje:
+   1. normaliza el texto (minúsculas, sin tildes ni signos);
+   2. extrae fechas con patrones («siglo XVIII», «entre 1600 y 1650», «1700»…);
+   3. reconoce entidades con un diccionario construido con los nombres reales de ARCA
+      (países, ciudades, museos, autores, personajes, símbolos…): busca n-gramas de
+      hasta 8 palabras, primero el más largo, con singular/plural y un error de tipeo;
+   4. usa pistas de contexto: «pintado en», «origen» o un gentilicio («quiteño») hacen
+      que un lugar sea de origen; «símbolo», «objeto», «técnica»… deciden el campo
+      cuando un mismo nombre existe en varios.
+   Antes de aplicar se muestra lo que entendió, y cada pieza se puede corregir. */
+const BUSCA = (()=>{
+  const norm = s => (s||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+  // Forma canónica de una palabra: quita la «s» y la «e» finales (nube/nubes, flor/flores)
+  const canon = t => t.length > 3 && !/^\d+$/.test(t) ? t.replace(/s$/,'').replace(/e$/,'') : t;
+  const STOP = new Set(('de del la las el los y e o u ni en con sin por para a al un una unos unas lo que como sobre entre ante tras hacia segun '
+    + 'su sus se me mi muestrame mostrar muestra ver veo busco buscar quiero quisiera dame dime donde cuales cual hay tenga tengan tiene tienen '
+    + 'aparece aparecen aparezca aparezcan todas todos toda todo este esta estos estas ese esa esos esas obra obras pintura pinturas cuadro cuadros '
+    + 'imagen imagenes lienzo lienzos arte colonial relacionado relacionada relacionados relacionadas tipo tipos alguna alguno algunas algunos mas '
+    + 'san santa').split(' '));
+  const PISTA_ORIGEN = /^(pintad|hech|realizad|cread|elaborad|producid|procedent|provenient|origen|originari|nacid|fabricad|escuela)/;
+  const PISTA_CONSERVA = /^(conservad|ubicad|custodiad|guardad|exhibid|resguardad|hoy|actualmente|esta|estan|alojad)/;
+  const PISTA_CAMPO = [
+    [/^simbol/, 'simbolos'], [/^objet/, 'objetos'], [/^escenari/, 'escenarios'], [/^(personaj|tema)/, 'personajes'],
+    [/^tecnic/, 'tecnicas'], [/^gest/, 'gestos'], [/^descriptor/, 'descriptores'], [/^caracteristic/, 'caracteristicas'],
+    [/^(autor|pintor|artista|maestr)/, 'autores'], [/^(postura|cuerpo)/, 'fisiognomicas'], [/^(rostro|cara)/, 'rostros'],
+    [/^relato/, 'relatos_visuales'], [/^donante/, 'donantes'], [/^(cartela|filacteria)/, 'cartelas_filacterias'],
+    [/^(museo|iglesia|templo|convento|catedral|capilla|monasterio|coleccion)/, 'ubicaciones'],
+  ];
+  // Campos en orden de prioridad cuando no hay pistas
+  const CAMPOS = [
+    {col:'paises', rot:'País', lugar:true}, {col:'ciudades', rot:'Ciudad', lugar:true},
+    {col:'categorias1', campo:'categoria1', rot:'Tema'},
+    {col:'autores', campo:'autores', rot:'Autor'},
+    {col:'personajes', campo:'personajes', rot:'Personaje / tema'},
+    {col:'simbolos', campo:'simbolos', rot:'Símbolo'}, {col:'objetos', campo:'objetos', rot:'Objeto'},
+    {col:'escenarios', campo:'escenarios', rot:'Escenario'}, {col:'tecnicas', campo:'tecnicas', rot:'Técnica'},
+    {col:'descriptores', campo:'descriptores', rot:'Descriptor'}, {col:'caracteristicas', campo:'caracteristicas', rot:'Característica'},
+    {col:'ubicaciones', campo:'ubicacion', rot:'Lugar de conservación'},
+    ...[2,3,4,5,6].map(n => ({col:'categorias'+n, campo:'categoria'+n, rot:'Clasificación'})),
+    {col:'relatos_visuales', campo:'relato_visual', rot:'Relato visual'}, {col:'donantes', campo:'donante', rot:'Donante'},
+    {col:'cartelas_filacterias', campo:'cartela_filacteria', rot:'Cartela / filacteria'},
+    {col:'gestos', campo:'gesto1', rot:'Gesto'}, {col:'fisiognomicas', campo:'fisiognomica', rot:'Postura'},
+    {col:'fisiognomicas_imagen', campo:'fisiognomica_imagen', rot:'Cuerpo', soloConPista:true},
+    {col:'rostros', campo:'rostro', rot:'Rostro', soloConPista:true},
+  ];
+  const RELLENO = /^(no|no aplica|ninguno|ninguna|desconocido|desconocida|otro|otros|otra|otras|sin .+|ambiguo.*)$/;
+  // Gentilicios: siempre indican lugar de origen
+  const GENTILICIOS = [
+    [/^(mexican|novohispan)[oa]s?$/, 'paises', ['Mexico']], [/^peruan[oa]s?$/, 'paises', ['Peru']],
+    [/^limen[oa]s?$/, 'ciudades', ['Lima']], [/^(cusquen|cuzquen)[oa]s?$/, 'ciudades', ['Cusco','Cuzco']],
+    [/^quiten[oa]s?$/, 'ciudades', ['Quito']], [/^(colombian|neogranadin)[oa]s?$/, 'paises', ['Colombia']],
+    [/^santaferen[oa]s?$/, 'ciudades', ['Bogota']], [/^ecuatorian[oa]s?$/, 'paises', ['Ecuador']],
+    [/^(bolivian|altoperuan)[oa]s?$/, 'paises', ['Bolivia']], [/^potosin[oa]s?$/, 'ciudades', ['Potosi']],
+    [/^venezolan[oa]s?$/, 'paises', ['Venezuela']], [/^chilen[oa]s?$/, 'paises', ['Chile']],
+    [/^argentin[oa]s?$/, 'paises', ['Argentina']], [/^guatemaltec[oa]s?$/, 'paises', ['Guatemala']],
+    [/^espanol(a|es|as)?$/, 'paises', ['Espana']], [/^sevillan[oa]s?$/, 'ciudades', ['Sevilla']],
+    [/^italian[oa]s?$/, 'paises', ['Italia']], [/^brasilen[oa]s?$/, 'paises', ['Brasil']],
+    [/^cuban[oa]s?$/, 'paises', ['Cuba']], [/^puertorriquen[oa]s?$/, 'paises', ['Puerto Rico']],
+    [/^panamen[oa]s?$/, 'paises', ['Panama']], [/^filipin[oa]s?$/, 'paises', ['Filipinas']],
+  ];
+  const nombreDe = (col, it) => col === 'autores' ? [it.nombre, it.apellido].filter(Boolean).join(' ') : (it.nombre || '');
+  const pesoDe = it => it.obras_count ?? it.count?.obras ?? (typeof it.obras === 'number' ? it.obras : 0);
+  const clave = s => norm(s).split(' ').filter(Boolean).map(canon).join(' ');
+
+  // ── Diccionario: clave normalizada → candidatos ──
+  let indice = null, unaPalabra = [], refUsada = null, porPalabra = new Map();
+  function construir(REF){
+    const m = new Map(), derivados = new Map();   // derivados: para descartar variantes ambiguas
+    porPalabra = new Map();                       // palabra → nombres que la contienen (coincidencia parcial)
+    const poner = (k, cand, principal) => {
+      if (!k || k.length < 3 || (!k.includes(' ') && STOP.has(k))) return;
+      if (!m.has(k)) m.set(k, []);
+      const lista = m.get(k);
+      if (lista.some(c => c.cfg === cand.cfg && c.id === cand.id)) return;
+      lista.push({...cand, principal});
+      if (!principal){ const d = k + '|' + cand.cfg.col; derivados.set(d, (derivados.get(d)||0) + 1); }
+    };
+    for (const cfg of CAMPOS){
+      for (const it of (REF[cfg.col] || [])){
+        const nombre = nombreDe(cfg.col, it).trim();
+        if (!nombre || RELLENO.test(norm(nombre))) continue;
+        const cand = {cfg, id:it.id, nombre, peso:pesoDe(it)};
+        poner(clave(nombre), cand, true);
+        if (!cfg.soloConPista) for (const p of new Set(clave(nombre).split(' ')))
+          if (p.length >= 4 && !STOP.has(p)){ if (!porPalabra.has(p)) porPalabra.set(p, []); porPalabra.get(p).push(cand); }
+        const v = [];
+        if (nombre.includes(',')){ const [a, ...b] = nombre.split(','); v.push(`${b.join(' ')} ${a}`, a); }
+        if (nombre.includes('(')) v.push(nombre.replace(/\(.*?\)/g, ' '));
+        if (nombre.includes('/')) v.push(...nombre.split('/'));
+        if (nombre.includes(':')) v.push(nombre.split(':').slice(1).join(' '));
+        if (cfg.col === 'autores' && it.apellido && norm(it.apellido).length >= 5) v.push(it.apellido);
+        v.forEach(x => poner(clave(x), cand, false));
+      }
+    }
+    // Una variante (no el nombre completo) que apunta a varios elementos del mismo campo es ambigua: fuera.
+    // También una variante de una sola palabra muy repetida en otros nombres («óleo» sale de
+    // «Óleo / acuarela sobre hueso», pero está en muchas técnicas): no identifica nada.
+    for (const [k, lista] of m){
+      const comun = !k.includes(' ') && (porPalabra.get(k)?.length || 0) >= 3;
+      const limpia = lista.filter(c => c.principal || (derivados.get(k + '|' + c.cfg.col) === 1 && !comun));
+      if (limpia.length) m.set(k, limpia); else m.delete(k);
+    }
+    indice = m; refUsada = REF;
+    unaPalabra = [...m.keys()].filter(k => !k.includes(' ') && k.length >= 5);
+  }
+  // Distancia de edición con corte temprano (para un error de tipeo)
+  function distancia(a, b, max){
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    let prev = Array.from({length:b.length + 1}, (_, j) => j);
+    for (let i = 1; i <= a.length; i++){
+      const cur = [i]; let menor = i;
+      for (let j = 1; j <= b.length; j++){
+        cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+        menor = Math.min(menor, cur[j]);
+      }
+      if (menor > max) return max + 1;
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+
+  // ── Fechas ──
+  const romano = r => { const v = {i:1, v:5, x:10, l:50, c:100}; let n = 0;
+    for (let k = 0; k < r.length; k++){ const a = v[r[k]], b = v[r[k+1]] || 0; n += a < b ? -a : a; } return n; };
+  const numSiglo = s => /^\d+$/.test(s) ? +s : romano(s);
+  const SIG = '([xvi]{1,5}|\\d{1,2})';
+  function extraerFechas(t){
+    const rangos = [];
+    const quitar = (re, fn) => { t = t.replace(re, (...g) => { const r = fn(...g); if (r) { rangos.push(r); return ' | '; } return g[0]; }); };
+    const siglo = n => (n >= 14 && n <= 20) ? [(n-1)*100, (n-1)*100 + 99] : null;
+    quitar(new RegExp(`\\b(primera|segunda) mitad del siglo ${SIG}\\b`, 'g'), (_, p, s) => { const b = siglo(numSiglo(s)); if (!b) return null;
+      return p === 'primera' ? {desde:b[0], hasta:b[0]+49, txt:`primera mitad del siglo ${s.toUpperCase()}`} : {desde:b[0]+50, hasta:b[1], txt:`segunda mitad del siglo ${s.toUpperCase()}`}; });
+    quitar(new RegExp(`\\b(principios|inicios|comienzos|mediados|finales|fines) del siglo ${SIG}\\b`, 'g'), (_, p, s) => { const b = siglo(numSiglo(s)); if (!b) return null;
+      const [d, h] = /^(principios|inicios|comienzos)$/.test(p) ? [0, 33] : p === 'mediados' ? [33, 66] : [66, 99];
+      return {desde:b[0]+d, hasta:b[0]+h, txt:`${p} del siglo ${s.toUpperCase()}`}; });
+    quitar(new RegExp(`\\bsiglos? ${SIG} (?:y|al|a|hasta el) (?:siglo )?${SIG}\\b`, 'g'), (_, a, b) => { const x = siglo(numSiglo(a)), y = siglo(numSiglo(b)); if (!x || !y) return null;
+      return {desde:Math.min(x[0], y[0]), hasta:Math.max(x[1], y[1]), txt:`siglos ${a.toUpperCase()} y ${b.toUpperCase()}`}; });
+    quitar(new RegExp(`\\bsiglo ${SIG}\\b`, 'g'), (_, s) => { const b = siglo(numSiglo(s)); return b ? {desde:b[0], hasta:b[1], txt:`siglo ${s.toUpperCase()}`} : null; });
+    quitar(/\b(?:entre|de|desde)(?: el)?(?: ano)? (1[4-9]\d\d) (?:y|a|al|hasta)(?: el)?(?: ano)? (1[4-9]\d\d)\b/g, (_, a, b) => ({desde:Math.min(+a,+b), hasta:Math.max(+a,+b), txt:`${Math.min(+a,+b)}–${Math.max(+a,+b)}`}));
+    quitar(/\b(1[4-9]\d\d) (1[4-9]\d\d)\b/g, (_, a, b) => ({desde:Math.min(+a,+b), hasta:Math.max(+a,+b), txt:`${Math.min(+a,+b)}–${Math.max(+a,+b)}`}));
+    quitar(/\b(?:decada de(?: los)?|anos) (1[4-9]\d0)s?\b/g, (_, a) => ({desde:+a, hasta:+a+9, txt:`década de ${a}`}));
+    quitar(/\b(?:antes de(?:l)?|hasta)(?: el)?(?: ano)? (1[4-9]\d\d)\b/g, (_, a) => ({desde:null, hasta:+a, txt:`hasta ${a}`}));
+    quitar(/\b(?:despues de(?:l)?|desde|a partir de(?:l)?)(?: el)?(?: ano)? (1[4-9]\d\d)\b/g, (_, a) => ({desde:+a, hasta:null, txt:`desde ${a}`}));
+    quitar(/\b(1[4-9]\d\d)\b/g, (_, a) => ({desde:+a, hasta:+a, txt:`año ${a}`}));
+    if (!rangos.length) return {t, fecha:null};
+    // Varias expresiones: se toma el periodo que las abarca a todas
+    const ds = rangos.map(r => r.desde).filter(v => v != null), hs = rangos.map(r => r.hasta).filter(v => v != null);
+    return {t, fecha:{desde: ds.length ? Math.min(...ds) : null, hasta: hs.length ? Math.max(...hs) : null, txt: rangos.map(r => r.txt).join(' + ')}};
+  }
+
+  // ── Análisis completo ──
+  function analizar(q){
+    const ref = PF.referencias();
+    if (!ref) return null;
+    if (refUsada !== ref.REF) construir(ref.REF);
+    const {t, fecha} = extraerFechas(' ' + norm(q) + ' ');
+    const tok = t.split(' ').filter(Boolean);
+    const entidades = [], sueltos = [];
+    const ventana = (i, n) => tok.slice(Math.max(0, i - n), i);
+    const pistaCampo = i => { for (const w of ventana(i, 3).reverse()) for (const [re, col] of PISTA_CAMPO) if (re.test(w)) return col; return null; };
+    const rolLugar = i => { const w = ventana(i, 4);
+      if (w.some(x => PISTA_ORIGEN.test(x))) return 'origen';
+      if (w.some(x => PISTA_CONSERVA.test(x))) return 'conservacion';
+      return 'conservacion'; };
+    const elegir = (cands, i) => {
+      const pista = pistaCampo(i);
+      let lista = cands.filter(c => !c.cfg.soloConPista || c.cfg.col === pista);
+      if (!lista.length) return null;
+      const orden = c => CAMPOS.indexOf(c.cfg);
+      lista.sort((a, b) => (b.cfg.col === pista) - (a.cfg.col === pista) || orden(a) - orden(b) || b.peso - a.peso || b.principal - a.principal);
+      // Alternativas: un candidato por campo, para poder corregir con un clic
+      const opciones = []; for (const c of lista) if (!opciones.some(o => o.cfg === c.cfg)) opciones.push(c);
+      return {opciones, sel:0};
+    };
+    const agregar = (e, i) => {
+      const c = e.opciones[e.sel];
+      if (entidades.some(x => x.opciones[x.sel].cfg === c.cfg && x.opciones[x.sel].id === c.id)) return;
+      if (c.cfg.lugar) e.rol = e.rol || rolLugar(i);
+      entidades.push(e);
+    };
+    for (let i = 0; i < tok.length; ){
+      const w = tok[i];
+      if (w === '|'){ i++; continue; }
+      // Gentilicio → lugar de origen
+      const gent = GENTILICIOS.find(([re]) => re.test(w));
+      if (gent){
+        const [, col, nombres] = gent, cfg = CAMPOS.find(c => c.col === col);
+        const it = (ref.REF[col] || []).find(x => nombres.map(norm).includes(norm(x.nombre)));
+        if (it){ agregar({opciones:[{cfg, id:it.id, nombre:it.nombre, peso:0}], sel:0, rol:'origen', via:w}, i); i++; continue; }
+      }
+      // Las palabras de pista («pintada», «hoy», «símbolo»…) orientan, pero no son términos
+      const esPista = PISTA_ORIGEN.test(w) || PISTA_CONSERVA.test(w) || PISTA_CAMPO.some(([re]) => re.test(w));
+      const parciales = !STOP.has(w) && !esPista && canon(w).length >= 5 ? porPalabra.get(canon(w)) : null;
+      // N-gramas, del más largo al más corto
+      let hecho = false;
+      for (let L = Math.min(8, tok.length - i); L >= 1 && !hecho; L--){
+        const trozo = tok.slice(i, i + L);
+        if (trozo.includes('|')) continue;
+        if (L === 1 && (STOP.has(w) || w.length < 3 || esPista)) continue;
+        const cands = indice.get(trozo.map(canon).join(' '));
+        if (!cands) continue;
+        const e = elegir(cands, i);
+        if (!e) continue;
+        // Una sola palabra que solo nombra una ciudad o un museo («guadalupe») cede ante un término
+        // mucho más frecuente que la contiene (Virgen de Guadalupe); el lugar queda como alternativa.
+        if (L === 1 && ['ciudades','ubicaciones'].includes(e.opciones[0].cfg.col) && !pistaCampo(i)){
+          const fuerte = (parciales || []).filter(c => !c.cfg.lugar && c.cfg.col !== 'ubicaciones' && c.peso >= 100).sort((a, b) => b.peso - a.peso)[0];
+          if (fuerte){ e.opciones = [fuerte, ...e.opciones]; e.aprox = w; }
+        }
+        agregar(e, i); i += L; hecho = true;
+      }
+      if (hecho) continue;
+      // Coincidencia parcial: una palabra que forma parte de un nombre («guadalupe» → Virgen de Guadalupe).
+      // Gana el nombre con más obras (o el del campo que indique una pista); los demás quedan como alternativas.
+      if (parciales){
+        const pista = pistaCampo(i);
+        const lista = [...parciales].sort((a, b) => (b.cfg.col === pista) - (a.cfg.col === pista) || b.peso - a.peso || CAMPOS.indexOf(a.cfg) - CAMPOS.indexOf(b.cfg));
+        agregar({opciones:lista.slice(0, 6), sel:0, aprox:w}, i); i++; continue;
+      }
+      // Un error de tipeo en una palabra larga
+      if (!STOP.has(w) && w.length >= 5 && !esPista){
+        const c = canon(w), max = c.length >= 9 ? 2 : 1;
+        let mejor = null, dmin = max + 1;
+        for (const k of unaPalabra){ const d = distancia(c, k, max); if (d < dmin){ dmin = d; mejor = k; if (d === 1) break; } }
+        if (mejor){ const e = elegir(indice.get(mejor), i); if (e){ e.aprox = w; agregar(e, i); i++; continue; } }
+      }
+      if (!STOP.has(w) && !/^\d+$/.test(w) && !PISTA_ORIGEN.test(w) && !PISTA_CONSERVA.test(w) && !PISTA_CAMPO.some(([re]) => re.test(w)) && !/^(siglo|decada|ano|anos|entre|antes|despues|desde|partir)$/.test(w))
+        sueltos.push(w);
+      i++;
+    }
+    // No se avisa de palabras que ya forman parte de un término reconocido («óleo» en «Óleo sobre lámina»)
+    const enNombres = new Set(entidades.flatMap(e => clave(e.opciones[e.sel].nombre).split(' ')));
+    return {q:q.trim(), entidades, fecha, sueltos: sueltos.filter(s => !enNombres.has(canon(s)))};
+  }
+
+  // Campo del panel que corresponde a una entidad (los lugares dependen del rol)
+  function campoDe(e){
+    const c = e.opciones[e.sel];
+    if (c.cfg.col === 'paises') return e.rol === 'origen' ? 'origenPaisUI' : 'pais';
+    if (c.cfg.col === 'ciudades') return e.rol === 'origen' ? 'ciudad_origen' : 'ciudad';
+    return c.cfg.campo;
+  }
+  const M2M = ['autores','tecnicas','simbolos','caracteristicas','escenarios','objetos','descriptores','personajes'];
+  function aFiltros(a){
+    const obj = {}, avisos = [];
+    // Lugares de mayor a menor nivel, para que la ciudad o el museo queden por encima del país
+    const orden = e => ({pais:0, origenPaisUI:0, ciudad:1, ciudad_origen:1, ubicacion:2})[campoDe(e)] ?? 3;
+    for (const e of [...a.entidades].sort((x, y) => orden(x) - orden(y))){
+      const campo = campoDe(e), c = e.opciones[e.sel];
+      if (M2M.includes(campo)) (obj[campo] ||= []).push(Number(c.id));
+      else if (obj[campo] == null) obj[campo] = Number(c.id);
+      else avisos.push(`Solo se puede elegir un valor en «${c.cfg.rot}»; se usará el primero.`);
+    }
+    if (a.fecha){ obj.fechaDesde = a.fecha.desde; obj.fechaHasta = a.fecha.hasta; }
+    if (!a.entidades.length && !a.fecha && a.q) obj.titulo = a.q;
+    return {obj, avisos};
+  }
+  return {analizar, aFiltros, campoDe};
+})();
+
+// ── Interfaz del buscador ──
+(() => {
+  const entrada = $('bTexto'), vista = $('bVista');
+  let actual = null, espera;
+  const rotulo = e => {
+    const c = e.opciones[e.sel];
+    if (c.cfg.col === 'paises') return e.rol === 'origen' ? 'País de origen' : 'País de conservación';
+    if (c.cfg.col === 'ciudades') return e.rol === 'origen' ? 'Ciudad de origen' : 'Ciudad de conservación';
+    return c.cfg.rot;
+  };
+  function pintar(){
+    if (!entrada.value.trim()){ vista.hidden = true; return; }
+    if (!actual){ vista.innerHTML = '<p class="nota-b">Cargando el vocabulario de ARCA para entender la búsqueda…</p>'; vista.hidden = false; return; }
+    const {obj, avisos} = BUSCA.aFiltros(actual);
+    const chips = actual.entidades.map((e, i) => {
+      const c = e.opciones[e.sel];
+      const rol = c.cfg.lugar ? `<button type="button" class="rol" data-rol="${i}" title="Cambiar entre origen y conservación">${e.rol === 'origen' ? '→ conservación' : '→ origen'}</button>` : '';
+      const otras = e.opciones.map(o => `${o.cfg.rot}: ${o.nombre}`).join(' · ');
+      const alt = e.opciones.length > 1 ? `<button type="button" data-alt="${i}" title="Probar otra coincidencia (${escHTML(otras)})" aria-label="Probar otra coincidencia">⇄</button>` : '';
+      const aprox = e.aprox ? ` <span class="tipo">(por «${escHTML(e.aprox)}»)</span>` : e.via ? ` <span class="tipo">(por «${escHTML(e.via)}»)</span>` : '';
+      return `<span class="b-ent"><span class="tipo">${escHTML(rotulo(e))}:</span> ${escHTML(c.nombre)}${aprox}${rol}${alt}<button type="button" data-quitar="${i}" aria-label="Quitar">×</button></span>`;
+    });
+    if (actual.fecha) chips.push(`<span class="b-ent"><span class="tipo">Fecha:</span> ${actual.fecha.desde ?? '…'}–${actual.fecha.hasta ?? '…'} <span class="tipo">(${escHTML(actual.fecha.txt)})</span><button type="button" data-quitar="fecha" aria-label="Quitar">×</button></span>`);
+    let html = '';
+    if (chips.length) html += `<p class="rot">Entendí estos filtros:</p><div class="ents">${chips.join('')}</div>`;
+    else html += `<p class="nota-b">No reconocí ningún término de ARCA: buscaré «<b>${escHTML(actual.q)}</b>» en los <b>títulos</b> de las obras.</p>`;
+    if (chips.length && actual.sueltos.length) html += `<p class="nota-b">No reconocí: ${actual.sueltos.map(s=>`«${escHTML(s)}»`).join(', ')} (se ignora).</p>`;
+    const varios = Object.entries(obj).filter(([, v]) => Array.isArray(v) && v.length > 1);
+    if (varios.length) html += `<p class="nota-b">Dos términos del mismo campo se combinan con «o», como en el panel: basta con que la obra tenga uno.</p>`;
+    avisos.forEach(a => html += `<p class="nota-b">${escHTML(a)}</p>`);
+    html += `<p class="nota-b" style="margin-top:6px"><b>Enter</b> o <b>Aplicar</b> reemplaza los filtros actuales · <b>Esc</b> cierra.</p>`;
+    vista.innerHTML = html; vista.hidden = false;
+    vista.querySelectorAll('[data-quitar]').forEach(b => b.onclick = ev => { ev.stopPropagation();
+      if (b.dataset.quitar === 'fecha') actual.fecha = null; else actual.entidades.splice(+b.dataset.quitar, 1);
+      pintar(); });
+    vista.querySelectorAll('[data-rol]').forEach(b => b.onclick = ev => { ev.stopPropagation();
+      const e = actual.entidades[+b.dataset.rol]; e.rol = e.rol === 'origen' ? 'conservacion' : 'origen'; pintar(); });
+    vista.querySelectorAll('[data-alt]').forEach(b => b.onclick = ev => { ev.stopPropagation();
+      const e = actual.entidades[+b.dataset.alt]; e.sel = (e.sel + 1) % e.opciones.length;
+      if (e.opciones[e.sel].cfg.lugar && !e.rol) e.rol = 'conservacion'; pintar(); });
+  }
+  function analizar(){ actual = BUSCA.analizar(entrada.value); pintar(); }
+  entrada.addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(analizar, 140); });
+  entrada.addEventListener('focus', () => { if (entrada.value.trim()){ if (!actual) analizar(); else pintar(); } });
+  entrada.addEventListener('keydown', e => { if (e.key === 'Escape'){ vista.hidden = true; e.stopPropagation(); } });
+  document.addEventListener('click', e => { if (!$('buscador').contains(e.target)) vista.hidden = true; });
+  $('buscador').addEventListener('submit', e => {
+    e.preventDefault();
+    if (!entrada.value.trim()) return;
+    if (!actual || actual.q !== entrada.value.trim()) actual = BUSCA.analizar(entrada.value);
+    if (!actual){ pintar(); return; }
+    const {obj} = BUSCA.aFiltros(actual);
+    PF.reiniciar();
+    PF.fijarVarias(obj);
+    vista.hidden = true;
+  });
 })();
 
 /* ---------- Arranque ---------- */
