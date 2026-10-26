@@ -164,6 +164,10 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 .barra-activa .chip{font-size:.8rem}
 .barra-activa .acciones{margin-left:auto;display:flex;gap:8px}
 .barra-activa .boton{padding:5px 12px;font-size:.8rem}
+.barra-activa .aviso-filtro{font-size:.78rem;color:var(--tenue);font-style:italic}
+.barra-activa .aviso-filtro[hidden]{display:none}
+/* Dentro del encabezado café: recupera los tonos de la página para que los chips se lean igual */
+header.cabeza .barra-activa{--texto:#2a1d16;--tenue:#6e5a46;--oro:#8a6210;--linea:#c3ae8c;color:var(--texto);margin-top:4px;padding:6px 12px;max-height:30vh;overflow:auto}
 .controles .ayuda{flex-basis:100%;font-size:.77rem;color:var(--tenue);margin:0 0 2px;max-width:70ch}
 .controles select optgroup{background:var(--panel);color:var(--oro);font-style:normal}
 
@@ -177,8 +181,9 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 select.destello{animation:destello 1.6s ease-out}
 .lista .nombre{font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lista .cifra{font-size:.82rem;color:var(--tenue);font-variant-numeric:tabular-nums}
-.lista .pista{grid-column:1/-1;height:5px;background:var(--panel2);border-radius:3px;overflow:hidden}
-.lista .pista span{display:block;height:100%;background:var(--oro)}
+.lista .pista{grid-column:1/-1;height:5px;background:#f3e1e6;border-radius:3px;overflow:hidden}
+/* Color propio (carmín rosado) para no confundirla con las gráficas doradas */
+.lista .pista span{display:block;height:100%;background:#c43b6a}
 
 .red-leyenda{display:flex;gap:14px;font-size:.78rem;color:var(--tenue);margin-top:6px;flex-wrap:wrap}
 .red-leyenda span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;background:var(--c)}
@@ -248,6 +253,12 @@ label.faceta-rotulo select{margin-top:4px}
 .pf-geo{font-size:.78rem;margin-top:6px}
 .pf-rango{position:relative;height:52px}
 .pf-rango-valores{display:flex;justify-content:space-between;font-size:.8rem;color:var(--oro);font-variant-numeric:tabular-nums}
+/* Los extremos se pueden escribir: parecen texto, pero al pasar o tocar se ven como campo */
+.pf-rango-valores input{width:4.6em;padding:1px 4px;margin:0 -4px;background:transparent;border:1px dashed transparent;border-bottom-color:var(--linea);border-radius:4px;font:inherit;color:inherit;font-variant-numeric:tabular-nums;cursor:text;-moz-appearance:textfield;appearance:textfield}
+.pf-rango-valores input:last-child{text-align:right}
+.pf-rango-valores input::-webkit-inner-spin-button,.pf-rango-valores input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.pf-rango-valores input:hover{border-color:var(--linea)}
+.pf-rango-valores input:focus{outline:none;border:1px solid var(--oro);background:var(--panel);color:var(--texto)}
 .pf-rango-pista{position:absolute;top:33px;left:0;right:0;height:4px;border-radius:999px;background:var(--linea)}
 .pf-rango-relleno{position:absolute;top:0;height:4px;border-radius:999px;background:var(--oro)}
 .pf-rango input[type=range]{-webkit-appearance:none;appearance:none;position:absolute;top:27px;left:0;width:100%;height:16px;margin:0;background:transparent;pointer-events:none}
@@ -379,6 +390,15 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
       <button type="submit" class="boton" id="bAplicar">Aplicar</button>
       <div class="b-vista" id="bVista" aria-live="polite" hidden></div>
     </form>
+    <!-- Filtros activos dentro del encabezado fijo: siguen a la vista al hacer scroll -->
+    <div class="barra-activa" id="barraActiva" hidden>
+      <span class="rot">Filtros activos:</span>
+      <span id="chipsActivos" style="display:flex;flex-wrap:wrap;gap:6px"></span>
+      <span class="aviso-filtro" id="avisoFiltro" role="status" hidden></span>
+      <span class="acciones">
+        <button class="boton sec" id="quitarTodo">Quitar todos los filtros</button>
+      </span>
+    </div>
   </header>
 
   <div class="aviso" id="aviso">
@@ -391,14 +411,6 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
 
 
   <div class="rejilla">
-    <div class="barra-activa" id="barraActiva" hidden>
-      <span class="rot">Filtros activos:</span>
-      <span id="chipsActivos" style="display:flex;flex-wrap:wrap;gap:6px"></span>
-      <span class="acciones">
-        <button class="boton sec" id="quitarTodo">Quitar todos los filtros</button>
-      </span>
-    </div>
-
     <section class="bloque b-pulso" data-bloque="pulso" data-titulo="Pulso de la colección">
       <h2>Pulso de la colección<span class="info" tabindex="0" role="button" aria-label="Cómo leer este resumen"><span class="info-globo" role="tooltip">Resume las obras que cumplen los filtros del panel: cuántas son, cuántos pintores identificados las hicieron, en cuántos lugares se conservan hoy y cuántas son anónimas (sin autor identificado). Sin filtros, describe toda la colección.</span></span></h2>
       <p class="lectura" id="pulsoLectura">Calculando…</p>
@@ -673,9 +685,9 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
 
         <div class="faceta">
           <span class="faceta-rotulo">Fecha (rango de años, se cruza con la datación de la obra)</span>
-          <p class="pf-pista">Arrastra los dos extremos para definir el rango.</p>
+          <p class="pf-pista">Arrastra los dos extremos para definir el rango, o toca un año para escribirlo exacto.</p>
           <div class="pf-rango">
-            <div class="pf-rango-valores"><span id="pf-val-desde"></span><span id="pf-val-hasta"></span></div>
+            <div class="pf-rango-valores"><input type="number" id="pf-val-desde" step="1" inputmode="numeric" aria-label="Escribir año desde" title="Clic para escribir el año exacto"><input type="number" id="pf-val-hasta" step="1" inputmode="numeric" aria-label="Escribir año hasta" title="Clic para escribir el año exacto"></div>
             <div class="pf-rango-pista"><div class="pf-rango-relleno" id="pf-relleno"></div></div>
             <input type="range" id="pf-rango-desde" step="1" aria-label="Año desde">
             <input type="range" id="pf-rango-hasta" step="1" aria-label="Año hasta">
@@ -1013,12 +1025,28 @@ function aplicarFiltros(){
   pintarBarraActiva();
   const n = S.permitidas ? S.permitidas.size : S.total;
   $('alcance').textContent = activo ? `${fmt(n)} de ${fmt(S.total)} obras en el filtro` : `${fmt(S.total)} obras`;
+  avisarSiNoCambia(n, activo);
   dibujarPulso(); dibujarMapa(); dibujarTecnicas(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRanking(); dibujarRed();
   if (vistos.has('gestos')) dibujarGestos();
   if (vistos.has('comparativo')) dibujarComparativo();
   if (vistos.has('detalle')) dibujarAutores();
   S.tablaPag = 0; dibujarTabla();
   if ($('explorador').classList.contains('abierto') && EX.filtros) exDibujar();
+}
+// Si se pone o se quita un filtro y el número de obras sigue igual, las gráficas no
+// cambian y parece que el clic no hizo nada. Se avisa en la barra de filtros activos
+// (p. ej. quitar «Fecha: … – 1851» con Ecuador: no hay obras de Ecuador posteriores).
+let firmaFiltros = null, nAnterior = null, avisoTimer;
+function avisarSiNoCambia(n, activo){
+  const firma = (typeof PF !== 'undefined' && PF.resumen ? PF.resumen() : []).map(p => p[0] + ':' + p[1]).join('|');
+  const aviso = $('avisoFiltro');
+  if (firmaFiltros !== null && firma !== firmaFiltros && n === nAnterior && activo){
+    aviso.textContent = `El resultado no cambió: las mismas ${fmt(n)} obras cumplen los filtros antes y después de este ajuste.`;
+    aviso.hidden = false;
+    clearTimeout(avisoTimer);
+    avisoTimer = setTimeout(() => { aviso.hidden = true; }, 8000);
+  } else if (firma !== firmaFiltros) aviso.hidden = true;
+  firmaFiltros = firma; nAnterior = n;
 }
 /* Los bloques que exigen descargar tablas enteras solo se calculan la primera vez
    que el usuario llega a ellos; después siguen el ritmo de los filtros. */
@@ -1216,6 +1244,20 @@ function corregirOrientacion(f){
 // Rampa multitono (amarillo → naranja → café) de claro a oscuro: sobre un fondo
 // beige, más obras tiene que leerse como más oscuro, no al revés.
 const RAMPA_MAPA = t => d3.interpolateYlOrBr(0.18 + 0.79*t);
+// Paleta por categoría (identidad: país, origen, término…). Ocho tonos bien separados
+// en orden fijo: el orden está elegido para que los vecinos se distingan también con
+// daltonismo. A partir del noveno, todo va en gris «otros»: nunca se repite un color.
+const CATEG = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#6250d6','#e34948'];
+const CATEG_OTROS = '#a39686';
+const colorCateg = claves => { const m = new Map(claves.slice(0, CATEG.length).map((k,i)=>[k, CATEG[i]])); return k => m.get(k) || CATEG_OTROS; };
+// Texto legible sobre un relleno: oscuro sobre tonos claros, blanco sobre oscuros.
+const tintaSobre = c => d3.lab(c).l > 64 ? '#2a1d16' : '#fff';
+// Rampas de magnitud (un solo tono, de claro a oscuro). Cada gráfica tiene la suya
+// para que no se confundan entre sí: Temática en azul, Técnicas en verde, Gestos en
+// violeta y Explorar a fondo en turquesa; el mapa conserva el dorado.
+const RAMPA_TEMAS    = d3.interpolateRgb('#e6eefa', '#0d366b');
+const RAMPA_TECNICAS = d3.interpolateRgb('#e2f3ea', '#0b5a3c');
+const RAMPA_GESTOS   = d3.interpolateRgb('#efe9f8', '#3a2382');
 
 function dibujarMapa(){
   const cont = $('mapa');
@@ -1414,7 +1456,7 @@ function dibujarTiempo(){
     .call(g=>g.selectAll('line').attr('x2',W-m.l-m.r).attr('stroke','var(--linea)').attr('stroke-opacity',.5));
   svg.append('g').selectAll('rect').data(decs).join('rect')
     .attr('x',d=>x(d)).attr('width',x.bandwidth()).attr('y',d=>y(filtr.get(d)||0)).attr('height',d=>y(0)-y(filtr.get(d)||0))
-    .attr('fill','var(--oro)')
+    .attr('fill','#e4572e')   // bermellón: color propio y llamativo para Temporalidad
     .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d}–${d+9}</strong><br>${fmt(filtr.get(d)||0)} obras`))
     .on('mouseleave', ocultarTip);
   cont.replaceChildren(svg.node());
@@ -1459,7 +1501,7 @@ function dibujarAtlas(extra = 0){   // extra: alto adicional (px) para alinear c
   const W=cont.clientWidth||700, m={t:18,r:10,b:34,l:Math.min(142,W*.28)}, fila=25 + extra/Math.max(1,cats.length), H=m.t+cats.length*fila+m.b;
   const x=d3.scaleBand(periodos,[m.l,W-m.r]).padding(.04), y=d3.scaleBand(cats,[m.t,H-m.b]).padding(.04);
   const maxP=d3.max(celdas,d=>d.total?d.n/d.total:0)||1;
-  const color=d3.scaleSequentialSqrt([0,maxP],d3.interpolateRgb('#f0e4c8','#6b3d06'));
+  const color=d3.scaleSequentialSqrt([0,maxP],RAMPA_TEMAS);
   const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Composición iconográfica por cuartos de siglo');
   const celdaSel = d => catActiva!=null && String(idCat.get(d.cat))===String(catActiva) && S.filtro.desde===d.p && S.filtro.hasta===d.p+24;
   svg.append('g').selectAll('rect').data(celdas).join('rect').attr('class','celda-calor')
@@ -1559,15 +1601,15 @@ function dibujarFlujos(){
   const W=cont.clientWidth||500, H=Math.max(390,Math.max(izq.length,der.length)*39), xL=Math.min(145,W*.32), xR=Math.max(W-145,W*.68), gap=6;
   const total=movidas.length, escala=Math.min((H-28-gap*(izq.length-1))/total,(H-28-gap*(der.length-1))/total);
   const colocar = lista => { let y=14; const m=new Map(); for(const [nombre,n] of lista){ m.set(nombre,{nombre,n,y,h:Math.max(2,n*escala),off:0}); y+=Math.max(2,n*escala)+gap; } return m; };
-  const nodosL=colocar(izq), nodosR=colocar(der), paleta=d3.scaleOrdinal(izq.map(d=>d[0]),['#8a6210','#ab2d45','#3a64a2','#2b7864','#a55628','#6d4b9a','#7a7230','#63524a']);
+  const nodosL=colocar(izq), nodosR=colocar(der), paleta=colorCateg(izq.map(d=>d[0]).filter(n=>n!=='Otros orígenes'));
   const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Flujos entre país de origen y país de conservación');
   const cintas=svg.append('g').selectAll('path').data(enlaces).join('path').attr('class','cinta-flujo').attr('fill',d=>paleta(d.a)).attr('stroke',d=>paleta(d.a))
     .attr('d',d=>{ const a=nodosL.get(d.a),b=nodosR.get(d.b),h=Math.max(1,d.n*escala),sy=a.y+a.off,ty=b.y+b.off,mid=(xL+xR)/2; a.off+=h;b.off+=h; return `M${xL},${sy}C${mid},${sy} ${mid},${ty} ${xR},${ty}L${xR},${ty+h}C${mid},${ty+h} ${mid},${sy+h} ${xL},${sy+h}Z`; })
     .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.a} → ${d.b}</strong><br>${fmt(d.n)} obras`))
     .on('mouseleave',ocultarTip)
     .style('cursor','default');
-  const dibujarLado=(mapa,x,ancla) => { const ns=[...mapa.values()]; svg.append('g').selectAll('rect').data(ns).join('rect').attr('class','nodo-flujo').attr('x',x-4).attr('y',d=>d.y).attr('width',8).attr('height',d=>d.h); svg.append('g').selectAll('text').data(ns).join('text').attr('class','etiqueta-flujo').attr('x',x+(ancla==='start'?9:-9)).attr('y',d=>d.y+d.h/2).attr('text-anchor',ancla).attr('dominant-baseline','middle').text(d=>`${d.nombre} · ${fmt(d.n)}`); };
-  dibujarLado(nodosL,xL,'end'); dibujarLado(nodosR,xR,'start');
+  const dibujarLado=(mapa,x,ancla,relleno) => { const ns=[...mapa.values()]; svg.append('g').selectAll('rect').data(ns).join('rect').attr('class','nodo-flujo').attr('x',x-4).attr('y',d=>d.y).attr('width',8).attr('height',d=>d.h).style('fill',relleno?d=>relleno(d.nombre):null); svg.append('g').selectAll('text').data(ns).join('text').attr('class','etiqueta-flujo').attr('x',x+(ancla==='start'?9:-9)).attr('y',d=>d.y+d.h/2).attr('text-anchor',ancla).attr('dominant-baseline','middle').text(d=>`${d.nombre} · ${fmt(d.n)}`); };
+  dibujarLado(nodosL,xL,'end',paleta); dibujarLado(nodosR,xR,'start');
   svg.append('text').attr('x',xL).attr('y',10).attr('text-anchor','end').attr('fill','var(--tenue)').attr('font-size',9).text('ORIGEN');
   svg.append('text').attr('x',xR).attr('y',10).attr('text-anchor','start').attr('fill','var(--tenue)').attr('font-size',9).text('CONSERVACIÓN');
   cont.replaceChildren(svg.node());
@@ -1753,7 +1795,7 @@ async function dibujarRed(){
   const dA = DIMS[$('nA').value], dB = DIMS[$('nB').value];
   const top = +$('nTop').value, minW = +$('nMin').value, cont = $('red');
   const mismo = dA.id === dB.id;
-  $('redLeyenda').innerHTML = mismo ? `<span style="--c:var(--oro)">${dA.label}</span>` : `<span style="--c:var(--carmin)">${dA.label}</span><span style="--c:var(--azurita)">${dB.label}</span>`;
+  $('redLeyenda').innerHTML = mismo ? `<span style="--c:${CATEG[0]}">${dA.label}</span>` : `<span style="--c:${CATEG[0]}">${dA.label}</span><span style="--c:${CATEG[1]}">${dB.label}</span>`;
   ocupado(cont, true);
   try {
     const [fA, fB] = await Promise.all([cargarDim(dA,$('nCarga')), mismo?null:cargarDim(dB,$('nCarga'))]);
@@ -1830,7 +1872,7 @@ async function dibujarRed(){
     const r = d3.scaleSqrt([0, d3.max(nodos,d=>d.n)], [3, Math.max(14, W/36)]);
     const maxW = d3.max(aristas,d=>d.w);
     const grosor = d3.scaleSqrt([minW, maxW], [.4, 6]);
-    const colorNodo = d => mismo ? 'var(--oro)' : (d.dim.id===dA.id ? 'var(--carmin)' : 'var(--azurita)');
+    const colorNodo = d => (mismo || d.dim.id===dA.id) ? CATEG[0] : CATEG[1];
 
     const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label',`Red de relaciones entre ${dA.label} y ${dB.label}`);
     // Fondo: tocar un espacio vacío suelta la selección fijada.
@@ -1964,8 +2006,8 @@ async function dibujarTecnicas(){
     const H = angosto ? 420 : Math.max(240, Math.round(fondoDe('.col-der') - fondoDe('.col-izq')));
     const raiz = d3.hierarchy({children:hojas}).sum(d=>d.n || 0).sort((a,b)=>b.value-a.value);
     d3.treemap().size([W, H]).paddingInner(2).round(true).tile(d3.treemapSquarify.ratio(1.2))(raiz);
-    // Misma rampa café que Temática más relevante; el tono más claro se sube un poco para que se distinga del fondo.
-    const rampa = d3.interpolateRgb('#f0e4c8','#6b3d06');
+    // Rampa verde propia; el tono más claro se sube un poco para que se distinga del fondo.
+    const rampa = RAMPA_TECNICAS;
     const maxN = d3.max(hojas, d=>d.n) || 1;
     const tono = n => .14 + .86*Math.sqrt(n/maxN);
     const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Treemap de obras por técnica');
@@ -1980,7 +2022,7 @@ async function dibujarTecnicas(){
     celda.append('rect').attr('width', d=>d.x1-d.x0).attr('height', d=>d.y1-d.y0).attr('rx', 2)
       .attr('fill', d=>rampa(tono(d.data.n)));
     // Rótulos solo donde caben: nombre, y debajo la cifra si hay alto suficiente.
-    const claro = d => tono(d.data.n) > .5;
+    const claro = d => tintaSobre(rampa(tono(d.data.n))) === '#fff';
     celda.filter(d=>d.x1-d.x0 > 46 && d.y1-d.y0 > 18).append('text')
       .attr('x', 7).attr('y', 15).attr('font-size', d=>(d.x1-d.x0 > 180 && d.y1-d.y0 > 60) ? 14 : 11)
       .attr('fill', d=>claro(d) ? '#fff' : 'var(--texto)').style('pointer-events','none')
@@ -2114,7 +2156,7 @@ async function dibujarGestos(){
     // Base del porcentaje: el total de la columna, o el total del gesto si es la única fila
     const celdas = datos.flatMap((g,i)=>cols.map(k=>({g, i, k, n:g.celdas.get(k)||0, t: porFila ? g.n : totCol.get(k)})));
     const maxP = d3.max(celdas, c=>c.t ? c.n/c.t : 0) || 1;
-    const color = d3.scaleSequentialSqrt([0, maxP], d3.interpolateRgb('#f3e7cc', '#4a2c04'));
+    const color = d3.scaleSequentialSqrt([0, maxP], RAMPA_GESTOS);
     const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label',`Gestos por ${cruce.label}`);
     svg.append('g').selectAll('rect').data(celdas).join('rect').attr('class','celda-calor')
       .attr('x', c=>x(c.k)).attr('y', c=>y(c.i)).attr('width', x.bandwidth()).attr('height', y.bandwidth()).attr('rx', 2)
@@ -2216,8 +2258,7 @@ async function dibujarComparativo(){
     const alto = altoFila - 7;
     const y = d => m.t + d.i*altoFila;
     const medio = d => y(d) + alto/2;
-    const paleta = d3.scaleOrdinal(d3.range(filas.length),
-      ['#3a64a2','#a55628','#2b7864','#ab2d45','#6d4b9a','#63524a','#8a6210','#33767a','#8a3f62','#58722a','#96601f','#47558a']);
+    const paleta = colorCateg(d3.range(filas.length));
 
     const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img')
       .attr('aria-label',`Comparación entre ${dA.label} y ${dB.label}`);
@@ -2237,7 +2278,7 @@ async function dibujarComparativo(){
         .attr('x', cabe ? dentro(d) : fuera(d))
         .attr('y', medio(d)).attr('dominant-baseline','middle')
         .attr('text-anchor', cabe ? 'middle' : (fuera(d) < eje ? 'end' : 'start'))
-        .attr('fill', cabe ? '#fff' : 'var(--tenue)')
+        .attr('fill', cabe ? tintaSobre(paleta(d.i)) : 'var(--tenue)')
         .text(texto(d));
     });
 
@@ -2320,9 +2361,11 @@ async function dibujarAutores(){
     const años = lista.flatMap(a => [a.desde, a.hasta].filter(v => v != null));
     const x = d3.scaleLinear(d3.extent(años), [m.l, W-m.r]).nice();
     const r = d3.scaleSqrt([0, d3.max(lista, a=>a.n)], [3, 9]);
-    const origenes = [...new Set(lista.map(a=>a.origen))].sort((a,b)=>a.localeCompare(b,'es'));
-    const color = d3.scaleOrdinal(origenes,
-      ['#3a64a2','#a55628','#2b7864','#ab2d45','#6d4b9a','#8a6210','#63524a','#33767a','#8a3f62','#58722a']);
+    // Los orígenes con más autores reciben color propio; el resto se agrupa en «otros».
+    const porOrigen = d3.rollup(lista, v=>v.length, a=>a.origen);
+    const origenes = [...porOrigen.keys()].sort((a,b)=>porOrigen.get(b)-porOrigen.get(a) || a.localeCompare(b,'es'));
+    const color = colorCateg(origenes);
+    const conColor = origenes.slice(0, CATEG.length), sinColor = origenes.slice(CATEG.length);
 
     const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Autores por periodo de actividad');
     const ejeArriba = d3.axisTop(x).ticks(Math.max(3, Math.round(W/90))).tickFormat(d3.format('d')).tickSizeOuter(0);
@@ -2348,7 +2391,8 @@ async function dibujarAutores(){
       .text(d=>d.nombre);
 
     cont.replaceChildren(svg.node());
-    $('autoresLeyenda').innerHTML = origenes.map(o=>`<span><i style="background:${color(o)}"></i>${o}</span>`).join('')
+    $('autoresLeyenda').innerHTML = conColor.map(o=>`<span><i style="background:${color(o)}"></i>${o}</span>`).join('')
+      + (sinColor.length ? `<span title="${escHTML(sinColor.join(', '))}"><i style="background:${CATEG_OTROS}"></i>Otros orígenes (${sinColor.length})</span>` : '')
       + `<span style="width:100%">Se muestran ${fmt(lista.length)} de ${fmt(conFecha)} autores con periodo registrado.</span>`;
   } catch(e){ if (turno===turnoAutores) cont.innerHTML=`<div class="vacio">No se pudieron leer los autores: ${e.message}</div>`; }
   finally { if (turno===turnoAutores) ocupado(cont, false); }
@@ -2513,11 +2557,11 @@ function cerrarDetalle(){ const p=$('detalle'); p.classList.remove('abierto'); p
    Una sola vista de detalle que cruza dos campos cualesquiera de ARCA (incluidos
    lugar y tiempo), con términos concretos elegidos a mano. Cada gráfica del tablero
    la abre ya configurada con sus propios campos. */
-// Paleta de series validada sobre el fondo beige (orden fijo; se acompaña de trazos
+// Las series usan los primeros tonos de CATEG (orden fijo; se acompañan de trazos
 // distintos para que se lea también impresa en grises).
-const SERIES = ['#3a64a2','#c0601a','#7048a8','#1f8a5c','#a8459a','#9a7300','#b2304f'];
+const SERIES = CATEG.slice(0, 7);
 const TRAZOS = ['', '7 4', '2 3', '10 3 2 3', '4 4', '1 2', '12 4'];
-const RAMPA_EX = d3.interpolateRgb('#f3e7cc', '#4a2c04');
+const RAMPA_EX = d3.interpolateRgb('#e0f2f3', '#0e4a58');
 const EX = {a:'categoria1', b:'decada', selA:[], selB:[], top:12, medida:'col', vista:'lineas',
             filtros:true, termMapa:null, R:null, turno:0, bloque:null};
 const MEDIDAS = {
@@ -3400,9 +3444,13 @@ const PF = (()=>{
   const rangeDesde = $('pf-rango-desde'), rangeHasta = $('pf-rango-hasta');
   [rangeDesde, rangeHasta].forEach(inp => { inp.min = FECHA_MIN; inp.max = FECHA_MAX; });
   rangeDesde.value = FECHA_MIN; rangeHasta.value = FECHA_MAX;
+  const valDesde = $('pf-val-desde'), valHasta = $('pf-val-hasta');
+  [valDesde, valHasta].forEach(inp => { inp.min = FECHA_MIN; inp.max = FECHA_MAX; });
   function syncRangeUI(){
     const lo = Number(rangeDesde.value), hi = Number(rangeHasta.value);
-    $('pf-val-desde').textContent = lo; $('pf-val-hasta').textContent = hi;
+    // No se pisa el número mientras alguien lo está escribiendo.
+    if (document.activeElement !== valDesde) valDesde.value = lo;
+    if (document.activeElement !== valHasta) valHasta.value = hi;
     $('pf-relleno').style.left = (lo - FECHA_MIN) / (FECHA_MAX - FECHA_MIN) * 100 + '%';
     $('pf-relleno').style.right = (100 - (hi - FECHA_MIN) / (FECHA_MAX - FECHA_MIN) * 100) + '%';
   }
@@ -3423,6 +3471,27 @@ const PF = (()=>{
   }
   rangeDesde.addEventListener('input', onRangeInput);
   rangeHasta.addEventListener('input', onRangeInput);
+  // Año escrito a mano: se aplica con Enter o al salir del campo. Se ajusta al rango
+  // permitido y, si queda al revés del otro extremo, se intercambian.
+  function onValorEscrito(e){
+    const inp = e.target, rango = inp === valDesde ? rangeDesde : rangeHasta;
+    const n = Math.round(Number(inp.value));
+    if (inp.value.trim() === '' || !Number.isFinite(n)){ syncRangeUI(); inp.value = rango.value; return; }
+    rango.value = Math.min(FECHA_MAX, Math.max(FECHA_MIN, n));
+    if (Number(rangeDesde.value) > Number(rangeHasta.value)){
+      const t = rangeDesde.value; rangeDesde.value = rangeHasta.value; rangeHasta.value = t;
+    }
+    valDesde.value = rangeDesde.value; valHasta.value = rangeHasta.value;
+    onRangeInput({target: rango});
+  }
+  [valDesde, valHasta].forEach(inp => {
+    inp.addEventListener('change', onValorEscrito);
+    inp.addEventListener('focus', () => inp.select());
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter'){ e.preventDefault(); inp.blur(); }
+      else if (e.key === 'Escape'){ inp.value = (inp === valDesde ? rangeDesde : rangeHasta).value; inp.blur(); }
+    });
+  });
   syncRangeUI();
 
   // ── Clasificación (6 niveles en cascada vía "ancestro") ──
