@@ -33,13 +33,30 @@ header.cabeza{--texto:#f1e8d8;--tenue:#b5a48c;--oro:#d2a94b;--linea:#4a3a31;colo
   display:grid;grid-template-columns:1fr auto;gap:6px 32px;align-items:end;border-bottom:1px solid var(--linea);padding:14px 0 12px;margin-top:-28px}
 /* Buscador del encabezado: entiende la consulta con reglas y diccionarios de ARCA (sin LLM) */
 .buscador{grid-column:1/-1;position:relative;display:flex;gap:8px;margin-top:6px}
-.buscador input{flex:1;min-width:0;background:#2b201a;border:1px solid #6a5444;border-radius:8px;padding:9px 13px;font-size:.92rem;color:#f1e8d8}
-.buscador input::placeholder{color:#a8977f}
-.buscador input:focus{outline:2px solid #d2a94b;outline-offset:1px;border-color:#d2a94b}
-.buscador .boton{background:#d2a94b;color:#241910}
+/* Buscador destacado: fondo claro, borde dorado y lupa, para que se lea como la entrada principal */
+.buscador input{flex:1;min-width:0;background:#fbf6ec;border:2px solid #d2a94b;border-radius:10px;padding:13px 16px 13px 46px;font-size:1.02rem;color:#2a1d16;
+  box-shadow:0 0 0 4px rgba(210,169,75,.14),0 6px 18px rgba(0,0,0,.25)}
+.buscador input::placeholder{color:#7d6a55}
+.buscador input:focus{outline:none;border-color:#e2bb5f;box-shadow:0 0 0 5px rgba(210,169,75,.35),0 6px 18px rgba(0,0,0,.25)}
+.buscador .lupa{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:#8a6210;pointer-events:none}
+.buscador .boton{background:#d2a94b;color:#241910;font-size:1rem;padding:0 24px;border-radius:10px}
 .b-vista{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:35;background:#fbf6ec;color:#2a1d16;border:1px solid #c3ae8c;border-radius:10px;
   box-shadow:0 10px 26px rgba(20,12,8,.35);padding:12px 14px;font-size:.84rem;line-height:1.45}
 .b-vista[hidden]{display:none}
+/* Pista de uso bajo el buscador: avisa que las gráficas se pueden tocar */
+.pista-uso{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:2px;padding:7px 10px 7px 12px;border-radius:8px;
+  background:linear-gradient(90deg,rgba(210,169,75,.22),rgba(210,169,75,.06));border:1px solid rgba(210,169,75,.55);color:#f1e8d8;font-size:.86rem;line-height:1.35}
+.pista-uso[hidden]{display:none}
+.pista-uso b{color:#d2a94b;font-weight:600}
+.pista-uso svg{flex:none;width:22px;height:22px;color:#d2a94b}
+.pista-uso .toque{transform-origin:9px 4px;animation:toque 1.8s ease-in-out infinite}
+@keyframes toque{0%,55%,100%{transform:scale(1)}65%{transform:scale(.86)}75%{transform:scale(1)}}
+.pista-uso .ondas{animation:ondas 1.8s ease-out infinite;opacity:0}
+@keyframes ondas{0%,60%{opacity:0;transform:scale(.6)}70%{opacity:.9}100%{opacity:0;transform:scale(1.25)}}
+.pista-uso .ondas{transform-origin:9px 4px}
+@media (prefers-reduced-motion:reduce){.pista-uso .toque,.pista-uso .ondas{animation:none}.pista-uso .ondas{opacity:.7}}
+.pista-uso .texto{flex:1}
+
 .b-vista .rot{color:#6e5a46;font-size:.76rem;margin:0 0 6px}
 .b-vista .ents{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
 .b-ent{display:inline-flex;align-items:center;gap:6px;background:#e6d9c2;border:1px solid #8a6210;border-radius:999px;padding:3px 5px 3px 10px;font-size:.8rem}
@@ -49,7 +66,7 @@ header.cabeza{--texto:#f1e8d8;--tenue:#b5a48c;--oro:#d2a94b;--linea:#4a3a31;colo
 .b-ent .rol{font-size:.7rem;text-decoration:underline}
 .b-vista .nota-b{color:#6e5a46;font-size:.76rem;margin:0}
 .b-vista .nota-b b{color:#2a1d16}
-h1{font-family:var(--serif);font-weight:400;color:var(--oro);font-size:clamp(2rem,4vw,2.9rem);line-height:.95;margin:0;letter-spacing:-.01em}
+h1{font-family:var(--serif);font-weight:400;color:var(--oro);font-size:clamp(1.45rem,2.4vw,1.9rem);line-height:.95;margin:0;letter-spacing:-.01em}
 h1 i{color:var(--oro)}
 .subtitulo,.resumen{font-family:var(--serif);font-size:clamp(.98rem,1.5vw,1.12rem);line-height:1.3;margin:0;color:var(--texto)}
 .subtitulo{margin-top:8px}
@@ -87,16 +104,15 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 .col-izq{grid-column:1/span 7}
 .col-der{grid-column:8/-1}
 /* Cada columna con su alto natural; dibujarTecnicas iguala los bordes inferiores de
-   Técnicas y Temática (crece el treemap o, si no alcanza, se estiran las filas de Temática). */
+   Técnicas y Temática (se ensanchan las barras o, si no alcanza, se estiran las filas de Temática). */
 .col-izq,.col-der{align-self:start}
 .b-pulso{grid-column:1/-1}
 .b-ranking{grid-column:span 7}
 .b-flujos{grid-column:span 5}
 .b-red{grid-column:1/-1}
-.b-gestos{grid-column:1/-1}
 .b-comparativo{grid-column:1/-1}
 .b-detalle{grid-column:1/-1}
-@media (max-width:1000px){.col-izq,.col-der,.b-flujos,.b-ranking,.b-red,.b-gestos{grid-column:1/-1;grid-row:auto}}
+@media (max-width:1000px){.col-izq,.col-der,.b-flujos,.b-ranking,.b-red{grid-column:1/-1;grid-row:auto}}
 .bloque h2{font-family:var(--serif);font-weight:400;font-size:1.55rem;margin:0;line-height:1.1}
 .bloque .nota{color:var(--tenue);font-size:.84rem;margin:4px 0 12px;max-width:60ch}
 /* Lectura: qué dice la gráfica con los filtros actuales, en palabras. */
@@ -123,6 +139,24 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 
 .pulso{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--linea);border:1px solid var(--linea);border-radius:7px;overflow:hidden;margin-top:14px}
 .metrica{background:var(--panel);padding:14px 16px;min-height:106px}
+/* Pulso en carrusel: cuatro tarjetas a la vista en escritorio; se desliza con flechas, puntos o el dedo */
+.carrusel-marco{position:relative;margin-top:14px}
+.pulso.carrusel{display:flex;gap:0;margin:0;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none}
+.pulso.carrusel::-webkit-scrollbar{display:none}
+.pulso.carrusel .metrica{flex:0 0 25%;scroll-snap-align:start;border-right:1px solid var(--linea)}
+.pulso.carrusel .metrica:last-child{border-right:0}
+.pulso.carrusel .vacio{flex:1}
+@media (max-width:900px){.pulso.carrusel .metrica{flex-basis:calc(100%/3)}}
+@media (max-width:760px){.pulso.carrusel .metrica{flex-basis:50%}}
+@media (max-width:440px){.pulso.carrusel .metrica{flex-basis:100%}}
+.car-flecha{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:32px;height:32px;border-radius:50%;border:1px solid var(--linea);
+  background:var(--panel);color:var(--oro);font-size:1.3rem;line-height:1;cursor:pointer;box-shadow:0 2px 8px rgba(60,44,28,.18);display:grid;place-items:center}
+.car-flecha:hover{border-color:var(--oro)}
+.car-flecha.prev{left:-14px} .car-flecha.next{right:-14px}
+.car-pie{display:flex;justify-content:center;align-items:center;gap:7px;margin-top:10px}
+.car-pie button{all:unset;cursor:pointer;width:8px;height:8px;border-radius:50%;background:var(--linea)}
+.car-pie button[aria-current="true"]{background:var(--oro);width:22px;border-radius:4px}
+.car-pie button:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
 .metrica .valor{display:block;font-family:var(--serif);font-size:clamp(1.8rem,4vw,2.8rem);line-height:1;color:var(--oro);font-variant-numeric:tabular-nums}
 .metrica .rotulo{display:block;margin-top:7px;font-size:.83rem;color:var(--texto)}
 .metrica .explica{display:block;margin-top:2px;font-size:.73rem;color:var(--tenue)}
@@ -153,6 +187,13 @@ section.bloque{background:var(--panel);border:1px solid var(--linea);border-radi
 .mapa-ctl{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 9px}
 .mapa-ctl .sep{width:1px;background:var(--linea);margin:2px 3px}
 .mapa-ctl button.destacado{color:var(--oro);border-color:var(--oro)}
+/* Selector Mapa / Barras, alineado a la derecha de los controles */
+.mapa-forma{margin-left:auto;display:inline-flex;border:1px solid var(--linea);border-radius:7px;overflow:hidden}
+.mapa-ctl .mapa-forma button{border:0;border-radius:0;padding:4px 9px;display:inline-flex;align-items:center;gap:5px;background:var(--panel2);color:var(--tenue)}
+.mapa-ctl .mapa-forma button+button{border-left:1px solid var(--linea)}
+.mapa-ctl .mapa-forma button[aria-pressed="true"]{background:var(--oro);color:#fff}
+.mapa-forma svg{width:16px;height:14px;display:block}
+.b-mapa.en-barras #mapaMas,.b-mapa.en-barras #mapaMenos,.b-mapa.en-barras .mapa-ctl .sep{display:none}
 @media (min-width:640px){.bloque h2{padding-right:250px}}
 @media (max-width:639px){.herramientas{position:static;margin-bottom:8px;flex-wrap:wrap}}
 
@@ -171,6 +212,32 @@ header.cabeza .barra-activa{--texto:#2a1d16;--tenue:#6e5a46;--oro:#8a6210;--line
 .controles .ayuda{flex-basis:100%;font-size:.77rem;color:var(--tenue);margin:0 0 2px;max-width:70ch}
 .controles select optgroup{background:var(--panel);color:var(--oro);font-style:normal}
 
+/* ---------- Pestañas: análisis general / análisis por gestos ---------- */
+.pestanas{display:flex;gap:4px;margin:16px 0 0;border-bottom:1px solid #4a3a31}
+.pestanas button{all:unset;cursor:pointer;padding:8px 16px 7px;font-family:var(--serif);font-size:1.15rem;color:#b5a48c;border-bottom:3px solid transparent;margin-bottom:-1px}
+.pestanas button:hover{color:#f1e8d8}
+.pestanas button[aria-selected="true"]{color:#d2a94b;border-bottom-color:#d2a94b}
+.pestanas button:focus-visible{outline:2px solid #d2a94b;outline-offset:2px}
+.rejilla[hidden],.rejilla-g[hidden]{display:none}
+.rejilla-g{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;margin-top:22px}
+.gx-resumen,.gx-comp,.gx-grafo{grid-column:1/-1}
+.gx-lista{grid-column:span 5}
+.gx-asoc{grid-column:span 7}
+@media (max-width:1000px){.gx-lista,.gx-asoc{grid-column:1/-1}}
+.controles input[type=search]{background:var(--panel2);border:1px solid var(--linea);border-radius:6px;padding:5px 8px;width:190px}
+.controles .boton{align-self:flex-end}
+.controles label[hidden],.controles .boton[hidden]{display:none}
+/* Violeta propio de la pestaña de gestos */
+.gx-lista .lista{max-height:640px}
+.gx-lista .lista .pista{background:#ebe5f5}
+.gx-lista .lista .pista span{background:#5b3fa0}
+.lista li button.elegido{background:var(--panel2);box-shadow:inset 3px 0 0 #5b3fa0}
+.lista li button.elegido .nombre{font-weight:600}
+.gx-elegidos{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px}
+.gx-elegidos .chip{font-size:.78rem;padding:2px 4px 2px 10px;border-color:#5b3fa0}
+.gx-elegidos .chip button{color:#5b3fa0}
+.gx-elegidos .boton{font-size:.74rem;padding:3px 10px}
+.gx-elegidos .pista-elegidos{font-size:.8rem;color:var(--tenue)}
 .lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;max-height:560px;overflow:auto}
 .lista li button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;width:100%;padding:5px 6px;border-radius:5px;cursor:pointer}
 .lista li button:hover,.lista li button:focus-visible{background:var(--panel2)}
@@ -193,8 +260,25 @@ select.destello{animation:destello 1.6s ease-out}
 
 #tip{position:fixed;pointer-events:none;background:var(--panel);border:1px solid var(--linea);box-shadow:0 3px 12px rgba(60,44,28,.28);color:var(--texto);padding:6px 10px;border-radius:6px;font-size:.82rem;z-index:50;opacity:0;transition:opacity .1s;max-width:260px}
 
-.detalle{position:fixed;top:0;right:0;height:100%;width:min(420px,100%);background:var(--panel);border-left:1px solid var(--linea);z-index:40;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column}
-.detalle.abierto{transform:none}
+/* Ventana de obras: a la izquierda, la gráfica que se tocó (copia fija, con el elemento
+   marcado); a la derecha, las obras. Así la selección nunca queda tapada. */
+.detalle{position:fixed;inset:0;z-index:46;background:rgba(29,20,17,.55);display:none;align-items:center;justify-content:center;padding:3vh 3vw}
+.detalle.abierto{display:flex}
+.detalle-caja{background:var(--panel);border:1px solid var(--linea);border-radius:12px;box-shadow:0 12px 40px rgba(29,20,17,.35);width:min(1280px,100%);height:min(88vh,880px);display:grid;grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr);overflow:hidden}
+.detalle-caja.sin-viz{grid-template-columns:minmax(0,1fr);width:min(560px,100%)}
+.detalle-viz{border-right:1px solid var(--linea);padding:18px 20px;overflow:hidden;min-height:0;background:var(--panel);display:flex;flex-direction:column}
+/* La gráfica se escala para caber entera en el alto de la ventana; las listas largas
+   (que no son SVG) se desplazan dentro de su propio marco. */
+.detalle-viz>.lienzo{flex:1;min-height:0;overflow:auto}
+.detalle-viz>.lienzo>svg{width:100%;height:100%}
+.detalle-viz .leyenda-escala{flex:none}
+.sin-viz .detalle-viz{display:none}
+.detalle-viz h4{font-family:var(--serif);font-weight:400;font-size:1.25rem;margin:0 0 4px;color:var(--tenue)}
+.detalle-viz .pista-viz{font-size:.78rem;color:var(--tenue);margin:0 0 10px}
+.detalle-viz .marcado:is(rect,path,circle){stroke:#1d1209 !important;stroke-width:2.5px !important;stroke-opacity:1 !important}
+.detalle-viz .marcado:not(rect,path,circle){outline:2px solid #1d1209;outline-offset:2px;border-radius:4px}
+.detalle-obras{display:flex;flex-direction:column;min-height:0;min-width:0}
+.detalle-obras .cuerpo{flex:1}
 .detalle .cab{padding:18px 20px 12px;border-bottom:1px solid var(--linea);display:flex;gap:12px;align-items:start}
 .detalle h3{font-family:var(--serif);font-weight:400;font-size:1.6rem;margin:0;line-height:1.1;flex:1}
 .detalle .cuerpo{padding:14px 20px 30px;overflow:auto}
@@ -205,45 +289,60 @@ select.destello{animation:destello 1.6s ease-out}
 .galeria a{display:block;text-decoration:none;color:var(--texto);font-size:.72rem;line-height:1.25}
 .galeria img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:4px;background:var(--panel2);display:block;margin-bottom:4px}
 @media (max-width:640px){
-  .detalle{top:auto;bottom:0;height:78vh;width:100%;border-left:0;border-top:1px solid var(--linea);transform:translateY(100%);border-radius:12px 12px 0 0}
+  .detalle{padding:0}
+  .detalle-caja,.detalle-caja.sin-viz{width:100%;height:100%;border-radius:0;grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .detalle-viz{max-height:34vh;border-right:0;border-bottom:1px solid var(--linea)}
   header.cabeza{grid-template-columns:1fr}
   .conexion .alcance{text-align:left}
 }
 /* ---------- Panel lateral de filtros ---------- */
 /* Siempre visible: es la única forma de filtrar el tablero. */
-:root{--ancho-panel:340px}
+:root{--ancho-panel:260px}   /* angosto: la prioridad son las visualizaciones */
 body{padding-left:var(--ancho-panel)}
 .panel-filtros{position:fixed;top:0;left:0;height:100%;width:var(--ancho-panel);background:var(--panel);border-right:1px solid var(--linea);z-index:45;display:flex;flex-direction:column}
+/* En móvil el panel es un cajón lateral: escondido al inicio, se abre con el botón «Filtros». */
+.abrir-filtros,.fondo-filtros,.panel-filtros .cerrar-movil{display:none}
 @media (max-width:900px){
-  /* En pantallas estrechas el panel pasa arriba, dentro del flujo de la página. */
   :root{--ancho-panel:0px}
-  body{display:flex;flex-direction:column}
-  .panel-filtros{position:relative;order:-1;width:100%;height:auto;max-height:65vh;border-right:0;border-bottom:1px solid var(--linea)}
-  .envoltura{width:100%}
+  .panel-filtros{width:min(88vw,380px);box-shadow:6px 0 24px rgba(29,20,17,.35);transform:translateX(-105%);transition:transform .25s ease;z-index:48}
+  body.filtros-abiertos .panel-filtros{transform:none}
+  body.filtros-abiertos{overflow:hidden}
+  .fondo-filtros{position:fixed;inset:0;z-index:47;background:rgba(29,20,17,.5)}
+  body.filtros-abiertos .fondo-filtros{display:block}
+  .panel-filtros .cerrar-movil{display:inline-block}
+  .abrir-filtros{display:inline-flex;align-items:center;gap:8px;position:fixed;left:14px;bottom:16px;z-index:44;
+    background:var(--oro);color:var(--sobre-oro);border:0;border-radius:999px;padding:11px 18px;font-weight:600;font-size:.95rem;
+    box-shadow:0 6px 18px rgba(29,20,17,.4);cursor:pointer}
+  .abrir-filtros svg{width:18px;height:18px}
+  .abrir-filtros .n{background:var(--sobre-oro);color:var(--oro);border-radius:999px;min-width:20px;padding:0 6px;font-size:.78rem;text-align:center}
+  .abrir-filtros .n:empty{display:none}
+  body.filtros-abiertos .abrir-filtros{display:none}
 }
-.panel-filtros .cab{padding:18px 20px 12px;border-bottom:1px solid var(--linea);display:flex;gap:10px;align-items:center}
-.panel-filtros h3{font-family:var(--serif);font-weight:400;font-size:1.6rem;margin:0;line-height:1.1;flex:1}
-.panel-filtros .cuerpo{padding:14px 20px 40px;overflow:auto;flex:1}
+@media (prefers-reduced-motion:reduce){.panel-filtros{transition:none}}
+.panel-filtros .cab{padding:14px 14px 10px;border-bottom:1px solid var(--linea);display:flex;gap:10px;align-items:center}
+.panel-filtros h3{font-family:var(--serif);font-weight:400;font-size:1.3rem;margin:0;line-height:1.1;flex:1}
+.panel-filtros .cab .boton{font-size:.78rem;padding:5px 10px}
+.panel-filtros .cuerpo{padding:10px 14px 40px;overflow:auto;flex:1}
 .pf-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .pf-chips:empty{display:none}
 .pf-chips .chip,.pf-mini .chip{font-size:.78rem;padding:2px 4px 2px 10px}
 .pf-grupo{border-bottom:1px solid var(--linea)}
 .pf-grupo.g-basicos{--c:var(--oro)} .pf-grupo.g-analisis{--c:var(--azurita)} .pf-grupo.g-gestos{--c:var(--verdigris)}
-.pf-toggle{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:12px 6px 12px 12px;margin:6px 0;border-left:4px solid var(--c);cursor:pointer;font-size:.98rem;color:var(--texto)}
+.pf-toggle{all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:7px;padding:9px 4px 9px 9px;margin:4px 0;border-left:3px solid var(--c);cursor:pointer;font-size:.98rem;color:var(--texto)}
 .pf-toggle:hover{background:var(--panel2)}
 .pf-toggle:focus-visible{outline:2px solid var(--oro);outline-offset:2px}
 .pf-toggle .flecha{color:var(--c);font-size:1.05rem}
-.pf-toggle .titulo{flex:1;font-family:var(--serif);font-weight:400;font-size:1.35rem;line-height:1.1}
+.pf-toggle .titulo{flex:1;font-family:var(--serif);font-weight:400;font-size:1.12rem;line-height:1.1}
 .pf-toggle .cnt{color:var(--oro);font-size:.8rem}
 .pf-toggle .chev{color:var(--tenue);font-size:.7rem;transition:transform .15s}
 .pf-grupo.open .chev{transform:rotate(180deg)}
-.pf-cuerpo-grupo{display:none;padding:6px 0 14px 16px}
+.pf-cuerpo-grupo{display:none;padding:4px 0 12px 8px}
 .pf-grupo.open .pf-cuerpo-grupo{display:block}
-.faceta{margin-bottom:18px}
+.faceta{margin-bottom:14px}
 .faceta-rotulo{display:block;font-size:.86rem;color:var(--texto);margin-bottom:4px}
 .pf-pista{display:flex;gap:6px;font-size:.74rem;color:var(--tenue);line-height:1.35;margin:0 0 7px}
 .pf-pista::before{content:"i";flex:none;display:inline-grid;place-items:center;width:13px;height:13px;margin-top:2px;border:1px solid currentColor;border-radius:50%;font-size:9px;font-weight:600;font-style:normal}
-.pf-rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 10px}
+.pf-rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px 8px}
 .pf-rejilla label{display:block;font-size:.74rem;color:var(--tenue);margin-bottom:3px}
 .faceta select,.faceta input[type=text]{width:100%;background:var(--panel2);border:1px solid var(--linea);border-radius:6px;padding:6px 8px;font-size:.84rem;color:var(--texto)}
 .faceta select:focus,.faceta input[type=text]:focus{outline:1px solid var(--oro);border-color:var(--oro)}
@@ -378,18 +477,21 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
   <header class="cabeza">
     <div>
       <h1>ARCA <i>Arte Colonial Americano</i></h1>
-      <p class="subtitulo">Tablero analítico conectado a la base de datos de Arte Colonial Americano.</p>
-      <p class="resumen" id="resumen">Consultando cifras…</p>
     </div>
     <div class="conexion">
       <div class="alcance" id="alcance"></div>
       <div class="estado" id="estado" role="status">Sin conectar</div>
     </div>
     <form class="buscador" id="buscador" role="search" autocomplete="off">
+      <svg class="lupa" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
       <input type="search" id="bTexto" placeholder="Busca en lenguaje natural: «Virgen de Guadalupe con corona, pintada en México en el siglo XVIII»" aria-label="Buscar y filtrar" aria-describedby="bVista">
       <button type="submit" class="boton" id="bAplicar">Aplicar</button>
       <div class="b-vista" id="bVista" aria-live="polite" hidden></div>
     </form>
+    <p class="pista-uso" id="pistaUso" role="note">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g class="ondas" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4.5 4a5 5 0 0 1 9 0"/><path d="M2.2 4.6a7.5 7.5 0 0 1 13.6 0"/></g><path class="toque" fill="currentColor" d="M9 3.2a1.6 1.6 0 0 1 1.6 1.6v5.3l.5-.1a1.6 1.6 0 0 1 1.9 1.1l.1.3.4-.1a1.6 1.6 0 0 1 1.9 1.1l.1.3.3-.1a1.6 1.6 0 0 1 2 1.5v3.4c0 2.7-2.2 4.8-4.8 4.8h-1.3a4.8 4.8 0 0 1-3.9-2l-3.3-4.6a1.6 1.6 0 0 1 2.4-2.1l.4.4V4.8A1.6 1.6 0 0 1 9 3.2z"/></svg>
+      <span class="texto"><b>Las gráficas son interactivas:</b> toca cualquier elemento para ver sus obras.</span>
+    </p>
     <!-- Filtros activos dentro del encabezado fijo: siguen a la vista al hacer scroll -->
     <div class="barra-activa" id="barraActiva" hidden>
       <span class="rot">Filtros activos:</span>
@@ -401,6 +503,11 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
     </div>
   </header>
 
+  <nav class="pestanas" role="tablist" aria-label="Tipo de análisis">
+    <button type="button" role="tab" data-p="general" aria-selected="true" aria-controls="vistaGeneral">Análisis general</button>
+    <button type="button" role="tab" data-p="gestos" aria-selected="false" aria-controls="vistaGestos">Análisis por gestos</button>
+  </nav>
+
   <div class="aviso" id="aviso">
     <h3>No fue posible leer la API</h3>
     <p id="avisoTexto"></p>
@@ -410,34 +517,45 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
   </div>
 
 
-  <div class="rejilla">
+  <div class="rejilla" id="vistaGeneral" role="tabpanel">
     <section class="bloque b-pulso" data-bloque="pulso" data-titulo="Pulso de la colección">
-      <h2>Pulso de la colección<span class="info" tabindex="0" role="button" aria-label="Cómo leer este resumen"><span class="info-globo" role="tooltip">Resume las obras que cumplen los filtros del panel: cuántas son, cuántos pintores identificados las hicieron, en cuántos lugares se conservan hoy y cuántas son anónimas (sin autor identificado). Sin filtros, describe toda la colección.</span></span></h2>
+      <h2>Pulso de la colección<span class="info" tabindex="0" role="button" aria-label="Cómo leer este resumen"><span class="info-globo" role="tooltip">Resume las obras que cumplen los filtros del panel: cuántas son, cuántos pintores identificados las hicieron, cuántas son anónimas, y cuántos personajes, técnicas, lugares de conservación, países y gestos distintos aparecen en ellas. Cuando aplica, la tarjeta indica también el total registrado en ARCA como referencia. Sin filtros, describe toda la colección. Usa las flechas, los puntos o desliza para ver todas las cifras; el carrusel avanza solo y se detiene al pasar el cursor.</span></span></h2>
       <p class="lectura" id="pulsoLectura">Calculando…</p>
-      <div class="pulso" id="pulso"><div class="vacio">Esperando datos.</div></div>
+      <div class="carrusel-marco">
+        <button type="button" class="car-flecha prev" id="pulsoPrev" aria-label="Cifras anteriores">‹</button>
+        <div class="pulso carrusel" id="pulso" tabindex="0" aria-roledescription="carrusel" aria-label="Cifras de la colección"><div class="vacio">Esperando datos.</div></div>
+        <button type="button" class="car-flecha next" id="pulsoNext" aria-label="Más cifras">›</button>
+      </div>
+      <div class="car-pie" id="pulsoPuntos"></div>
     </section>
 
     <div class="col-izq">
     <section class="bloque b-mapa" data-bloque="mapa" data-titulo="Geografía">
-      <h2>Geografía<span class="info" tabindex="0" role="button" aria-label="Cómo leer este mapa"><span class="info-globo" role="tooltip">El color de cada país indica cuántas obras del filtro se conservan allí, o se hicieron allí si eliges «Lugar de origen» en <b>Contar por</b>. Es un número de obras, no un porcentaje. Los círculos son los lugares concretos donde están hoy (museos, iglesias, colecciones); su tamaño es el número de obras. Toca un país o un círculo para ver sus obras. Arrastra para mover el mapa y usa la rueda o los botones + y − para acercar.</span></span></h2>
+      <h2>Geografía<span class="info" tabindex="0" role="button" aria-label="Cómo leer este mapa"><span class="info-globo" role="tooltip">El color de cada país indica cuántas obras del filtro se conservan allí, o se hicieron allí si eliges «Lugar de origen» en <b>Contar por</b>. Con «total» el color es el número de obras; con «porcentual», la parte que representan sobre las obras del filtro con país registrado. Los círculos son los lugares concretos donde están hoy (museos, iglesias, colecciones); su tamaño es el número de obras. Toca un país o un círculo para ver sus obras. Con el selector <b>Barras / Mapa</b> ves los mismos países como una gráfica de barras ordenada de mayor a menor. Arrastra para mover el mapa y usa la rueda o los botones + y − para acercar.</span></span></h2>
       <p class="lectura" id="mapaLectura">Calculando…</p>
       <div class="mapa-ctl">
         <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--tenue)">Contar por
           <select id="mapaModo" style="background:var(--panel2);border:1px solid var(--linea);color:var(--texto);border-radius:6px;padding:3px 7px;font-size:.75rem">
-            <option value="ubicacion" selected>Ubicación actual</option>
-            <option value="origen">Lugar de origen</option>
+            <option value="ubicacion" selected>Ubicación actual · total</option>
+            <option value="ubicacion_pct">Ubicación actual · porcentual</option>
+            <option value="origen">Lugar de origen · total</option>
+            <option value="origen_pct">Lugar de origen · porcentual</option>
           </select>
         </label>
         <span class="sep"></span>
         <button id="mapaMas" title="Acercar">＋</button>
         <button id="mapaMenos" title="Alejar">－</button>
+        <span class="mapa-forma" role="group" aria-label="Forma de ver la geografía">
+          <button type="button" data-forma="barras" aria-pressed="false" title="Ver como gráfica de barras"><svg viewBox="0 0 16 14" aria-hidden="true"><path fill="currentColor" d="M1 3h3v11H1zM6 6h3v8H6zM11 9h3v5h-3z"/></svg>Barras</button>
+          <button type="button" data-forma="mapa" aria-pressed="true" title="Ver como mapa"><svg viewBox="0 0 16 14" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" d="M1 3l4.5-2 5 2L15 1v10l-4.5 2-5-2L1 13zM5.5 1v10M10.5 3v10"/></svg>Mapa</button>
+        </span>
       </div>
       <div class="lienzo" id="mapa"><div class="vacio">Conecta la API para dibujar el mapa.</div></div>
       <div class="leyenda-escala" id="mapaLeyenda"></div>
     </section>
 
     <section class="bloque b-tecnicas" data-bloque="tecnicas" data-titulo="Técnicas">
-      <h2>Técnicas<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">Cada rectángulo es una técnica (el soporte y el medio con que se hizo la obra). Su tamaño y su color indican cuántas obras del filtro se hicieron con ella: más grande y más oscuro, más obras. Las técnicas menos usadas se agrupan en «Otras técnicas». Una obra puede tener más de una técnica registrada. En <b>Técnicas a mostrar</b> eliges cuántas ver por separado. Toca un rectángulo para ver ejemplos.</span></span></h2>
+      <h2>Técnicas<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">Cada barra es una técnica (el soporte y el medio con que se hizo la obra). Su largo indica cuántas obras del filtro se hicieron con ella; al final de la barra ves la cifra y el porcentaje. Las técnicas menos usadas se agrupan en «Otras técnicas». Una obra puede tener más de una técnica registrada. En <b>Técnicas a mostrar</b> eliges cuántas ver por separado. Toca una barra para ver ejemplos.</span></span></h2>
       <p class="lectura" id="tecnicasLectura">Calculando…</p>
       <div class="controles">
         <label>Técnicas a mostrar<select id="tTop"><option>8</option><option selected>12</option><option>20</option></select></label>
@@ -450,20 +568,24 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
     <div class="col-der">
 
     <section class="bloque b-tiempo" data-bloque="tiempo" data-titulo="Temporalidad">
-      <h2>Temporalidad<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">Cada barra es una década y su altura, el número de obras cuya fecha inicial cae en ella. Una obra entra en el filtro de fechas si su periodo de datación se cruza con el rango elegido. Para acotar el periodo usa el control de <b>Fecha</b> del panel de filtros. Pasa el cursor por una barra para ver su cifra.</span></span></h2>
+      <h2>Temporalidad<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">Cada barra es una década y su altura, el número de obras cuya fecha inicial cae en ella. Una obra entra en el filtro de fechas si su periodo de datación se cruza con el rango elegido. Para acotar el periodo usa el control de <b>Fecha</b> del panel de filtros. Pasa el cursor por una barra para ver su cifra y tócala para ver las obras de esa década.</span></span></h2>
       <p class="lectura" id="tiempoLectura">Calculando…</p>
       <div class="lienzo" id="tiempo"><div class="vacio">Esperando datos.</div></div>
     </section>
 
     <section class="bloque b-atlas" data-bloque="atlas" data-titulo="Temática más relevante">
-      <h2>Temática más relevante<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">Cada fila es un tema (la clasificación de primer nivel) y cada columna, un periodo de 25 años. Cuanto más oscura la celda, mayor es la parte de las obras de ese periodo que pertenece al tema. Cada obra se ubica en el punto medio de su rango de datación. Pasa el cursor por una celda para ver sus cifras.</span></span></h2>
+      <h2>Temática más relevante<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">Cada fila es un tema (la clasificación de primer nivel) y cada columna, un periodo de 25 años. En <b>Color según</b> eliges qué indica el tono: con «Número de obras», cuanto más oscura la celda, más obras de ese tema hay en el periodo; con «% del periodo», mayor es la parte de las obras de ese periodo que pertenece al tema. En ese modo, los periodos con menos de 20 obras se ven atenuados, porque un porcentaje sobre muy pocas obras puede exagerar. Cada obra se ubica en el punto medio de su rango de datación. Pasa el cursor por una celda para ver sus cifras y tócala para ver sus obras; toca el nombre de un tema para ver todas las obras de ese tema.</span></span></h2>
       <p class="lectura" id="atlasLectura">Calculando…</p>
+      <div class="controles">
+        <label>Color según<select id="atlasMedida"><option value="n" selected>Número de obras</option><option value="pct">% del periodo</option></select></label>
+      </div>
       <div class="lienzo" id="atlas"><div class="vacio">Esperando datos.</div></div>
+      <div class="leyenda-escala" id="atlasLeyenda"></div>
     </section>
     </div>
 
-    <section class="bloque b-ranking" data-bloque="ranking" data-titulo="Obras por término">
-      <h2>Obras por término<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta lista"><span class="info-globo" role="tooltip">En <b>Campo a observar</b> elige cuál de los datos de análisis quieres contar: personajes, símbolos, objetos, escenarios, descriptores, características, relatos visuales, donantes o cartelas. En <b>Términos a mostrar</b> eliges cuántos resultados ver. Cada barra indica en cuántas obras del filtro aparece el término; una obra puede tener varios términos a la vez. Toca un término para ver ejemplos.</span></span></h2>
+    <section class="bloque b-ranking" data-bloque="ranking" data-titulo="Pinturas en relación a campos">
+      <h2>Pinturas en relación a campos<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta lista"><span class="info-globo" role="tooltip">En <b>Campo a observar</b> elige cuál de los datos de análisis quieres contar: personajes, símbolos, objetos, escenarios, descriptores, características, relatos visuales, donantes o cartelas. En <b>Términos a mostrar</b> eliges cuántos resultados ver. Cada barra indica en cuántas obras del filtro aparece el término; una obra puede tener varios términos a la vez. Toca un término para ver ejemplos.</span></span></h2>
       <p class="lectura" id="rankingLectura">Calculando…</p>
       <div class="controles">
         <label>Campo a observar<select id="rDim"></select></label>
@@ -474,7 +596,7 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
     </section>
 
     <section class="bloque b-flujos" data-bloque="flujos" data-titulo="Origen vs. conservación">
-      <h2>Origen vs. conservación<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">A la izquierda, dónde se hizo cada obra; a la derecha, dónde está hoy. El grosor de cada franja es el número de obras que hicieron ese recorrido. Solo se dibujan las obras que cambiaron de lugar. Con <b>Nivel</b> eliges si comparar países o ciudades. El lugar de origen suele ser una atribución de los investigadores, no siempre un dato seguro.</span></span></h2>
+      <h2>Origen vs. conservación<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">A la izquierda, dónde se hizo cada obra; a la derecha, dónde está hoy. El grosor de cada franja es el número de obras que hicieron ese recorrido. Solo se dibujan las obras que cambiaron de lugar. Con <b>Nivel</b> eliges si comparar países o ciudades. Toca una franja para ver las obras de ese recorrido. El lugar de origen suele ser una atribución de los investigadores, no siempre un dato seguro.</span></span></h2>
       <p class="lectura" id="flujosLectura">Calculando…</p>
       <div class="controles">
         <label>Nivel<select id="fNivel"><option value="pais" selected>País</option><option value="ciudad">Ciudad</option></select></label>
@@ -506,22 +628,6 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
       <div class="cargando" id="nCarga"></div>
     </section>
 
-    <section class="bloque b-gestos" data-bloque="gestos" data-titulo="Gestos">
-      <h2>Gestos<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">Cada fila es un valor del campo de gesto elegido (un gesto de las manos, una postura, el tipo de rostro…) y cada columna, un grupo de obras: un tema, un periodo o un país, según lo que elijas en <b>Cruzar con</b>. El número de cada celda es cuántas obras de esa columna tienen ese gesto, y el color indica qué parte de la columna representan: así se comparan grupos grandes y pequeños. Los registros «No», «No aplica», «Desconocido» o «Ambiguo» se cuentan aparte y no se dibujan. Toca una celda para ver sus obras.</span></span></h2>
-      <p class="lectura" id="gestosLectura">Baja hasta aquí para calcular esta sección…</p>
-      <div class="controles">
-        <label>Campo de gesto<select id="gCampo"></select></label>
-        <label>Cruzar con<select id="gCruce">
-          <option value="tema" selected>Tema (clasificación nivel 1)</option>
-          <option value="medio_siglo">Periodo (medio siglo)</option>
-          <option value="pais_conservacion">País de conservación</option>
-        </select></label>
-        <label>Gestos a mostrar<select id="gTop"><option>8</option><option selected>12</option><option>20</option></select></label>
-      </div>
-      <div class="lienzo" id="gestos"><div class="vacio">Esperando datos.</div></div>
-      <div class="leyenda-escala" id="gestosLeyenda"></div>
-      <div class="cargando" id="gCarga"></div>
-    </section>
 
     <!-- Oculto por ahora: quitar style="display:none" para volver a mostrarlo. -->
     <section class="bloque b-comparativo" data-bloque="comparativo" data-titulo="Análisis comparativo" style="display:none">
@@ -578,14 +684,94 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
     </section>
   </div>
 
+  <!-- Análisis por gestos: se calcula solo cuando se abre esta pestaña -->
+  <div class="rejilla-g" id="vistaGestos" role="tabpanel" hidden>
+    <section class="bloque gx-resumen" data-bloque="gx-resumen" data-titulo="Cómo se cuentan los gestos">
+      <h2>Cómo se cuentan los gestos<span class="info" tabindex="0" role="button" aria-label="Cómo se cuentan"><span class="info-globo" role="tooltip">Cada pintura tiene tres casillas de gesto (gesto 1, gesto 2 y gesto 3) con el mismo vocabulario: no son niveles, sino hasta tres gestos distintos de la misma obra. En toda esta pestaña la unidad es la <b>obra</b>. Con «Los tres campos juntos», una obra cuenta una vez en cada gesto que tenga, esté en la casilla que esté; si el mismo gesto aparece en dos casillas, cuenta una sola vez. Los valores «No», «No aplica», «Desconocido» y «Ambiguo o no notorio» no se cuentan como gestos. Los filtros del panel lateral se aplican a toda la pestaña.</span></span></h2>
+      <p class="lectura" id="gxResumenLectura">Calculando…</p>
+      <div class="controles">
+        <label>Campos de gesto que se cuentan<select id="gxCampos">
+          <option value="todos" selected>Los tres campos juntos (gesto 1, 2 y 3)</option>
+          <option value="gesto1">Solo el campo gesto 1</option>
+          <option value="gesto2">Solo el campo gesto 2</option>
+          <option value="gesto3">Solo el campo gesto 3</option>
+        </select></label>
+      </div>
+      <div class="pulso" id="gxResumen"><div class="vacio">Esperando datos.</div></div>
+      <div class="cargando" id="gxCarga"></div>
+    </section>
+
+    <section class="bloque gx-lista" data-bloque="gx-lista" data-titulo="Gestos">
+      <h2>Gestos<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta lista"><span class="info-globo" role="tooltip">Todos los gestos registrados en las obras del filtro, con el número de obras en que aparecen y su porcentaje sobre las obras que tienen algún gesto. Como una obra puede tener varios gestos, los porcentajes no suman 100 %. Busca por cualquier parte del nombre, ordénalos por frecuencia o alfabéticamente y elige cuántos ver. <b>Toca gestos</b> para agregarlos o quitarlos de «Asociaciones» (hasta 8) y compararlos.</span></span></h2>
+      <p class="lectura" id="gxListaLectura">Calculando…</p>
+      <div class="controles">
+        <label>Buscar<input type="search" id="gxBuscar" placeholder="Ej.: mano, orar, señalar"></label>
+        <label>Ordenar<select id="gxOrden"><option value="n" selected>Más frecuentes</option><option value="az">Alfabético</option></select></label>
+        <label>Mostrar<select id="gxMostrar"><option>20</option><option>50</option><option value="todos" selected>Todos</option></select></label>
+      </div>
+      <div class="lienzo" id="gxLista"><div class="vacio">Esperando datos.</div></div>
+    </section>
+
+    <section class="bloque gx-asoc" data-bloque="gx-asoc" data-titulo="Asociaciones">
+      <h2>Asociaciones<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">Compara uno o varios gestos (hasta 8) según cualquier campo de ARCA: temas y subtemas (clasificación nivel 1 y 2), personajes, símbolos, objetos, periodos, países, técnicas… Cada columna es un gesto elegido y cada fila, un valor del campo. El <b>tamaño</b> del círculo es el número de obras que tienen a la vez el gesto y ese valor. El <b>color</b> depende de la <b>Medida</b>: el número de obras; el porcentaje de las obras de cada gesto (para comparar gestos con cantidades distintas); o la comparación con el conjunto del filtro, donde <b>2×</b> quiere decir el doble de frecuente que en todas las obras (violeta: más de lo esperado; gris: menos). Agrega o quita gestos tocándolos en la lista; toca un círculo para ver sus obras o el nombre de un gesto para ver todas las suyas.</span></span></h2>
+      <p class="lectura" id="gxAsocLectura">Calculando…</p>
+      <div class="gx-elegidos" id="gxElegidos"></div>
+      <div class="controles">
+        <label>Cruzar con<select id="gxCruce"></select></label>
+        <label>Medida<select id="gxMedida">
+          <option value="n" selected>Número de obras</option>
+          <option value="pct">% de las obras de cada gesto</option>
+          <option value="lift">Comparado con el filtro (× veces)</option>
+        </select></label>
+        <label>Mostrar<select id="gxTopA"><option>15</option><option selected>25</option><option>40</option><option value="todos">Todos</option></select></label>
+      </div>
+      <div class="lienzo" id="gxAsoc"><div class="vacio">Esperando datos.</div></div>
+    </section>
+
+    <section class="bloque gx-grafo" data-bloque="gx-grafo" data-titulo="Red de gestos">
+      <h2>Red de gestos<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta red"><span class="info-globo" role="tooltip">Cada círculo es un gesto (violeta) o un término de otro campo (naranja); su tamaño es el número de obras. Una línea une dos términos que aparecen en las mismas obras y su grosor es cuántas comparten. Con <b>Gestos que aparecen juntos</b>, la red muestra qué gestos se combinan en una misma pintura (en sus casillas gesto 1, 2 y 3). Con <b>Gestos con otro campo</b>, une cada gesto con personajes, temas, símbolos o cualquier otro campo. El anillo dorado marca los gestos elegidos en «Asociaciones». Pasa el cursor para resaltar los vínculos, toca un círculo o una línea para ver sus obras, arrastra los círculos para ordenarlos y usa la rueda para acercar.</span></span></h2>
+      <p class="lectura" id="gxGrafoLectura">Calculando…</p>
+      <div class="controles">
+        <label>Relacionar<select id="gxRelModo">
+          <option value="juntos" selected>Gestos que aparecen juntos en la misma obra</option>
+          <option value="campo">Gestos con otro campo</option>
+        </select></label>
+        <label id="gxRelCampoL" hidden>Otro campo<select id="gxRelCampo"></select></label>
+        <label>Gestos<select id="gxRelTop"><option>15</option><option selected>25</option><option>40</option></select></label>
+        <label id="gxRelTopBL" hidden>Términos del otro campo<select id="gxRelTopB"><option>10</option><option selected>15</option><option>25</option></select></label>
+        <label>Obras mínimas por vínculo<select id="gxRelMin"><option>3</option><option>5</option><option selected>10</option><option>20</option><option>50</option></select></label>
+      </div>
+      <div class="lienzo" id="gxGrafo"><div class="vacio">Esperando datos.</div></div>
+      <div class="red-leyenda" id="gxGrafoLeyenda"></div>
+    </section>
+
+    <section class="bloque gx-comp" data-bloque="gx-comp" data-titulo="Composición gestual por grupos">
+      <h2>Composición gestual por grupos<span class="info" tabindex="0" role="button" aria-label="Cómo leer esta gráfica"><span class="info-globo" role="tooltip">Cada barra es un grupo de obras (un tema, un periodo, un país, un personaje…) y se divide según los gestos que aparecen en sus obras. Con <b>% dentro de cada grupo</b> todas las barras miden lo mismo, así que se pueden comparar grupos con cantidades muy distintas de obras; con <b>Número</b> el largo muestra el tamaño real. Como una obra puede tener hasta tres gestos, la barra reparte apariciones de gestos (una por cada gesto distinto de cada obra), no obras. Los gestos menos frecuentes se juntan en «Otros». Toca un tramo para ver sus obras.</span></span></h2>
+      <p class="lectura" id="gxCompLectura">Calculando…</p>
+      <div class="controles">
+        <label>Comparar grupos de<select id="gxGrupo"></select></label>
+        <label>Grupos<select id="gxNG"><option>4</option><option selected>8</option><option>12</option><option>20</option></select></label>
+        <label>Gestos con color propio<select id="gxNK"><option>5</option><option selected>7</option></select></label>
+        <label>Medida<select id="gxMedC"><option value="pct" selected>% dentro de cada grupo</option><option value="n">Número</option></select></label>
+      </div>
+      <div class="lienzo" id="gxComp"><div class="vacio">Esperando datos.</div></div>
+      <div class="leyenda-escala" id="gxCompLeyenda"></div>
+    </section>
+  </div>
+
   <footer>
     Datos: <a href="https://arca.uniandes.edu.co" target="_blank" rel="noopener">ARCA, Arte Colonial Americano</a>, Universidad de los Andes.
   </footer>
 </div>
 
-<aside class="detalle" id="detalle" aria-hidden="true">
-  <div class="cab"><h3 id="dTitulo"></h3><button class="boton sec" id="dCerrar" aria-label="Cerrar">Cerrar</button></div>
-  <div class="cuerpo" id="dCuerpo"></div>
+<aside class="detalle" id="detalle" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dTitulo">
+  <div class="detalle-caja" id="dCaja">
+    <div class="detalle-viz" id="dViz"></div>
+    <div class="detalle-obras">
+      <div class="cab"><h3 id="dTitulo"></h3><button class="boton sec" id="dCerrar" aria-label="Cerrar">Cerrar</button></div>
+      <div class="cuerpo" id="dCuerpo"></div>
+    </div>
+  </div>
 </aside>
 <div class="explorador" id="explorador" aria-hidden="true" role="dialog" aria-label="Explorar a fondo">
   <div class="marco">
@@ -645,10 +831,16 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
 </div>
 <div id="tip"></div>
 
+<button type="button" class="abrir-filtros" id="abrirFiltros" aria-controls="panelFiltros" aria-expanded="false">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 6h16M7 12h10M10 18h4"/></svg>
+  Filtros<span class="n" id="abrirFiltrosN"></span>
+</button>
+<div class="fondo-filtros" id="fondoFiltros"></div>
 <aside class="panel-filtros" id="panelFiltros" aria-label="Filtros">
   <div class="cab">
     <h3>Filtros</h3>
     <button class="boton sec" id="pf-reiniciar">Reiniciar todo</button>
+    <button class="boton cerrar-movil" id="cerrarFiltros" type="button" aria-label="Cerrar filtros y ver resultados">Ver resultados</button>
   </div>
   <div class="cuerpo">
     <div class="pf-chips" id="pf-chips"></div>
@@ -864,7 +1056,7 @@ const S = {
   api:'', obras:[], obraPais:new Map(), paises:[], ubic:[], total:0,
   filtro:{pais:null, desde:null, hasta:null}, permitidas:null, panelIds:null,
   dimCache:new Map(), indexCache:new Map(), pendientes:new Map(),
-  datos:{}, mapaVista:null, mapaCtl:null, mapaModo:'ubicacion',
+  datos:{}, mapaVista:null, mapaCtl:null, mapaModo:'ubicacion', mapaForma:'mapa',
   autoresInfo:null, tablaPag:0, tablaOrden:'titulo', tablaAsc:true
 };
 const fmt = n => new Intl.NumberFormat('es-CO').format(n);
@@ -955,7 +1147,7 @@ async function conectar(){
   S.dimCache.clear(); S.indexCache.clear(); S.pendientes.clear();
   try {
     estado('Consultando totales…');
-    const [obras, autores, ubicaciones, personajes] = await Promise.all(['obras','autores','ubicaciones','personajes'].map(contar));
+    const [obras, autores, ubicaciones, personajes, gestos] = await Promise.all(['obras','autores','ubicaciones','personajes','gestos'].map(contar));
     if (obras == null) await gql('query{ obras(limit:1){ id } }'); // fuerza el error real si no hay acceso
     S.total = obras || 0;
 
@@ -989,12 +1181,8 @@ async function conectar(){
     if (!S.total) S.total = S.obras.length;
 
     const cuando = new Date().toLocaleString('es-CO',{dateStyle:'medium', timeStyle:'short'});
-    const partes = [`<b>${fmt(S.total)}</b> pinturas`];
-    if (autores) partes.push(`<b>${fmt(autores)}</b> autores`);
-    if (personajes) partes.push(`<b>${fmt(personajes)}</b> personajes`);
-    if (ubicaciones) partes.push(`<b>${fmt(ubicaciones)}</b> lugares`);
-    partes.push(`<b>${fmt(S.paises.length)}</b> países`);
-    $('resumen').innerHTML = `${partes.slice(0,-1).join(', ')} y ${partes.at(-1)}.`;
+    // Totales registrados en ARCA: el pulso los usa como referencia junto a las cifras del filtro.
+    S.catalogo = {autores, personajes, ubicaciones, gestos, paises:S.paises.length};
     estado(`Conectado a ${S.api} · ${cuando}`);
     aplicarFiltros();
   } catch(e){
@@ -1027,11 +1215,11 @@ function aplicarFiltros(){
   $('alcance').textContent = activo ? `${fmt(n)} de ${fmt(S.total)} obras en el filtro` : `${fmt(S.total)} obras`;
   avisarSiNoCambia(n, activo);
   dibujarPulso(); dibujarMapa(); dibujarTecnicas(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRanking(); dibujarRed();
-  if (vistos.has('gestos')) dibujarGestos();
   if (vistos.has('comparativo')) dibujarComparativo();
   if (vistos.has('detalle')) dibujarAutores();
   S.tablaPag = 0; dibujarTabla();
   if ($('explorador').classList.contains('abierto') && EX.filtros) exDibujar();
+  if (gxActiva()) dibujarGestosTab();
 }
 // Si se pone o se quita un filtro y el número de obras sigue igual, las gráficas no
 // cambian y parece que el clic no hizo nada. Se avisa en la barra de filtros activos
@@ -1158,7 +1346,7 @@ function montarHerramientas(){
     const bloque = sec.dataset.bloque, titulo = sec.dataset.titulo;
     const barra = document.createElement('div');
     barra.className = 'herramientas';
-    const svgs = bloque !== 'pulso' && bloque !== 'ranking';
+    const svgs = !['pulso','ranking','gx-resumen','gx-lista'].includes(bloque);
     barra.innerHTML = (svgs ?'<button data-t="png" title="Descargar imagen PNG">PNG</button><button data-t="svg" title="Descargar vector SVG">SVG</button>' : '')
       + '<button data-t="csv" title="Descargar los datos de esta gráfica">CSV</button>';
     barra.querySelectorAll('button').forEach(b => b.onclick = () => {
@@ -1179,6 +1367,7 @@ function pintarBarraActiva(){
   const partes = (typeof PF !== 'undefined' && PF.resumen) ? PF.resumen() : [];
   const barra = $('barraActiva'), cont = $('chipsActivos');
   barra.hidden = !partes.length;
+  $('abrirFiltrosN').textContent = partes.length || '';
   cont.innerHTML = partes.map(([k,l]) =>
     `<span class="chip">${l.replace(/&/g,'&amp;').replace(/</g,'&lt;')}<button data-key="${k}" aria-label="Quitar este filtro">×</button></span>`).join('');
   cont.querySelectorAll('button').forEach(b => b.onclick = () => PF.quitar(b.dataset.key));
@@ -1221,14 +1410,113 @@ function dibujarPulso(){
       $('pulso').querySelectorAll('.metrica .explica')[1].textContent = 'no se pudieron leer los autores: ' + e.message;
     });
   }
+  const C = S.catalogo || {}, deARCA = (k, que) => C[k] ? ` · ${fmt(C[k])} ${que} en ARCA` : '';
+  const origenes = new Set(obras.map(o=>o.origen?.id).filter(Boolean));
   const tarjetas = [
     [fmt(n),'obras en la lectura',S.permitidas?'con los filtros activos':'colección completa'],
     pintores,
-    [fmt(ubicaciones.size),'número de ubicaciones',`lugares de conservación en ${fmt(paises.size)} países`],
-    autoria
+    autoria,
+    tarjetaPersonajes(n),
+    tarjetaTecnicas(n),
+    [fmt(ubicaciones.size),'lugares de conservación',`museos, iglesias y colecciones${deARCA('ubicaciones','registrados')}`],
+    [`${fmt(paises.size)} / ${fmt(origenes.size)}`,'países de conservación / de origen',`donde están hoy y donde se hicieron${deARCA('paises','países')}`],
+    tarjetaGestos()
   ];
-  $('pulso').innerHTML = tarjetas.map(([v,r,e])=>`<div class="metrica"><span class="valor">${v}</span><span class="rotulo">${r}</span><span class="explica">${e}</span></div>`).join('');
+  const car = $('pulso'), pos = car.scrollLeft;
+  car.innerHTML = tarjetas.map(([v,r,e,lazy])=>`<div class="metrica"${lazy?` data-carga="${lazy}"`:''}><span class="valor">${v}</span><span class="rotulo">${r}</span><span class="explica">${e}</span></div>`).join('');
+  car.scrollLeft = pos;   // al cambiar los filtros el carrusel se queda donde estaba
+  vigilarCargaPulso();
+  pintarPuntosPulso();
   S.datos.pulso = {filas: tarjetas.map(([v,r,e])=>({indicador:r, valor:v, detalle:e}))};
+}
+// Personajes y gestos salen de tablas que se descargan aparte: la tarjeta muestra el total de
+// ARCA mientras tanto y se completa con la cifra del filtro cuando llegan los datos.
+function tarjetaPersonajes(n){
+  const C = S.catalogo || {}, filas = S.dimCache.get('personajes');
+  if (!filas){
+    cargarDim(DIMS.personajes).then(dibujarPulso).catch(()=>{});   // la comparte «Pinturas en relación a campos»
+    return [C.personajes ? fmt(C.personajes) : '…', 'personajes', 'registrados en ARCA · calculando los del filtro…'];
+  }
+  const visible = o => !S.permitidas || S.permitidas.has(o);
+  const pers = new Set(), con = new Set();
+  for (const r of filas) if (visible(r.o)){ pers.add(claveIt(r.it)); con.add(r.o); }
+  return [fmt(pers.size), 'personajes distintos', `en ${fmt(con.size)} obras (${parte(con.size, n)})${C.personajes ? ` · ${fmt(C.personajes)} en ARCA` : ''}`];
+}
+function tarjetaTecnicas(n){
+  const filas = S.dimCache.get('tecnicas');
+  if (!filas){
+    cargarDim(DIMS.tecnicas).then(dibujarPulso).catch(()=>{});   // la comparte el bloque Técnicas
+    return ['…', 'técnicas', 'calculando…'];
+  }
+  const visible = o => !S.permitidas || S.permitidas.has(o);
+  const tec = new Set(), con = new Set();
+  for (const r of filas) if (visible(r.o)){ tec.add(claveIt(r.it)); con.add(r.o); }
+  return [fmt(tec.size), 'técnicas distintas', `soportes y medios en ${fmt(con.size)} obras (${parte(con.size, n)})`];
+}
+function tarjetaGestos(){
+  const C = S.catalogo || {}, listas = CAMPOS_GESTO.map(k => S.dimCache.get(k));
+  // Los gestos se piden solo cuando la tarjeta aparece en el carrusel (son tres descargas)
+  if (listas.some(l => !l)) return [C.gestos ? fmt(C.gestos) : '…', 'gestos', 'en el vocabulario de ARCA · desliza aquí para ver los del filtro', 'gestos'];
+  const visible = o => !S.permitidas || S.permitidas.has(o);
+  const gestos = new Set(), con = new Set();
+  for (const l of listas) for (const r of l){
+    if (!visible(r.o) || SIN_DATO_GESTO.test((r.it.nombre || '').trim())) continue;
+    gestos.add(claveIt(r.it)); con.add(r.o);
+  }
+  return [fmt(gestos.size), 'gestos distintos', `en ${fmt(con.size)} obras con gesto${C.gestos ? ` · ${fmt(C.gestos)} en el vocabulario` : ''}`];
+}
+let vigiaPulso;
+function vigilarCargaPulso(){
+  vigiaPulso?.disconnect();
+  const t = $('pulso').querySelector('[data-carga="gestos"]');
+  if (!t || !('IntersectionObserver' in window)) return;
+  vigiaPulso = new IntersectionObserver(es => {
+    if (!es.some(e => e.isIntersecting)) return;
+    vigiaPulso.disconnect();
+    t.querySelector('.explica').textContent = 'calculando los gestos del filtro…';
+    Promise.all(CAMPOS_GESTO.map(k => cargarDim(DIMS[k]))).then(dibujarPulso).catch(()=>{ t.querySelector('.explica').textContent = 'no se pudieron leer los gestos'; });
+  }, {root:$('pulso'), threshold:.6});
+  vigiaPulso.observe(t);
+}
+// Carrusel: páginas según cuántas tarjetas caben a la vista
+function paginasPulso(){
+  const car = $('pulso'), tarjetas = [...car.querySelectorAll('.metrica')];
+  if (!tarjetas.length) return {n:0, actual:0, porVista:1, tarjetas};
+  const ancho = tarjetas[0].offsetWidth, porVista = Math.max(1, Math.round(car.clientWidth / ancho));
+  const n = Math.ceil(tarjetas.length / porVista), max = car.scrollWidth - car.clientWidth;
+  const actual = car.scrollLeft >= max - 2 ? n - 1 : Math.min(n - 1, Math.round(car.scrollLeft / (ancho * porVista)));
+  return {n, actual, porVista, tarjetas, max};
+}
+function pintarPuntosPulso(){
+  const {n, actual} = paginasPulso(), caja = $('pulsoPuntos');
+  caja.innerHTML = n > 1 ? Array.from({length:n}, (_, i) => `<button type="button" data-i="${i}" aria-label="Grupo ${i + 1} de ${n}"${i === actual ? ' aria-current="true"' : ''}></button>`).join('') : '';
+  caja.querySelectorAll('button').forEach(b => b.onclick = () => { tocoPulso = Date.now(); irPulso(+b.dataset.i); });
+  $('pulsoPrev').hidden = $('pulsoNext').hidden = n < 2;
+}
+function irPulso(i){
+  const car = $('pulso'), {n, porVista, tarjetas, max} = paginasPulso();
+  if (!n) return;
+  const t = tarjetas[(((i % n) + n) % n) * porVista];
+  car.scrollTo({left: Math.min(max, t.offsetLeft - tarjetas[0].offsetLeft)});
+}
+let tocoPulso = 0;   // última interacción: el avance automático espera un rato después
+function montarCarruselPulso(){
+  const car = $('pulso');
+  $('pulsoPrev').onclick = () => { tocoPulso = Date.now(); irPulso(paginasPulso().actual - 1); };
+  $('pulsoNext').onclick = () => { tocoPulso = Date.now(); irPulso(paginasPulso().actual + 1); };
+  let espera; car.addEventListener('scroll', () => { clearTimeout(espera); espera = setTimeout(() => {
+    const {actual} = paginasPulso();
+    $('pulsoPuntos').querySelectorAll('button').forEach((b, i) => i === actual ? b.setAttribute('aria-current', 'true') : b.removeAttribute('aria-current'));
+  }, 80); });
+  ['pointerdown','wheel','touchstart','focusin'].forEach(ev => car.addEventListener(ev, () => { tocoPulso = Date.now(); }, {passive:true}));
+  new ResizeObserver(() => pintarPuntosPulso()).observe(car);
+  // Avance automático suave: se detiene con el cursor encima, al interactuar o si se pidió menos movimiento
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  setInterval(() => {
+    if (document.hidden || car.matches(':hover') || car.parentElement.matches(':focus-within') || Date.now() - tocoPulso < 15000) return;
+    const r = car.getBoundingClientRect(); if (r.bottom < 0 || r.top > innerHeight) return;
+    irPulso(paginasPulso().actual + 1);
+  }, 7000);
 }
 
 /* ---------- Mapa ---------- */
@@ -1253,11 +1541,10 @@ const colorCateg = claves => { const m = new Map(claves.slice(0, CATEG.length).m
 // Texto legible sobre un relleno: oscuro sobre tonos claros, blanco sobre oscuros.
 const tintaSobre = c => d3.lab(c).l > 64 ? '#2a1d16' : '#fff';
 // Rampas de magnitud (un solo tono, de claro a oscuro). Cada gráfica tiene la suya
-// para que no se confundan entre sí: Temática en azul, Técnicas en verde, Gestos en
-// violeta y Explorar a fondo en turquesa; el mapa conserva el dorado.
+// para que no se confundan entre sí: Temática en azul, Técnicas en verde
+// y Explorar a fondo en turquesa; el mapa conserva el dorado.
 const RAMPA_TEMAS    = d3.interpolateRgb('#e6eefa', '#0d366b');
 const RAMPA_TECNICAS = d3.interpolateRgb('#e2f3ea', '#0b5a3c');
-const RAMPA_GESTOS   = d3.interpolateRgb('#efe9f8', '#3a2382');
 
 function dibujarMapa(){
   const cont = $('mapa');
@@ -1274,7 +1561,8 @@ function dibujarMapa(){
   const ruta = d3.geoPath(proy);
 
   // El mapa puede leerse por dónde está hoy la obra o por dónde se hizo.
-  const porOrigen = S.mapaModo === 'origen';
+  const porOrigen = S.mapaModo.startsWith('origen');
+  const enPct = S.mapaModo.endsWith('_pct');
   const paisDe = o => porOrigen ? (o.origen?.id ?? null) : o.pais;
   const paisSel = porOrigen ? (PF.valor('origenPaisUI') != null ? String(PF.valor('origenPaisUI')) : null)
                             : (S.filtro.pais?.id ?? null);
@@ -1287,9 +1575,15 @@ function dibujarMapa(){
     if (p!=null) porPais.set(p,(porPais.get(p)||0)+1);
     if (!porOrigen && o.ub!=null) porUb.set(o.ub,(porUb.get(o.ub)||0)+1);
   }
+  // En modo porcentual cada país vale su parte sobre las obras con país registrado.
+  const conPais = d3.sum([...porPais.values()]);
+  const pct = n => conPais ? n/conPais*100 : 0;
+  const medida = n => enPct ? pct(n) : n;
+  const fmtPct = v => `${new Intl.NumberFormat('es-CO',{maximumFractionDigits:1}).format(v)} %`;
+  const cifra = n => enPct ? `${fmtPct(pct(n))} de las obras (${fmt(n)})` : `${fmt(n)} obras`;
   // Escala por cuantiles: reparte el color entre los valores que existen, de modo
   // que los países con pocas obras no queden todos del mismo tono oscuro.
-  const valores = [...porPais.values()].filter(v=>v>0);
+  const valores = [...porPais.values()].filter(v=>v>0).map(medida);
   const nBins = Math.max(1, Math.min(7, new Set(valores).size));
   const colores = d3.range(nBins).map(i => RAMPA_MAPA(nBins===1 ? 1 : i/(nBins-1)));
   const escala = d3.scaleQuantile().domain(valores.length?valores:[0]).range(colores);
@@ -1307,10 +1601,10 @@ function dibujarMapa(){
   const glosa = porOrigen ? 'obras creadas aquí' : 'obras conservadas aquí';
   lienzo.append('g').selectAll('path').data(feats).join('path')
     .attr('class', d=>'pais'+(paisSel===String(d.properties.id)?' sel':''))
-    .attr('d', ruta).attr('fill', d=>{ const n=porPais.get(d.properties.id)||0; return n?escala(n):'#ded2ba'; })
+    .attr('d', ruta).attr('fill', d=>{ const n=porPais.get(d.properties.id)||0; return n?escala(medida(n)):'#ded2ba'; })
     .attr('tabindex',0)
     .on('mousemove', (ev,d)=>{ const n = porPais.get(d.properties.id)||0;
-      mostrarTip(ev, `<strong>${d.properties.nombre}</strong><br>${fmt(n)} ${glosa}${n?'<br><em>Clic para ver las obras</em>':''}`); })
+      mostrarTip(ev, `<strong>${d.properties.nombre}</strong><br>${enPct ? `${fmtPct(pct(n))} de las obras con país registrado<br>${fmt(n)} ${glosa}` : `${fmt(n)} ${glosa}`}${n?'<br><em>Clic para ver las obras</em>':''}`); })
     .on('mouseleave', ocultarTip)
     .on('click keydown', (ev,d)=>{
       if (ev.type==='keydown' && ev.key!=='Enter') return;
@@ -1328,7 +1622,7 @@ function dibujarMapa(){
   gPuntos.selectAll('circle').data(puntos).join('circle')
     .attr('class','punto').attr('cx',d=>d.xy[0]).attr('cy',d=>d.xy[1]).attr('r',d=>Math.max(1.5,radio(d.n)))
     .attr('tabindex',0)
-    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d.u.nombre}</strong><br>${fmt(d.n)} obras aquí<br><em>Clic para ver las obras</em>`))
+    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d.u.nombre}</strong><br>${cifra(d.n)} aquí<br><em>Clic para ver las obras</em>`))
     .on('mouseleave', ocultarTip)
     .on('click keydown',(ev,d)=>{
       if (ev.type==='keydown' && ev.key!=='Enter') return;
@@ -1355,7 +1649,44 @@ function dibujarMapa(){
     .on('end', ()=>svg.style('cursor','grab'));
   svg.call(zoom).on('dblclick.zoom', null);
 
-  cont.replaceChildren(svg.node());
+  const enBarras = S.mapaForma === 'barras';
+  document.querySelector('.b-mapa').classList.toggle('en-barras', enBarras);
+  cont.replaceChildren(enBarras ? barrasGeo() : svg.node());
+
+  // Vista alternativa: un país por barra, ordenados de mayor a menor según «Contar por».
+  function barrasGeo(){
+    const filasB = S.paises.map(p=>({p, n:porPais.get(p.id)||0})).filter(d=>d.n).sort((a,b)=>b.n-a.n);
+    if (!filasB.length) return Object.assign(document.createElement('div'), {className:'vacio', textContent:'Ninguna obra del filtro tiene país registrado.'});
+    const fila = 24, Hb = fila * filasB.length;
+    const rotW = Math.min(170, Math.round(W * .3)), cifraW = enPct ? 110 : 96;
+    const x = d3.scaleLinear([0, d3.max(filasB, d=>medida(d.n))], [0, Math.max(40, W - rotW - cifraW)]);
+    const y = d3.scaleBand(filasB.map((_, i)=>i), [0, Hb]).paddingInner(.22).paddingOuter(.1);
+    const svgB = d3.create('svg').attr('viewBox',`0 0 ${W} ${Hb}`).attr('role','img')
+      .attr('aria-label', `Barras de obras por país de ${porOrigen?'origen':'conservación'}`);
+    const g = svgB.append('g').selectAll('g').data(filasB).join('g')
+      .attr('transform', (d, i)=>`translate(0,${y(i)})`).style('cursor','pointer').attr('tabindex',0)
+      .on('mousemove', (ev,d)=>mostrarTip(ev, `<strong>${escHTML(d.p.nombre)}</strong><br>${enPct ? `${fmtPct(pct(d.n))} de las obras con país registrado<br>${fmt(d.n)} ${glosa}` : `${fmt(d.n)} ${glosa}`}<br><em>Clic para ver las obras</em>`))
+      .on('mouseleave', ocultarTip)
+      .on('click keydown', (ev,d)=>{
+        if (ev.type==='keydown' && ev.key!=='Enter') return;
+        const ids = S.obras.filter(o=>pasaPeriodo(o) && pasaPanel(o) && pasaPais(o) && paisDe(o)===d.p.id).map(o=>o.id);
+        if (!ids.length) return;
+        ocultarTip();
+        exGaleria(d.p.nombre, ids, porOrigen ? 'País de origen.' : 'País de conservación.');
+      });
+    // franja invisible a todo el ancho: el clic y el tooltip funcionan también sobre el rótulo
+    g.append('rect').attr('width', W).attr('height', y.bandwidth()).attr('fill','transparent');
+    g.append('text').attr('x', rotW - 8).attr('y', y.bandwidth()/2).attr('dy','.35em').attr('text-anchor','end')
+      .attr('font-size', 11.5).attr('fill','var(--texto)').attr('font-weight', d=>paisSel===String(d.p.id)?700:null)
+      .text(d=>recortar(d.p.nombre, Math.floor((rotW - 12)/6.2)));
+    // mismo color que el país en el mapa: las dos vistas se leen igual
+    g.append('rect').attr('x', rotW).attr('width', d=>Math.max(2, x(medida(d.n)))).attr('height', y.bandwidth()).attr('rx', 2)
+      .attr('fill', d=>escala(medida(d.n)));
+    g.append('text').attr('x', d=>rotW + Math.max(2, x(medida(d.n))) + 6).attr('y', y.bandwidth()/2).attr('dy','.35em')
+      .attr('font-size', 10.5).attr('fill','var(--tenue)').style('font-variant-numeric','tabular-nums')
+      .text(d=>enPct ? `${fmtPct(pct(d.n))} · ${fmt(d.n)}` : `${fmt(d.n)} · ${parte(d.n, conPais)}`);
+    return svgB.node();
+  }
 
   // Vista por omisión centrada en América: el resto del mundo sigue ahí, a un clic.
   // Solo países americanos presentes en la colección: así Groenlandia no estira
@@ -1378,31 +1709,33 @@ function dibujarMapa(){
 
   // Leyenda escalonada con los cortes reales de la escala
   $('mapaLeyenda').innerHTML =
-    `<span class="caja" style="color:var(--texto)">${porOrigen?'Obras por país de origen':'Obras por país de conservación'}:</span>`
+    `<span class="caja" style="color:var(--texto)">${enPct?'% de obras':'Obras'} por país de ${porOrigen?'origen':'conservación'}:</span>`
     + colores.map(c => { const [a,b] = escala.invertExtent(c);
-      return `<span class="caja"><i style="background:${c}"></i>${fmt(Math.round(a))}–${fmt(Math.round(b))}</span>`; }).join('')
-    + `<span class="caja" style="margin-left:6px"><i style="background:#ded2ba;border:1px solid var(--linea)"></i>sin obras</span>`
-    + (porOrigen ? '' : `<span class="caja"><i style="background:var(--carmin);border-radius:50%;width:10px;height:10px"></i>lugar de conservación (tamaño = nº de obras)</span>`);
+      const rango = enPct ? `${fmtPct(a)}–${fmtPct(b)}` : `${fmt(Math.round(a))}–${fmt(Math.round(b))}`;
+      return `<span class="caja"><i style="background:${c}"></i>${rango}</span>`; }).join('')
+    + (enBarras ? '' : `<span class="caja" style="margin-left:6px"><i style="background:#ded2ba;border:1px solid var(--linea)"></i>sin obras</span>`)
+    + (porOrigen || enBarras ? '' : `<span class="caja"><i style="background:var(--carmin);border-radius:50%;width:10px;height:10px"></i>lugar de conservación (tamaño = nº de obras)</span>`);
 
   S.datos.mapa = {filas:[
     ...S.paises.map(p=>({tipo: porOrigen?'País de origen':'País de conservación', nombre:p.nombre, obras:porPais.get(p.id)||0}))
       .filter(f=>f.obras).sort((a,b)=>b.obras-a.obras),
     ...puntos.map(p=>({tipo:'Lugar', nombre:p.u.nombre, obras:p.n}))
-  ]};
+  ].map(f=>({...f, porcentaje:+pct(f.obras).toFixed(2)}))};
 
   // Lectura en palabras
   const total = obrasVisibles().length;
   const ranking = S.paises.map(p=>({nombre:p.nombre, n:porPais.get(p.id)||0})).filter(p=>p.n).sort((a,b)=>b.n-a.n);
-  const conPais = d3.sum(ranking, p=>p.n), sinPais = total - conPais;
+  const sinPais = total - conPais;
   const verbo = porOrigen ? 'se hicieron' : 'se conservan hoy';
   let txt;
   if (!ranking.length) txt = `Ninguna obra ${delFiltro()} tiene ${porOrigen?'país de origen':'país de conservación'} registrado.`;
   else if (ranking.length === 1) txt = `Todas las obras ${delFiltro()} con país registrado ${verbo} en ${escHTML(ranking[0].nombre)}: ${nObras(ranking[0].n)}.`;
   else {
-    const top = ranking.slice(0,3).map(p=>`${escHTML(p.nombre)} (${negrita(p.n)}, ${parte(p.n, conPais)})`);
+    const top = ranking.slice(0,3).map(p=>enPct ? `${escHTML(p.nombre)} (<b>${parte(p.n, conPais)}</b>, ${nObras(p.n)})`
+                                                : `${escHTML(p.nombre)} (${negrita(p.n)}, ${parte(p.n, conPais)})`);
     txt = `Las obras ${delFiltro()} ${verbo} en ${negrita(ranking.length)} países. ${ranking.length > 3 ? 'Los que más concentran son' : 'Se reparten entre'} ${enumerar(top)}.`;
   }
-  if (!porOrigen && puntos.length) txt += ` El lugar con más obras es ${escHTML(puntos[0].u.nombre)}, con ${nObras(puntos[0].n)}.`;
+  if (!porOrigen && puntos.length) txt += ` El lugar con más obras es ${escHTML(puntos[0].u.nombre)}, con ${enPct ? `el <b>${parte(puntos[0].n, conPais)}</b> (${nObras(puntos[0].n)})` : nObras(puntos[0].n)}.`;
   if (sinPais > 0) txt += ` ${nObras(sinPais)} no ${sinPais===1?'tiene':'tienen'} ${porOrigen?'lugar de origen':'lugar de conservación'} registrado y no ${sinPais===1?'aparece':'aparecen'} en el mapa.`;
   leer('mapaLectura', txt);
 }
@@ -1454,11 +1787,22 @@ function dibujarTiempo(){
   svg.append('g').attr('transform',`translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickFormat(fmt))
     .call(g=>g.select('.domain').remove()).call(g=>g.selectAll('text').attr('fill','var(--tenue)'))
     .call(g=>g.selectAll('line').attr('x2',W-m.l-m.r).attr('stroke','var(--linea)').attr('stroke-opacity',.5));
-  svg.append('g').selectAll('rect').data(decs).join('rect')
+  const abrirDecada = d => {
+    const ids = conFecha.filter(o=>decada(o.fi)===d).map(o=>o.id);
+    if (!ids.length) return;
+    ocultarTip();
+    exGaleria(`${d}–${d+9}`, ids, 'Obras con fecha inicial en esta década.');
+  };
+  const barra = svg.append('g').selectAll('g').data(decs).join('g')
+    .style('cursor', d=>filtr.get(d) ? 'pointer' : 'default').attr('tabindex', d=>filtr.get(d) ? 0 : null)
+    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d}–${d+9}</strong><br>${fmt(filtr.get(d)||0)} obras${filtr.get(d)?'<br><em>Clic para ver las obras</em>':''}`))
+    .on('mouseleave', ocultarTip)
+    .on('click keydown',(ev,d)=>{ if (ev.type==='keydown' && ev.key!=='Enter') return; abrirDecada(d); });
+  // franja invisible a todo el alto: las décadas con pocas obras también se pueden tocar
+  barra.append('rect').attr('x',d=>x(d)).attr('width',x.bandwidth()).attr('y',m.t).attr('height',H-m.b-m.t).attr('fill','transparent');
+  barra.append('rect')
     .attr('x',d=>x(d)).attr('width',x.bandwidth()).attr('y',d=>y(filtr.get(d)||0)).attr('height',d=>y(0)-y(filtr.get(d)||0))
-    .attr('fill','#e4572e')   // bermellón: color propio y llamativo para Temporalidad
-    .on('mousemove',(ev,d)=>mostrarTip(ev, `<strong>${d}–${d+9}</strong><br>${fmt(filtr.get(d)||0)} obras`))
-    .on('mouseleave', ocultarTip);
+    .attr('fill','#e4572e');   // bermellón: color propio y llamativo para Temporalidad
   cont.replaceChildren(svg.node());
   S.datos.tiempo = {filas: decs.map(d=>({decada:`${d}-${d+9}`, obras_en_filtro:filtr.get(d)||0}))};
 }
@@ -1482,7 +1826,11 @@ function dibujarAtlas(extra = 0){   // extra: alto adicional (px) para alinear c
   const porPeriodo = d3.rollup(validas,v=>v.length,o=>periodo(o));
   const celdas = cats.flatMap(cat=>periodos.map(p=>({cat,p,n:porCelda.get(cat)?.get(p)||0,total:porPeriodo.get(p)||0})));
 
-  // Lectura: los temas principales y el momento de mayor peso del primero.
+  // El tono puede medir obras o la parte del periodo. En porcentaje, un periodo con
+  // pocas obras daría tonos muy fuertes sin respaldo: esas columnas se atenúan.
+  const enPct = $('atlasMedida').value === 'pct', POCAS = 20;
+
+  // Lectura: los temas principales y, según «Color según», qué dice el tono.
   {
     const n = validas.length;
     let txt;
@@ -1490,9 +1838,20 @@ function dibujarAtlas(extra = 0){   // extra: alto adicional (px) para alinear c
     else {
       const top = cats.slice(0,3).map(c=>`${escHTML(c)} (${negrita(totCat.get(c))}, ${parte(totCat.get(c), n)})`);
       txt = `Entre las ${nObras(n)} fechadas ${delFiltro()}, los temas más frecuentes son ${enumerar(top)}.`;
+    }
+    if (enPct){
+      txt += ` El color indica qué parte de las obras de cada periodo pertenece a cada tema: compara temas dentro de una misma época, no cuántas obras hay.`;
       // Periodo en que el tema principal pesa más (solo periodos con al menos 20 obras, para no exagerar).
-      const pico = celdas.filter(d=>d.cat===cats[0] && d.total>=20).sort((a,b)=>b.n/b.total-a.n/a.total)[0];
-      if (pico && pico.n) txt += ` ${escHTML(cats[0])} alcanza su mayor peso entre ${pico.p} y ${pico.p+24}, cuando es el ${parte(pico.n, pico.total)} de las obras de ese periodo.`;
+      const pico = cats.length > 1 && celdas.filter(d=>d.cat===cats[0] && d.total>=POCAS).sort((a,b)=>b.n/b.total-a.n/a.total)[0];
+      if (pico && pico.n) txt += ` ${escHTML(cats[0])} alcanza su mayor peso entre ${pico.p} y ${pico.p+24}, cuando es el ${parte(pico.n, pico.total)} de las obras de ese periodo (${negrita(pico.n)} de ${negrita(pico.total)}).`;
+      const flojos = periodos.filter(p => (porPeriodo.get(p)||0) > 0 && porPeriodo.get(p) < POCAS).length;
+      if (flojos) txt += ` ${negrita(flojos)} ${flojos===1?'periodo tiene':'periodos tienen'} menos de ${POCAS} obras y se ${flojos===1?'ve atenuado':'ven atenuados'}: ahí un porcentaje alto puede deberse a muy pocas obras.`;
+    } else {
+      txt += ` El color indica cuántas obras de cada tema hay en cada periodo: más oscuro, más obras.`;
+      const max = celdas.reduce((a,d)=>d.n>a.n?d:a, celdas[0]);
+      if (max && max.n) txt += ` La celda más oscura es ${escHTML(max.cat)} entre ${max.p} y ${max.p+24}, con ${nObras(max.n)}.`;
+      const pp = [...porPeriodo].sort((a,b)=>b[1]-a[1])[0];
+      if (pp) txt += ` El periodo con más obras fechadas es ${pp[0]}–${pp[0]+24} (${negrita(pp[1])}). Para comparar épocas con distinto número de obras, cambia a «% del periodo».`;
     }
     const fuera = todas.length - n;
     if (fuera > 0) txt += ` ${nObras(fuera)} no ${fuera===1?'tiene':'tienen'} fecha o tema registrado y no ${fuera===1?'aparece':'aparecen'} aquí.`;
@@ -1500,26 +1859,42 @@ function dibujarAtlas(extra = 0){   // extra: alto adicional (px) para alinear c
   }
   const W=cont.clientWidth||700, m={t:18,r:10,b:34,l:Math.min(142,W*.28)}, fila=25 + extra/Math.max(1,cats.length), H=m.t+cats.length*fila+m.b;
   const x=d3.scaleBand(periodos,[m.l,W-m.r]).padding(.04), y=d3.scaleBand(cats,[m.t,H-m.b]).padding(.04);
-  const maxP=d3.max(celdas,d=>d.total?d.n/d.total:0)||1;
-  const color=d3.scaleSequentialSqrt([0,maxP],RAMPA_TEMAS);
+  const valor = d => enPct ? (d.total ? d.n/d.total : 0) : d.n;
+  const maxV = d3.max(celdas, valor) || 1;
+  const color=d3.scaleSequentialSqrt([0,maxV],RAMPA_TEMAS);
+  const fmtV = v => enPct ? `${Math.round(v*100)} %` : fmt(Math.round(v));
   const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Composición iconográfica por cuartos de siglo');
   const celdaSel = d => catActiva!=null && String(idCat.get(d.cat))===String(catActiva) && S.filtro.desde===d.p && S.filtro.hasta===d.p+24;
   svg.append('g').selectAll('rect').data(celdas).join('rect').attr('class','celda-calor')
     .attr('x',d=>x(d.p)).attr('y',d=>y(d.cat)).attr('width',x.bandwidth()).attr('height',y.bandwidth())
-    .attr('rx',2).attr('fill',d=>d.n?color(d.n/d.total):'#ece0c9')
+    .attr('rx',2).attr('fill',d=>d.n?color(valor(d)):'#ece0c9')
+    .attr('fill-opacity',d=>enPct && d.total<POCAS ? .35 : null)
     .attr('stroke',d=>celdaSel(d)?'var(--texto)':null).attr('stroke-width',d=>celdaSel(d)?2:null)
-    .style('cursor','default')
-    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.cat}</strong><br>${d.p}–${d.p+24}: ${fmt(d.n)} obras<br>${d.total?(d.n/d.total*100).toFixed(1):0} % del periodo`))
+    .style('cursor',d=>d.n?'pointer':'default').attr('tabindex',d=>d.n?0:null)
+    .on('click keydown',(ev,d)=>{
+      if (ev.type==='keydown' && ev.key!=='Enter') return;
+      const ids = validas.filter(o=>o.categoria.nombre===d.cat && periodo(o)===d.p).map(o=>o.id);
+      if (!ids.length) return;
+      ocultarTip();
+      exGaleria(`${d.cat} · ${d.p}–${d.p+24}`, ids, 'Tema y periodo (cada obra en el punto medio de su datación).');
+    })
+    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.cat}</strong><br>${d.p}–${d.p+24}: ${fmt(d.n)} obras<br>${d.total?(d.n/d.total*100).toFixed(1):0} % del periodo (${fmt(d.total)} obras en total)${enPct && d.total<POCAS ? '<br><em>Pocas obras en el periodo: el porcentaje puede exagerar</em>' : ''}${d.n?'<br><em>Clic para ver las obras</em>':''}`))
     .on('mouseleave',ocultarTip);
   svg.append('g').selectAll('text').data(cats).join('text').attr('x',m.l-7).attr('y',d=>y(d)+y.bandwidth()/2)
     .attr('text-anchor','end').attr('dominant-baseline','middle')
     .attr('fill',d=>String(idCat.get(d))===String(catActiva)?'var(--oro)':'var(--texto)').attr('font-size',10)
-    .text(d=>d)
-    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d}</strong><br>${fmt(totCat.get(d)||0)} obras`))
-    .on('mouseleave',ocultarTip);
+    .text(d=>d).style('cursor','pointer')
+    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d}</strong><br>${fmt(totCat.get(d)||0)} obras<br><em>Clic para ver las obras</em>`))
+    .on('mouseleave',ocultarTip)
+    .on('click',(ev,d)=>{ ocultarTip(); exGaleria(d, validas.filter(o=>o.categoria.nombre===d).map(o=>o.id), 'Tema, en todos los periodos.'); });
   svg.append('g').attr('transform',`translate(0,${H-m.b})`).call(d3.axisBottom(x).tickValues(periodos.filter(p=>p%50===0)).tickFormat(d=>d).tickSizeOuter(0))
     .call(g=>g.selectAll('text').attr('fill','var(--tenue)').attr('font-size',9)).call(g=>g.selectAll('line,path').attr('stroke','var(--linea)'));
   cont.replaceChildren(svg.node());
+  const pasos = [0, .25, .5, .75, 1].map(t => maxV*t*t);   // la escala es de raíz: pasos parejos a la vista
+  $('atlasLeyenda').innerHTML =
+    `<span class="caja" style="color:var(--texto)">${enPct?'% de las obras del periodo':'Obras por tema y periodo'}:</span>`
+    + pasos.slice(1).map(v => `<span class="caja"><i style="background:${color(v)}"></i>${fmtV(v)}</span>`).join('')
+    + (enPct ? `<span class="caja"><i style="background:${color(maxV)};opacity:.35"></i>periodo con menos de ${POCAS} obras</span>` : '');
   S.datos.atlas = {filas: celdas.map(d=>({tema:d.cat, periodo:`${d.p}-${d.p+24}`, obras:d.n, total_del_periodo:d.total,
     porcentaje_del_periodo: d.total ? +(d.n/d.total*100).toFixed(2) : 0}))};
 }
@@ -1592,9 +1967,10 @@ function dibujarFlujos(){
   movidas.forEach(o=>{ idPais.set(lado.origen(o).nombre, lado.origen(o).id); idPais.set(lado.conserva(o).nombre, lado.conserva(o).id); });
   const marginal = campo => [...d3.rollup(movidas,v=>v.length,o=>lado[campo](o).nombre)].sort((a,b)=>b[1]-a[1]);
   const topO=new Set(marginal('origen').slice(0,7).map(d=>d[0])), topD=new Set(marginal('conserva').slice(0,7).map(d=>d[0]));
-  const pares=d3.rollup(movidas,v=>v.length,o=>topO.has(lado.origen(o).nombre)?lado.origen(o).nombre:'Otros orígenes',o=>topD.has(lado.conserva(o).nombre)?lado.conserva(o).nombre:'Otros destinos');
+  // Se guardan las obras de cada flujo para poder abrirlas al hacer clic en la cinta.
+  const pares=d3.group(movidas,o=>topO.has(lado.origen(o).nombre)?lado.origen(o).nombre:'Otros orígenes',o=>topD.has(lado.conserva(o).nombre)?lado.conserva(o).nombre:'Otros destinos');
   const enlaces=[];
-  for(const [a,bs] of pares) for(const [b,n] of bs) enlaces.push({a,b,n});
+  for(const [a,bs] of pares) for(const [b,os] of bs) enlaces.push({a,b,n:os.length,ids:os.map(o=>o.id)});
   enlaces.sort((a,b)=>b.n-a.n);
   const sumaL=d3.rollup(enlaces,v=>d3.sum(v,d=>d.n),d=>d.a), sumaR=d3.rollup(enlaces,v=>d3.sum(v,d=>d.n),d=>d.b);
   const izq=[...sumaL].sort((a,b)=>b[1]-a[1]), der=[...sumaR].sort((a,b)=>b[1]-a[1]);
@@ -1605,9 +1981,15 @@ function dibujarFlujos(){
   const svg=d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Flujos entre país de origen y país de conservación');
   const cintas=svg.append('g').selectAll('path').data(enlaces).join('path').attr('class','cinta-flujo').attr('fill',d=>paleta(d.a)).attr('stroke',d=>paleta(d.a))
     .attr('d',d=>{ const a=nodosL.get(d.a),b=nodosR.get(d.b),h=Math.max(1,d.n*escala),sy=a.y+a.off,ty=b.y+b.off,mid=(xL+xR)/2; a.off+=h;b.off+=h; return `M${xL},${sy}C${mid},${sy} ${mid},${ty} ${xR},${ty}L${xR},${ty+h}C${mid},${ty+h} ${mid},${sy+h} ${xL},${sy+h}Z`; })
-    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.a} → ${d.b}</strong><br>${fmt(d.n)} obras`))
+    .attr('tabindex',0)
+    .on('mousemove',(ev,d)=>mostrarTip(ev,`<strong>${d.a} → ${d.b}</strong><br>${fmt(d.n)} obras<br><em>Clic para ver las obras</em>`))
     .on('mouseleave',ocultarTip)
-    .style('cursor','default');
+    .on('click keydown',(ev,d)=>{
+      if (ev.type==='keydown' && ev.key!=='Enter') return;
+      ocultarTip();
+      exGaleria(`${d.a} → ${d.b}`, d.ids, `Origen: ${d.a} · Conservación: ${d.b}.`);
+    })
+    .style('cursor','pointer');
   const dibujarLado=(mapa,x,ancla,relleno) => { const ns=[...mapa.values()]; svg.append('g').selectAll('rect').data(ns).join('rect').attr('class','nodo-flujo').attr('x',x-4).attr('y',d=>d.y).attr('width',8).attr('height',d=>d.h).style('fill',relleno?d=>relleno(d.nombre):null); svg.append('g').selectAll('text').data(ns).join('text').attr('class','etiqueta-flujo').attr('x',x+(ancla==='start'?9:-9)).attr('y',d=>d.y+d.h/2).attr('text-anchor',ancla).attr('dominant-baseline','middle').text(d=>`${d.nombre} · ${fmt(d.n)}`); };
   dibujarLado(nodosL,xL,'end',paleta); dibujarLado(nodosR,xR,'start');
   svg.append('text').attr('x',xL).attr('y',10).attr('text-anchor','end').attr('fill','var(--tenue)').attr('font-size',9).text('ORIGEN');
@@ -1747,8 +2129,6 @@ function enfocarCampo(sel, campo){
   }
 }
 function enfocarRanking(campo){ enfocarCampo($('rDim'), campo); }
-// Igual para la sección Gestos con los filtros de «Datos de gestos».
-function enfocarGestos(campo){ enfocarCampo($('gCampo'), campo); }
 
 /* ---------- Red de co-ocurrencias ---------- */
 let turnoRed = 0, simulacion = null;
@@ -1988,52 +2368,49 @@ async function dibujarTecnicas(){
     if (sin > 0) txt += ` ${nObras(sin)} no ${sin===1?'tiene':'tienen'} técnica registrada.`;
     leer('tecnicasLectura', txt);
 
-    // Treemap. Primero se vacía el lienzo y se mide el alto libre: así el treemap llena
-    // lo que falta para alinearse con el borde inferior de Temática, sin empujarlo.
+    // Barras horizontales. Primero se vacía el lienzo y se mide el alto libre: así las
+    // filas se reparten lo que falta para alinearse con el borde inferior de Temática.
     const resto = lista.slice(top);
-    const hojas = lista.slice(0, top).map(d=>({...d, nombre:nombreItem(d.item)}));
+    const barras = lista.slice(0, top).map(d=>({...d, nombre:nombreItem(d.item)}));
     if (resto.length){
       // Obras distintas con alguna de las técnicas agrupadas (una obra con dos de ellas cuenta una vez)
       const clavesResto = new Set(resto.map(d=>d.item.id ?? d.item.slug)), obrasResto = new Set();
       for (const r of filas) if ((!S.permitidas || S.permitidas.has(r.o)) && clavesResto.has(r.it.id ?? r.it.slug)) obrasResto.add(r.o);
-      hojas.push({otras:resto, nombre:`Otras técnicas (${resto.length})`, n:obrasResto.size});
+      barras.push({otras:resto, nombre:`Otras técnicas (${resto.length})`, n:obrasResto.size});
     }
     cont.replaceChildren();
-    const angosto = matchMedia('(max-width:1000px)').matches;   // columnas apiladas: alto fijo
+    const angosto = matchMedia('(max-width:1000px)').matches;   // columnas apiladas: alto natural
     const fondoDe = sel => document.querySelector(sel).getBoundingClientRect().bottom;
     if (!angosto) dibujarAtlas();                                 // Temática a su alto natural antes de medir
     const W = cont.clientWidth || 600;
-    const H = angosto ? 420 : Math.max(240, Math.round(fondoDe('.col-der') - fondoDe('.col-izq')));
-    const raiz = d3.hierarchy({children:hojas}).sum(d=>d.n || 0).sort((a,b)=>b.value-a.value);
-    d3.treemap().size([W, H]).paddingInner(2).round(true).tile(d3.treemapSquarify.ratio(1.2))(raiz);
-    // Rampa verde propia; el tono más claro se sube un poco para que se distinga del fondo.
-    const rampa = RAMPA_TECNICAS;
-    const maxN = d3.max(hojas, d=>d.n) || 1;
-    const tono = n => .14 + .86*Math.sqrt(n/maxN);
-    const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Treemap de obras por técnica');
-    const celda = svg.append('g').selectAll('g').data(raiz.leaves()).join('g')
-      .attr('transform', d=>`translate(${d.x0},${d.y0})`)
-      .style('cursor', d=>d.data.otras ? 'default' : 'pointer')
-      .on('mousemove',(ev,d)=>mostrarTip(ev, d.data.otras
-        ? `<strong>${escHTML(d.data.nombre)}</strong><br>${d.data.otras.slice(0,6).map(o=>`${escHTML(nombreItem(o.item))}: ${fmt(o.n)}`).join('<br>')}${d.data.otras.length>6?'<br>…':''}<br><em>Sube «Técnicas a mostrar» para verlas por separado</em>`
-        : `<strong>${escHTML(d.data.nombre)}</strong><br>${fmt(d.data.n)} obras · ${parte(d.data.n, base)} ${delFiltro()}<br><em>Clic para ver ejemplos</em>`))
+    const libre = angosto ? 0 : Math.round(fondoDe('.col-der') - fondoDe('.col-izq'));
+    const fila = Math.max(22, Math.min(38, libre / barras.length || 26));
+    const H = Math.round(fila * barras.length);
+    const rotW = Math.min(210, Math.round(W * .36)), cifraW = 78;
+    const x = d3.scaleLinear([0, d3.max(barras, d=>d.n) || 1], [0, Math.max(40, W - rotW - cifraW)]);
+    const y = d3.scaleBand(barras.map((_, i)=>i), [0, H]).paddingInner(.22).paddingOuter(.1);
+    const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label','Barras de obras por técnica');
+    const barra = svg.append('g').selectAll('g').data(barras).join('g')
+      .attr('transform', (d, i)=>`translate(0,${y(i)})`)
+      .style('cursor', d=>d.otras ? 'default' : 'pointer')
+      .on('mousemove',(ev,d)=>mostrarTip(ev, d.otras
+        ? `<strong>${escHTML(d.nombre)}</strong><br>${d.otras.slice(0,6).map(o=>`${escHTML(nombreItem(o.item))}: ${fmt(o.n)}`).join('<br>')}${d.otras.length>6?'<br>…':''}<br><em>Sube «Técnicas a mostrar» para verlas por separado</em>`
+        : `<strong>${escHTML(d.nombre)}</strong><br>${fmt(d.n)} obras · ${parte(d.n, base)} ${delFiltro()}<br><em>Clic para ver ejemplos</em>`))
       .on('mouseleave', ocultarTip)
-      .on('click',(ev,d)=>{ if (d.data.otras) return; ocultarTip(); abrirDetalle(dim, d.data.item, d.data.n); });
-    celda.append('rect').attr('width', d=>d.x1-d.x0).attr('height', d=>d.y1-d.y0).attr('rx', 2)
-      .attr('fill', d=>rampa(tono(d.data.n)));
-    // Rótulos solo donde caben: nombre, y debajo la cifra si hay alto suficiente.
-    const claro = d => tintaSobre(rampa(tono(d.data.n))) === '#fff';
-    celda.filter(d=>d.x1-d.x0 > 46 && d.y1-d.y0 > 18).append('text')
-      .attr('x', 7).attr('y', 15).attr('font-size', d=>(d.x1-d.x0 > 180 && d.y1-d.y0 > 60) ? 14 : 11)
-      .attr('fill', d=>claro(d) ? '#fff' : 'var(--texto)').style('pointer-events','none')
-      .text(d=>recortar(d.data.nombre, Math.floor((d.x1-d.x0-12)/6.4)));
-    celda.filter(d=>d.x1-d.x0 > 60 && d.y1-d.y0 > 38).append('text')
-      .attr('x', 7).attr('y', d=>(d.x1-d.x0 > 180 && d.y1-d.y0 > 60) ? 34 : 30).attr('font-size', 10.5)
-      .attr('fill', d=>claro(d) ? '#fff' : 'var(--tenue)').attr('fill-opacity', .9).style('pointer-events','none')
-      .style('font-variant-numeric','tabular-nums')
-      .text(d=>`${fmt(d.data.n)} · ${parte(d.data.n, base)}`);
+      .on('click',(ev,d)=>{ if (d.otras) return; ocultarTip(); abrirDetalle(dim, d.item, d.n); });
+    // franja invisible a todo el ancho: el clic y el tooltip funcionan también sobre el rótulo
+    barra.append('rect').attr('width', W).attr('height', y.bandwidth()).attr('fill', 'transparent');
+    barra.append('text').attr('x', rotW - 8).attr('y', y.bandwidth()/2).attr('dy', '.35em')
+      .attr('text-anchor', 'end').attr('font-size', 11.5)
+      .attr('fill', d=>d.otras ? 'var(--tenue)' : 'var(--texto)').style('font-style', d=>d.otras ? 'italic' : null)
+      .text(d=>recortar(d.nombre, Math.floor((rotW - 12)/6.2)));
+    barra.append('rect').attr('x', rotW).attr('width', d=>Math.max(2, x(d.n))).attr('height', y.bandwidth()).attr('rx', 2)
+      .attr('fill', d=>d.otras ? RAMPA_TECNICAS(.3) : RAMPA_TECNICAS(.78));
+    barra.append('text').attr('x', d=>rotW + Math.max(2, x(d.n)) + 6).attr('y', y.bandwidth()/2).attr('dy', '.35em')
+      .attr('font-size', 10.5).attr('fill', 'var(--tenue)').style('font-variant-numeric','tabular-nums')
+      .text(d=>`${fmt(d.n)} · ${parte(d.n, base)}`);
     cont.replaceChildren(svg.node());
-    // Si el treemap quedó en su alto mínimo y la izquierda sigue más larga, Temática estira sus filas.
+    // Si las barras quedaron en su alto máximo y la izquierda sigue más larga, Temática estira sus filas.
     if (!angosto){
       const sobra = fondoDe('.col-izq') - fondoDe('.col-der');
       if (sobra > 2) dibujarAtlas(sobra);
@@ -2043,170 +2420,504 @@ async function dibujarTecnicas(){
   finally { if (turno===turnoTec) ocupado(cont, false); }
 }
 
-/* ---------- Gestos ----------
-   Matriz gesto × grupo de obras (tema, periodo o país). La celda cuenta obras y el color
-   es la parte de su columna, para comparar grupos de tamaños muy distintos. */
-// Valores de relleno en la base: se informan en el texto pero no se dibujan como gestos.
+/* ---------- Análisis por gestos ----------
+   Gesto 1, 2 y 3 no son niveles: son tres casillas de la misma obra con el mismo
+   vocabulario (un gesto puede estar en la casilla 1 de una obra y en la 2 de otra).
+   La unidad es siempre la obra: con «los tres campos juntos», una obra cuenta una vez
+   en cada gesto distinto que tenga, esté en la casilla que esté. */
+const CAMPOS_GESTO = ['gesto1','gesto2','gesto3'];
+// Valores de relleno en la base: se informan en el texto pero no se cuentan como gestos.
 const SIN_DATO_GESTO = /^(no|no aplica|desconocido|ambiguo o no notorio)$/i;
-const CRUCES_GESTO = {
-  tema:              {label:'tema', valor:o=>o.categoria, cond:it=>({categoria1:{_eq:it.id}}), max:12},
-  medio_siglo:       {label:'periodo', valor:o=>DIMS.medio_siglo.valor(o), cond:it=>condicionDim(DIMS.medio_siglo, it), max:12, cronologico:true},
-  pais_conservacion: {label:'país', valor:o=>o.conserva, cond:it=>condicionDim(DIMS.pais_conservacion, it), max:10},
-};
-let turnoGestos = 0;
-async function dibujarGestos(){
-  if (!S.obras.length) return;
-  const turno = ++turnoGestos, cont = $('gestos');
-  const dG = DIMS[$('gCampo').value], cruce = CRUCES_GESTO[$('gCruce').value], top = +$('gTop').value;
+const VIOLETA = '#5b3fa0', VIOLETA_CLARO = '#b9a9dc';
+const GX = {sels:null, base:null, basePerm:undefined, baseCampos:null, tR:0, tL:0, tA:0, tC:0, tG:0, sim:null};
+const sinTildes = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const fmtVeces = v => `${new Intl.NumberFormat('es-CO',{maximumFractionDigits:1}).format(v)}×`;
+function gxActiva(){ return S.obras.length > 0 && !$('vistaGestos').hidden; }
+
+// Gestos de las obras visibles según las casillas elegidas. Se calcula una vez por
+// combinación de filtros y casillas, y lo comparten los cuatro bloques.
+function baseGX(){
+  const campos = $('gxCampos').value;
+  if (GX.base && GX.basePerm === S.permitidas && GX.baseCampos === campos) return GX.base;
+  GX.basePerm = S.permitidas; GX.baseCampos = campos;
+  GX.base = calcularBaseGX(campos === 'todos' ? CAMPOS_GESTO : [campos]).catch(e => { GX.base = null; throw e; });
+  return GX.base;
+}
+async function calcularBaseGX(campos){
+  const filas = await Promise.all(CAMPOS_GESTO.map(k => cargarDim(DIMS[k], $('gxCarga'))));
+  const visible = o => !S.permitidas || S.permitidas.has(o);
+  const porGesto = new Map(), deObra = new Map(), relleno = new Map(), porCampo = {};
+  let casillas = 0;
+  CAMPOS_GESTO.forEach((k, i) => {
+    porCampo[k] = new Set();
+    const cuenta = campos.includes(k);
+    for (const r of filas[i]){
+      if (!visible(r.o)) continue;
+      const nom = (r.it.nombre || '').trim();
+      if (SIN_DATO_GESTO.test(nom)){ if (cuenta) relleno.set(nom, (relleno.get(nom)||0) + 1); continue; }
+      porCampo[k].add(r.o);
+      if (!cuenta) continue;
+      const c = claveIt(r.it);
+      let e = porGesto.get(c); if (!e){ e = {clave:c, item:r.it, obras:new Set()}; porGesto.set(c, e); }
+      e.obras.add(r.o); casillas++;
+      let m = deObra.get(r.o); if (!m){ m = new Set(); deObra.set(r.o, m); }
+      m.add(c);
+    }
+  });
+  const lista = [...porGesto.values()].sort((a,b) => b.obras.size - a.obras.size || nombreItem(a.item).localeCompare(nombreItem(b.item), 'es'));
+  return {campos, porGesto, deObra, lista, casillas, relleno, porCampo};
+}
+// Valores de otro campo por obra visible: obra → Map(clave → término)
+async function valoresPorObra(dim){
+  const filas = await cargarDim(dim, $('gxCarga'));
+  const m = new Map();
+  for (const r of filas){
+    if (S.permitidas && !S.permitidas.has(r.o)) continue;
+    let e = m.get(r.o); if (!e){ e = new Map(); m.set(r.o, e); }
+    e.set(claveIt(r.it), r.it);
+  }
+  return m;
+}
+function dibujarGestosTab(){ gxResumen(); gxLista(); gxAsoc(); gxGrafo(); gxComp(); }
+const gxError = (cont, e) => { cont.innerHTML = `<div class="vacio">No se pudieron leer los gestos: ${escHTML(e.message)}</div>`; };
+
+/* Cómo se cuentan: cifras que responden a «¿se cuenta la pintura o cada casilla?» */
+async function gxResumen(){
+  if (!gxActiva()) return;
+  const t = ++GX.tR, cont = $('gxResumen');
   ocupado(cont, true);
   try {
-    const filas = await cargarDim(dG, $('gCarga'));
-    if (turno !== turnoGestos) return;
-    const visible = o => !S.permitidas || S.permitidas.has(o);
-    const obraPorId = new Map(S.obras.map(o=>[o.id, o]));
-    const base = S.permitidas ? S.permitidas.size : S.total;
+    const B = await baseGX(); if (t !== GX.tR) return;
+    const N = S.permitidas ? S.permitidas.size : S.total, conG = B.deObra.size, todos = B.campos.length === 3;
+    const dist = [0,0,0,0]; for (const m of B.deObra.values()) dist[Math.min(3, m.size)]++;
+    const sumaObras = d3.sum(B.lista, g => g.obras.size);
+    const tarjetas = [
+      [fmt(conG), 'obras con algún gesto', `${parte(conG, N)} de las ${fmt(N)} obras ${delFiltro()}`],
+      [fmt(B.lista.length), 'gestos distintos', 'todos están en la lista «Gestos»'],
+      [fmt(B.casillas), 'casillas con gesto', todos ? 'gesto 1 + gesto 2 + gesto 3' : 'una por obra en esta casilla'],
+      todos ? [`${fmt(dist[1])} / ${fmt(dist[2])} / ${fmt(dist[3])}`, 'obras con 1 / 2 / 3 gestos', 'gestos distintos en la misma pintura']
+            : [CAMPOS_GESTO.map(k => fmt(B.porCampo[k].size)).join(' / '), 'obras con gesto en la casilla 1 / 2 / 3', 'para comparar cuánto se usa cada casilla']
+    ];
+    cont.innerHTML = tarjetas.map(([v,r,e])=>`<div class="metrica"><span class="valor">${v}</span><span class="rotulo">${r}</span><span class="explica">${e}</span></div>`).join('');
+    let txt;
+    if (todos){
+      txt = `Gesto 1, gesto 2 y gesto 3 no son niveles de detalle: son tres casillas donde se anotan hasta tres gestos distintos de una misma pintura, con el mismo vocabulario. Aquí la unidad es la <b>obra</b>: cada obra cuenta una vez en cada gesto que tenga, esté en la casilla que esté.`;
+      if (dist[2] + dist[3]) txt += ` Por eso, si sumas las obras de todos los gestos (${negrita(sumaObras)}) obtienes más que las ${nObras(conG)} con gesto: ${negrita(dist[2] + dist[3])} tienen dos o tres gestos distintos y aparecen en varias filas.`;
+      if (B.casillas > sumaObras) txt += ` En ${negrita(B.casillas - sumaObras)} ${B.casillas - sumaObras === 1 ? 'caso' : 'casos'} el mismo gesto está repetido en dos casillas de una obra y se cuenta una sola vez.`;
+    } else {
+      txt = `Solo se cuenta la casilla ${B.campos[0].replace('gesto', 'gesto ')}: cada obra aporta como máximo un gesto, así que todas las cifras de la pestaña son obras. Para ver todos los gestos de cada pintura, elige «Los tres campos juntos».`;
+    }
+    const rell = [...B.relleno].sort((a,b) => b[1] - a[1]);
+    if (rell.length) txt += ` Además, ${enumerar(rell.map(([nom, n]) => `${negrita(n)} ${n === 1 ? 'casilla dice' : 'casillas dicen'} «${escHTML(nom)}»`))}; no se cuentan como gestos.`;
+    leer('gxResumenLectura', txt);
+    S.datos['gx-resumen'] = {filas: tarjetas.map(([v,r,e]) => ({indicador:r, valor:v, detalle:e}))};
+  } catch(e){ if (t === GX.tR) gxError(cont, e); }
+  finally { if (t === GX.tR) ocupado(cont, false); }
+}
 
-    // Gesto de cada obra visible; los valores de relleno se cuentan aparte
-    const relleno = new Map(), gestoDe = new Map();
-    for (const r of filas){
-      if (!visible(r.o)) continue;
-      const nom = nombreItem(r.it) || '';
-      if (SIN_DATO_GESTO.test(nom.trim())) relleno.set(nom, (relleno.get(nom)||0) + 1);
-      else gestoDe.set(r.o, r.it);
-    }
-    // Columnas: grupos de todas las obras visibles (incluidas las que no tienen gesto)
-    const totCol = new Map(), itemCol = new Map();
-    for (const o of S.obras){
-      if (!visible(o.id)) continue;
-      const c = cruce.valor(o); if (!c) continue;
-      const k = String(c.id); itemCol.set(k, c); totCol.set(k, (totCol.get(k)||0) + 1);
-    }
-    let cols = [...totCol].sort((a,b)=>b[1]-a[1]).slice(0, cruce.max).map(([k])=>k);
-    if (cruce.cronologico) cols.sort((a,b)=>+a - +b);
-    const enCols = new Set(cols);
-    // Filas: los gestos más frecuentes entre las obras visibles
-    const porGesto = new Map();
-    for (const [o, it] of gestoDe){
-      const k = String(it.id ?? it.slug);
-      let e = porGesto.get(k); if (!e){ e = {item:it, n:0, celdas:new Map()}; porGesto.set(k, e); }
-      e.n++;
-      const c = cruce.valor(obraPorId.get(o)); if (!c || !enCols.has(String(c.id))) continue;
-      e.celdas.set(String(c.id), (e.celdas.get(String(c.id))||0) + 1);
-    }
-    const gestos = [...porGesto.values()].sort((a,b)=>b.n-a.n);
-    const campo = `«${escHTML(dG.label)}»`;
-    // Valor de este campo elegido en el panel de filtros (los campos de gestos admiten uno solo)
-    const idElegido = PF.valor(dG.faceta);
-    const esElegido = g => idElegido != null && String(g.item.id) === String(idElegido);
-    const elegido = gestos.find(esElegido);
-    if (!gestos.length || !cols.length){
-      cont.innerHTML = '<div class="vacio">No hay gestos registrados para este filtro.</div>';
-      const nomRelleno = [...relleno.keys()][0];
-      leer('gestosLectura', base === 0
-        ? 'Ninguna obra cumple todos los filtros elegidos. Prueba quitando alguno en el panel.'
-        : idElegido != null && relleno.size === 1
-        ? `Elegiste «${escHTML(nomRelleno)}» en ${campo} en el panel de filtros: esas ${nObras(base)} no tienen un gesto registrado en este campo, así que no hay nada que dibujar. Prueba con otro <b>Campo de gesto</b>.`
-        : `Ninguna obra ${delFiltro()} tiene un valor registrado en ${campo}.`);
-      $('gestosLeyenda').innerHTML = '';
+/* Lista completa de gestos: buscar, ordenar y elegir uno */
+async function gxLista(){
+  if (!gxActiva()) return;
+  const t = ++GX.tL, cont = $('gxLista');
+  ocupado(cont, true);
+  try {
+    const B = await baseGX(); if (t !== GX.tL) return;
+    elegidosGX(B);
+    if (!B.lista.length){
+      cont.innerHTML = '<div class="vacio">Ninguna obra del filtro tiene gestos registrados.</div>';
+      leer('gxListaLectura', `Ninguna obra ${delFiltro()} tiene un gesto registrado en las casillas elegidas.`);
       return;
     }
-    // Con el gesto fijado en el panel queda una sola fila: entonces el color muestra cómo se
-    // reparten sus obras entre las columnas (la parte de cada columna sería 100 % en todas).
-    const porFila = !!elegido && gestos.length === 1;
+    const q = sinTildes($('gxBuscar').value.trim()), base = B.deObra.size;
+    let lista = B.lista.filter(g => !q || sinTildes(nombreItem(g.item)).includes(q));
+    if ($('gxOrden').value === 'az') lista = [...lista].sort((a,b) => nombreItem(a.item).localeCompare(nombreItem(b.item), 'es'));
+    const coinciden = lista.length, mostrar = $('gxMostrar').value;
+    if (mostrar !== 'todos') lista = lista.slice(0, +mostrar);
+    const max = B.lista[0].obras.size;
+    const ol = document.createElement('ol'); ol.className = 'lista';
+    for (const g of lista){
+      const li = document.createElement('li'), b = document.createElement('button');
+      b.type = 'button'; b.dataset.clave = g.clave;
+      if (GX.sels.includes(g.clave)) b.classList.add('elegido');
+      b.innerHTML = `<span class="nombre"></span><span class="cifra">${fmt(g.obras.size)} · ${parte(g.obras.size, base)}</span><span class="pista"><span style="width:${g.obras.size/max*100}%"></span></span>`;
+      b.querySelector('.nombre').textContent = nombreItem(g.item);
+      b.title = nombreItem(g.item);
+      b.onclick = () => alternarGesto(g.clave);
+      li.append(b); ol.append(li);
+    }
+    cont.replaceChildren(lista.length ? ol : Object.assign(document.createElement('div'), {className:'vacio', textContent:'Ningún gesto coincide con la búsqueda.'}));
+    const g1 = B.lista[0];
+    let txt = `Hay ${negrita(B.lista.length)} gestos distintos en las obras ${delFiltro()}. El más frecuente es ${escHTML(nombreItem(g1.item))}, en ${nObras(g1.obras.size)} (${parte(g1.obras.size, base)} de las que tienen gesto).`;
+    if (q) txt += ` Con «${escHTML($('gxBuscar').value.trim())}» ${coinciden === 1 ? 'coincide' : 'coinciden'} ${negrita(coinciden)}.`;
+    if (mostrar !== 'todos' && coinciden > lista.length) txt += ` Se muestran ${negrita(lista.length)}; elige «Todos» en <b>Mostrar</b> para verlos completos.`;
+    if (B.campos.length === 3) txt += ` Los porcentajes no suman 100 % porque una obra puede tener varios gestos.`;
+    txt += ` Toca gestos para agregarlos o quitarlos de «Asociaciones» (hasta ${MAX_ELEGIDOS}) y compararlos.`;
+    leer('gxListaLectura', txt);
+    S.datos['gx-lista'] = {filas: B.lista.map(g => ({gesto:nombreItem(g.item), obras:g.obras.size, porcentaje_de_obras_con_gesto:+(g.obras.size/base*100).toFixed(2)}))};
+  } catch(e){ if (t === GX.tL) gxError(cont, e); }
+  finally { if (t === GX.tL) ocupado(cont, false); }
+}
 
-    // Lectura
-    if (elegido){
-      let txt = `Estás filtrando por <b>${escHTML(nombreItem(elegido.item))}</b> en ${campo} (marcado en la tabla): lo tienen las ${nObras(elegido.n)} del filtro.`;
-      const reparto = cols.map(k=>({k, n:elegido.celdas.get(k)||0})).filter(c=>c.n).sort((a,b)=>b.n-a.n);
-      const nomCol = k => escHTML(nombreItem(itemCol.get(k)));
-      if (reparto.length)
-        txt += ` Por ${cruce.label}, la mayoría está en ${enumerar(reparto.slice(0,3).map(c=>`${nomCol(c.k)} (${negrita(c.n)}, ${parte(c.n, elegido.n)})`))}.`;
-      const sugeridos = ['gesto2','rostro','fisiognomica','gesto1'].filter(k=>k!==dG.id).slice(0,2).map(k=>DIMS[k].label);
-      txt += ` Como cada obra tiene un solo valor en este campo, para ver con qué otros gestos se combina cambia el <b>Campo de gesto</b> (por ejemplo, a ${enumerar(sugeridos).replace(/ y /,' o ')}).`;
-      leer('gestosLectura', txt);
-    } else {
-      const conGesto = gestoDe.size, g1 = gestos[0];
-      let txt = `De las ${nObras(base)} ${delFiltro()}, ${negrita(conGesto)} (${parte(conGesto, base)}) tienen un valor registrado en ${campo}.`;
-      const rel = [...relleno].sort((a,b)=>b[1]-a[1]).map(([nom,n])=>`${negrita(n)} como «${escHTML(nom)}»`);
-      if (rel.length) txt += ` Las demás no se dibujan porque están registradas ${enumerar(rel)}.`;
-      txt += ` El más frecuente es ${escHTML(nombreItem(g1.item))}, en ${nObras(g1.n)}.`;
-      // Dónde pesa más un gesto: la celda con mayor parte de su columna (columnas de al menos 30 obras)
-      let mejor = null;
-      for (const g of gestos.slice(0, top)) for (const k of cols){
-        const n = g.celdas.get(k)||0, t = totCol.get(k);
-        if (t >= 30 && n && (!mejor || n/t > mejor.n/mejor.t)) mejor = {g, k, n, t};
+/* Asociaciones: uno o varios gestos cruzados con otro campo, en una matriz de círculos
+   (columnas = gestos elegidos, filas = valores del campo). */
+const MAX_ELEGIDOS = 8;
+function elegidosGX(B){
+  if (GX.sels === null) GX.sels = B.lista.slice(0, 4).map(g => g.clave);   // al abrir: los cuatro más frecuentes
+  return GX.sels.filter(c => B.porGesto.has(c)).map(c => B.porGesto.get(c));
+}
+function marcarListaGX(){ $('gxLista').querySelectorAll('button[data-clave]').forEach(b => b.classList.toggle('elegido', (GX.sels || []).includes(b.dataset.clave))); }
+function cambiarElegidosGX(sels){ GX.sels = sels; marcarListaGX(); gxAsoc(); gxGrafo(); }
+function alternarGesto(c){
+  const sels = (GX.sels || []).filter(x => x !== c);
+  if (sels.length === (GX.sels || []).length){ sels.push(c); if (sels.length > MAX_ELEGIDOS) sels.shift(); }
+  cambiarElegidosGX(sels);
+}
+function pintarElegidosGX(gs){
+  const caja = $('gxElegidos');
+  caja.innerHTML = gs.length
+    ? gs.map(g => `<span class="chip">${escHTML(nombreItem(g.item))}<button type="button" data-clave="${escHTML(g.clave)}" aria-label="Quitar este gesto">×</button></span>`).join('')
+      + (gs.length > 1 ? '<button type="button" class="boton sec" data-todos="1">Quitar todos</button>' : '')
+    : '<span class="pista-elegidos">Toca gestos en la lista para compararlos aquí.</span>';
+  caja.querySelectorAll('.chip button').forEach(b => b.onclick = () => alternarGesto(b.dataset.clave));
+  caja.querySelector('[data-todos]')?.addEventListener('click', () => cambiarElegidosGX([]));
+}
+async function gxAsoc(){
+  if (!gxActiva()) return;
+  const t = ++GX.tA, cont = $('gxAsoc'), dim = DIMS[$('gxCruce').value], medida = $('gxMedida').value, topV = $('gxTopA').value;
+  ocupado(cont, true);
+  try {
+    const [B, vals] = await Promise.all([baseGX(), valoresPorObra(dim)]);
+    if (t !== GX.tA) return;
+    const gs = elegidosGX(B), campo = dim.label.toLowerCase();
+    pintarElegidosGX(gs);
+    if (!gs.length){
+      cont.innerHTML = '<div class="vacio">Elige uno o varios gestos en la lista para ver sus asociaciones.</div>';
+      leer('gxAsocLectura', `Toca gestos en la lista (hasta ${MAX_ELEGIDOS}) para compararlos según ${campo}.`);
+      S.datos['gx-asoc'] = {filas: []};
+      return;
+    }
+    const MIN = 3, total = vals.size;
+    // Para cada valor: obras del filtro que lo tienen (N) y, por gesto, las que además tienen el gesto
+    const valores = new Map();
+    for (const [o, m] of vals) for (const [c, it] of m){
+      let e = valores.get(c); if (!e){ e = {clave:c, item:it, N:0, ids:gs.map(() => [])}; valores.set(c, e); }
+      e.N++; gs.forEach((g, j) => { if (g.obras.has(o)) e.ids[j].push(o); });
+    }
+    const conValor = gs.map(g => { let k = 0; for (const o of g.obras) if (vals.has(o)) k++; return k; });
+    const celda = (e, j) => { const n = e.ids[j].length; return {e, j, g:gs[j], n, ids:e.ids[j], pct:n/gs[j].obras.size,
+      veces: conValor[j] && e.N ? (n/conValor[j])/(e.N/total) : 0}; };
+    const suma = e => d3.sum(e.ids, l => l.length);
+    const mayorVeces = e => d3.max(gs.map((_, j) => celda(e, j)).filter(c => c.n >= MIN), c => c.veces) ?? 0;
+    let filas = [...valores.values()].filter(e => suma(e) > 0);
+    // Orden: más obras entre los gestos elegidos; en la comparación, lo más sobre-representado
+    if (medida === 'lift') filas = filas.filter(e => mayorVeces(e) > 0).sort((a,b) => mayorVeces(b) - mayorVeces(a));
+    else filas.sort((a,b) => suma(b) - suma(a));
+    const hayMas = filas.length;
+    if (topV !== 'todos') filas = filas.slice(0, +topV);
+    if (dim.periodo) filas.sort((a,b) => a.item.id - b.item.id);
+    const celdas = filas.flatMap(e => gs.map((_, j) => celda(e, j)));
+
+    // Lectura: el valor que más destaca para cada gesto
+    const nomG = g => escHTML(nombreItem(g.item));
+    let txt = gs.length === 1
+      ? `«${nomG(gs[0])}» aparece en ${nObras(gs[0].obras.size)} ${delFiltro()}; la matriz lo cruza con ${campo}.`
+      : `Comparas ${negrita(gs.length)} gestos según ${campo}: cada columna es un gesto y cada fila, un valor.`;
+    const dest = gs.map((g, j) => {
+      const cs = filas.map(e => celda(e, j)).filter(c => c.n && (medida !== 'lift' || c.n >= MIN));
+      const m = medida === 'lift' ? d3.greatest(cs, c => c.veces) : d3.greatest(cs, c => c.n);
+      return m ? `${nomG(g)} → ${escHTML(nombreItem(m.e.item))} (${medida === 'lift' ? fmtVeces(m.veces) + ', ' : ''}${negrita(m.n)}, ${parte(m.n, g.obras.size)} de sus obras)` : null;
+    }).filter(Boolean).slice(0, 5);
+    if (dest.length) txt += (medida === 'lift' ? ` Lo que más se destaca frente al conjunto ${delFiltro()}: ` : ` El valor más frecuente para cada gesto: `) + dest.join('; ') + '.';
+    txt += medida === 'n' ? ' El tamaño y el color del círculo son el número de obras.'
+      : medida === 'pct' ? ' El tamaño del círculo es el número de obras y el color, el porcentaje de las obras de cada gesto: así se comparan gestos con cantidades muy distintas.'
+      : ` El tamaño del círculo es el número de obras y el color dice si el valor es más (violeta) o menos (gris) frecuente que en el conjunto; «2×» es el doble. Solo cuentan celdas con al menos ${MIN} obras.`;
+    if (dim.tipo === 'm2m' && medida !== 'lift') txt += ' Una obra puede tener varios valores de este campo.';
+    if (topV !== 'todos' && hayMas > filas.length) txt += ` Se muestran ${negrita(filas.length)} de ${fmt(hayMas)} valores.`;
+    leer('gxAsocLectura', txt);
+    S.datos['gx-asoc'] = {filas: [...valores.values()].flatMap(e => gs.map((_, j) => celda(e, j))).filter(c => c.n).map(c => ({
+      gesto:nombreItem(c.g.item), [campo]:nombreItem(c.e.item), obras:c.n, porcentaje_de_las_obras_del_gesto:+(c.pct*100).toFixed(2),
+      obras_del_filtro_con_este_valor:c.e.N, veces_respecto_al_filtro: c.veces ? +c.veces.toFixed(2) : null}))};
+    if (!filas.length){ cont.innerHTML = '<div class="vacio">No hay valores que mostrar con esta medida.</div>'; return; }
+
+    // Matriz de círculos
+    const W = cont.clientWidth || 700, rotW = Math.min(190, Math.round(W * .3)), cabH = 118, filaH = filas.length <= 15 ? 40 : 32;
+    const colW = Math.min(150, (W - rotW - 80) / gs.length)   // margen derecho: el último nombre inclinado no se corta, H = cabH + filas.length * filaH + 6;
+    const cx = j => rotW + colW * j + colW / 2, cy = i => cabH + filaH * i + filaH / 2;
+    const maxN = d3.max(celdas, c => c.n) || 1, maxPct = d3.max(celdas, c => c.pct) || 1;
+    const radio = d3.scaleSqrt([0, maxN], [3, Math.min(colW, filaH) / 2 - 2]);
+    const rampa = d3.interpolateRgb('#ddd3f1', '#2e1a6e');
+    const colorDe = c => medida === 'n' ? rampa(.15 + .85 * Math.sqrt(c.n / maxN))
+      : medida === 'pct' ? rampa(.15 + .85 * Math.sqrt(c.pct / maxPct))
+      : c.n < MIN ? '#ddd3c3' : c.veces >= 1 ? rampa(Math.min(1, .25 + .75 * Math.log2(c.veces) / 2)) : '#98a2ad';
+    const etiqueta = c => medida === 'n' ? fmt(c.n) : medida === 'pct' ? parte(c.n, c.g.obras.size) : fmtVeces(c.veces);
+    const svg = d3.create('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', `Asociaciones de gestos con ${campo}`);
+    // Franjas alternas para seguir cada fila
+    svg.append('g').selectAll('rect').data(filas).join('rect').attr('x', 0).attr('width', rotW + colW * gs.length)
+      .attr('y', (d, i) => cabH + filaH * i).attr('height', filaH).attr('fill', (d, i) => i % 2 ? 'transparent' : 'var(--panel2)').attr('opacity', .55);
+    svg.append('g').selectAll('line').data(gs).join('line').attr('x1', (d, j) => cx(j)).attr('x2', (d, j) => cx(j))
+      .attr('y1', cabH - 2).attr('y2', H - 4).attr('stroke', 'var(--linea)').attr('stroke-opacity', .6);
+    // Encabezados: el nombre de cada gesto, inclinado; clic para ver todas sus obras
+    svg.append('g').selectAll('text').data(gs).join('text')
+      .attr('transform', (d, j) => `translate(${cx(j) - 2},${cabH - 8}) rotate(-35)`).attr('font-size', 11).attr('fill', 'var(--texto)')
+      .style('cursor', 'pointer').text(g => recortar(nombreItem(g.item), 26))
+      .on('mousemove', (ev, g) => mostrarTip(ev, `<strong>${nomG(g)}</strong><br>${fmt(g.obras.size)} obras con este gesto<br><em>Clic para ver sus obras</em>`))
+      .on('mouseleave', ocultarTip)
+      .on('click', (ev, g) => { ocultarTip(); exGaleria(nombreItem(g.item), [...g.obras], 'Obras con este gesto.'); });
+    svg.append('g').selectAll('text').data(filas).join('text').attr('x', rotW - 8).attr('y', (d, i) => cy(i)).attr('dy', '.35em')
+      .attr('text-anchor', 'end').attr('font-size', 11.5).attr('fill', 'var(--texto)').text(e => recortar(nombreItem(e.item), Math.floor((rotW - 12) / 6.2)));
+    const fil = new Map(filas.map((e, i) => [e, i]));
+    const cel = svg.append('g').selectAll('g').data(celdas).join('g')
+      .attr('transform', c => `translate(${cx(c.j)},${cy(fil.get(c.e))})`)
+      .style('cursor', c => c.n ? 'pointer' : 'default').attr('tabindex', c => c.n ? 0 : null)
+      .on('mousemove', (ev, c) => mostrarTip(ev, `<strong>${nomG(c.g)}</strong><br>${escHTML(nombreItem(c.e.item))}<br>${fmt(c.n)} obras · ${parte(c.n, c.g.obras.size)} de las obras con este gesto<br>${fmt(c.e.N)} obras ${delFiltro()} con este valor${c.n >= MIN && c.veces ? `<br>${fmtVeces(c.veces)} lo esperado` : ''}${c.n ? '<br><em>Clic para ver las obras</em>' : ''}`))
+      .on('mouseleave', ocultarTip)
+      .on('click keydown', (ev, c) => {
+        if (ev.type === 'keydown' && ev.key !== 'Enter') return;
+        if (!c.n) return;
+        ocultarTip();
+        exGaleria(`${nombreItem(c.g.item)} · ${nombreItem(c.e.item)}`, c.ids, `Gesto y ${campo}.`);
+      });
+    cel.append('rect').attr('x', -colW/2).attr('y', -filaH/2).attr('width', colW).attr('height', filaH).attr('fill', 'transparent');
+    cel.filter(c => !c.n).append('circle').attr('r', 1.5).attr('fill', 'var(--linea)');
+    cel.filter(c => c.n).append('circle').attr('r', c => radio(c.n)).attr('fill', colorDe);
+    cel.filter(c => c.n && radio(c.n) >= 11).append('text').attr('text-anchor', 'middle').attr('dy', '.35em').attr('font-size', 9)
+      .attr('fill', c => tintaSobre(colorDe(c))).style('pointer-events', 'none').style('font-variant-numeric', 'tabular-nums').text(etiqueta);
+    cont.replaceChildren(svg.node());
+  } catch(e){ if (t === GX.tA) gxError(cont, e); }
+  finally { if (t === GX.tA) ocupado(cont, false); }
+}
+
+/* Composición gestual: barras apiladas por grupo (tema, periodo, país, personaje…) */
+async function gxComp(){
+  if (!gxActiva()) return;
+  const t = ++GX.tC, cont = $('gxComp'), dim = DIMS[$('gxGrupo').value], NG = +$('gxNG').value, NK = +$('gxNK').value, enPct = $('gxMedC').value === 'pct';
+  ocupado(cont, true);
+  try {
+    const [B, vals] = await Promise.all([baseGX(), valoresPorObra(dim)]);
+    if (t !== GX.tC) return;
+    const campo = dim.label.toLowerCase();
+    // Grupos: obras con gesto y con valor en el campo. Cada gesto distinto de una obra es una aparición.
+    const grupos = new Map();
+    for (const [o, gs] of B.deObra){
+      const m = vals.get(o); if (!m) continue;
+      for (const [c, it] of m){
+        let e = grupos.get(c); if (!e){ e = {clave:c, item:it, obras:[], cuenta:new Map(), total:0}; grupos.set(c, e); }
+        e.obras.push(o);
+        for (const k of gs){ e.cuenta.set(k, (e.cuenta.get(k)||0) + 1); e.total++; }
       }
-      const prefijo = {tema:'el tema ', periodo:'el periodo ', 'país':''}[cruce.label];
-      const donde = mejor ? prefijo + escHTML(nombreItem(itemCol.get(mejor.k))) : '';
-      if (mejor && mejor.g !== g1)
-        txt += ` Donde un gesto pesa más es en ${donde}: ${escHTML(nombreItem(mejor.g.item))} aparece en el ${parte(mejor.n, mejor.t)} de sus obras (${fmt(mejor.n)} de ${fmt(mejor.t)}).`;
-      else if (mejor)
-        txt += ` Pesa más en ${donde}, donde aparece en el ${parte(mejor.n, mejor.t)} de las obras (${fmt(mejor.n)} de ${fmt(mejor.t)}).`;
-      leer('gestosLectura', txt);
+    }
+    let lista = [...grupos.values()].sort((a,b) => b.obras.length - a.obras.length).slice(0, NG);
+    if (dim.periodo) lista.sort((a,b) => a.item.id - b.item.id);
+    if (!lista.length){
+      cont.innerHTML = `<div class="vacio">Ninguna obra con gesto tiene ${campo} registrado.</div>`;
+      $('gxCompLeyenda').innerHTML = ''; leer('gxCompLectura', ''); return;
+    }
+    // Gestos con color propio: los más frecuentes dentro de los grupos mostrados
+    const glob = new Map(); for (const gr of lista) for (const [k, n] of gr.cuenta) glob.set(k, (glob.get(k)||0) + n);
+    const top = [...glob].sort((a,b) => b[1] - a[1]).slice(0, NK).map(d => d[0]);
+    const color = colorCateg(top), OTROS = '__otros';
+    const nombreG = k => k === OTROS ? 'Otros gestos' : nombreItem(B.porGesto.get(k).item);
+    for (const gr of lista){
+      let x0 = 0;
+      gr.segs = [...top, OTROS].map(k => {
+        const n = k === OTROS ? gr.total - d3.sum(top, j => gr.cuenta.get(j) || 0) : (gr.cuenta.get(k) || 0);
+        const s = {k, n, x0, gr}; x0 += n; return s;
+      }).filter(s => s.n > 0);
     }
 
-    // Matriz
-    const datos = gestos.slice(0, top);
-    const W = cont.clientWidth || 900, etiqueta = Math.min(260, W*.3);
-    // Margen derecho amplio: los rótulos inclinados de las columnas se extienden hacia la derecha.
-    const m = {t:118, r:96, b:10, l:etiqueta + 10}, alto = 30;
-    const H = m.t + datos.length*alto + m.b;
-    const x = d3.scaleBand(cols, [m.l, W - m.r]).padding(.06);
-    const y = d3.scaleBand(d3.range(datos.length), [m.t, H - m.b]).padding(.08);
-    // Base del porcentaje: el total de la columna, o el total del gesto si es la única fila
-    const celdas = datos.flatMap((g,i)=>cols.map(k=>({g, i, k, n:g.celdas.get(k)||0, t: porFila ? g.n : totCol.get(k)})));
-    const maxP = d3.max(celdas, c=>c.t ? c.n/c.t : 0) || 1;
-    const color = d3.scaleSequentialSqrt([0, maxP], RAMPA_GESTOS);
-    const svg = d3.create('svg').attr('viewBox',`0 0 ${W} ${H}`).attr('role','img').attr('aria-label',`Gestos por ${cruce.label}`);
-    svg.append('g').selectAll('rect').data(celdas).join('rect').attr('class','celda-calor')
-      .attr('x', c=>x(c.k)).attr('y', c=>y(c.i)).attr('width', x.bandwidth()).attr('height', y.bandwidth()).attr('rx', 2)
-      .attr('fill', c=>c.n ? color(c.n/c.t) : '#efe5d2')
-      .style('cursor', c=>c.n ? 'pointer' : 'default')
-      .on('mousemove',(ev,c)=>mostrarTip(ev, `<strong>${escHTML(nombreItem(c.g.item))}</strong><br>${escHTML(nombreItem(itemCol.get(c.k)))}: `
-        + (porFila ? `${fmt(c.n)} obras, el ${parte(c.n, c.t)} de las que tienen este gesto` : `${fmt(c.n)} de ${fmt(c.t)} obras (${parte(c.n, c.t)})`)
-        + (c.n?'<br><em>Clic para ver las obras</em>':'')))
+    // Lectura: la composición del primer gesto en los distintos grupos
+    const todos = B.campos.length === 3;
+    let txt = `Cada barra es un valor de ${campo} (los ${lista.length} con más obras con gesto${dim.periodo ? ', en orden cronológico' : ''}) y se reparte entre los gestos de sus obras.`;
+    txt += todos ? ` Como una obra puede tener hasta tres gestos, cada barra reparte apariciones de gestos (una por cada gesto distinto de cada obra), no obras.` : ` Con una sola casilla, cada obra aporta un gesto: las apariciones son obras.`;
+    if (lista.length > 1 && top.length){
+      const k = top[0], pesos = lista.map(gr => ({gr, n:gr.cuenta.get(k)||0, p:(gr.cuenta.get(k)||0)/gr.total})).sort((a,b) => b.p - a.p);
+      const alto = pesos[0], bajo = pesos.at(-1);
+      txt += ` El gesto más presente, ${escHTML(nombreG(k))}, pesa más en ${escHTML(nombreItem(alto.gr.item))} (${parte(alto.n, alto.gr.total)} de sus apariciones) y menos en ${escHTML(nombreItem(bajo.gr.item))} (${parte(bajo.n, bajo.gr.total)}).`;
+    }
+    if (enPct) txt += ` En porcentaje todas las barras miden lo mismo, aunque los grupos tengan cantidades muy distintas de obras; la cifra de la derecha dice cuántas obras hay en cada uno.`;
+    leer('gxCompLectura', txt);
+
+    const W = cont.clientWidth || 900, fila = 34, H = lista.length * fila;
+    const rotW = Math.min(200, Math.round(W * .24)), cifraW = 92;
+    const x = d3.scaleLinear([0, enPct ? 1 : d3.max(lista, gr => gr.total)], [0, Math.max(60, W - rotW - cifraW)]);
+    const y = d3.scaleBand(lista.map((_, i) => i), [0, H]).paddingInner(.25).paddingOuter(.1);
+    const ancho = s => enPct ? s.n / s.gr.total : s.n, inicio = s => enPct ? s.x0 / s.gr.total : s.x0;
+    const colorDe = k => k === OTROS ? CATEG_OTROS : color(k);
+    const svg = d3.create('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', `Composición gestual por ${campo}`);
+    const filas = svg.append('g').selectAll('g').data(lista).join('g').attr('transform', (d, i) => `translate(0,${y(i)})`);
+    filas.append('text').attr('x', rotW - 8).attr('y', y.bandwidth()/2).attr('dy', '.35em').attr('text-anchor', 'end')
+      .attr('font-size', 11.5).attr('fill', 'var(--texto)').text(d => recortar(nombreItem(d.item), Math.floor((rotW - 12)/6.2)));
+    filas.append('text').attr('x', d => rotW + x(enPct ? 1 : d.total) + 6).attr('y', y.bandwidth()/2).attr('dy', '.35em')
+      .attr('font-size', 10.5).attr('fill', 'var(--tenue)').style('font-variant-numeric', 'tabular-nums').text(d => `${fmt(d.obras.length)} obras`);
+    const seg = filas.selectAll('g.seg').data(d => d.segs).join('g').attr('class', 'seg').style('cursor', 'pointer').attr('tabindex', 0)
+      .on('mousemove', (ev, s) => mostrarTip(ev, `<strong>${escHTML(nombreG(s.k))}</strong> · ${escHTML(nombreItem(s.gr.item))}<br>${fmt(s.n)} ${s.k === OTROS ? 'apariciones' : 'obras'} · ${parte(s.n, s.gr.total)} de las apariciones de gestos del grupo<br>${fmt(s.gr.obras.length)} obras con gesto en el grupo<br><em>Clic para ver las obras</em>`))
       .on('mouseleave', ocultarTip)
-      .on('click',(ev,c)=>{ if (!c.n) return; ocultarTip(); abrirCruceGesto(dG, c.g.item, cruce, itemCol.get(c.k)); });
-    // Cifra dentro de la celda si cabe
-    if (x.bandwidth() >= 30)
-      svg.append('g').selectAll('text').data(celdas.filter(c=>c.n)).join('text')
-        .attr('x', c=>x(c.k) + x.bandwidth()/2).attr('y', c=>y(c.i) + y.bandwidth()/2)
-        .attr('text-anchor','middle').attr('dominant-baseline','middle').attr('font-size', 10).style('pointer-events','none')
-        .attr('fill', c=>c.n/c.t > maxP*.45 ? '#fff' : 'var(--texto)').text(c=>fmt(c.n));
-    // Rótulos de filas y columnas
-    svg.append('g').selectAll('text').data(datos).join('text')
-      .attr('x', m.l - 8).attr('y',(g,i)=>y(i) + y.bandwidth()/2).attr('text-anchor','end').attr('dominant-baseline','middle')
-      .attr('font-size', 10.5).attr('fill', g=>esElegido(g) ? 'var(--oro)' : 'var(--texto)').attr('font-weight', g=>esElegido(g) ? 600 : null)
-      .text(g=>(esElegido(g) ? '● ' : '') + recortar(nombreItem(g.item), Math.floor(etiqueta/5.8)))
-      .on('mousemove',(ev,g)=>mostrarTip(ev, `<strong>${escHTML(nombreItem(g.item))}</strong><br>${fmt(g.n)} obras en total${esElegido(g)?'<br><em>Elegido en el panel de filtros</em>':''}`))
-      .on('mouseleave', ocultarTip);
-    svg.append('g').selectAll('text').data(cols).join('text')
-      .attr('transform', k=>`translate(${x(k) + x.bandwidth()/2},${m.t - 8}) rotate(-38)`)
-      .attr('font-size', 10.5).attr('fill','var(--texto)')
-      .text(k=>recortar(nombreItem(itemCol.get(k)), 22))
-      .append('title').text(k=>`${nombreItem(itemCol.get(k))}: ${fmt(totCol.get(k))} obras`);
+      .on('click keydown', (ev, s) => {
+        if (ev.type === 'keydown' && ev.key !== 'Enter') return;
+        ocultarTip();
+        const ids = s.gr.obras.filter(o => { const gs = B.deObra.get(o); return s.k === OTROS ? [...gs].some(k => !top.includes(k)) : gs.has(s.k); });
+        exGaleria(`${nombreG(s.k)} · ${nombreItem(s.gr.item)}`, ids, `Gesto y ${campo}.`);
+      });
+    seg.append('rect').attr('x', s => rotW + x(inicio(s))).attr('width', s => Math.max(1, x(ancho(s)) - 1)).attr('height', y.bandwidth())
+      .attr('fill', s => colorDe(s.k));
+    seg.filter(s => x(ancho(s)) > 34).append('text').attr('x', s => rotW + x(inicio(s)) + 5).attr('y', y.bandwidth()/2).attr('dy', '.35em')
+      .attr('font-size', 10).attr('fill', s => tintaSobre(colorDe(s.k))).style('pointer-events', 'none').style('font-variant-numeric', 'tabular-nums')
+      .text(s => enPct ? parte(s.n, s.gr.total) : fmt(s.n));
     cont.replaceChildren(svg.node());
-    const pasos = d3.range(0, 1.0001, .25).map(t=>t*maxP);
-    $('gestosLeyenda').innerHTML = `<span>${porFila ? 'Parte de las obras con este gesto:' : 'Parte de las obras de cada columna:'}</span>`
-      + pasos.map(v=>`<span class="caja"><i style="background:${color(v)}"></i>${Math.round(v*100)} %</span>`).join('')
-      + `<span class="caja"><i style="background:#efe5d2;border:1px solid var(--linea)"></i>ninguna obra</span>`;
-    S.datos.gestos = {filas: celdas.map(c=>({gesto:nombreItem(c.g.item), [cruce.label]:nombreItem(itemCol.get(c.k)), obras:c.n,
-      [porFila ? 'obras_con_el_gesto' : 'obras_de_la_columna']:c.t,
-      [porFila ? 'porcentaje_del_gesto' : 'porcentaje_de_la_columna']:c.t ? +(c.n/c.t*100).toFixed(2) : 0}))};
-  } catch(e){ if (turno===turnoGestos) cont.innerHTML = `<div class="vacio">No se pudieron leer los gestos: ${escHTML(e.message)}</div>`; }
-  finally { if (turno===turnoGestos) ocupado(cont, false); }
+    $('gxCompLeyenda').innerHTML = [...top, OTROS].map(k => `<span class="caja"><i style="background:${colorDe(k)}"></i>${escHTML(nombreG(k))}</span>`).join('');
+    S.datos['gx-comp'] = {filas: lista.flatMap(gr => gr.segs.map(s => ({[campo]:nombreItem(gr.item), gesto:nombreG(s.k), apariciones:s.n,
+      porcentaje_del_grupo:+(s.n/gr.total*100).toFixed(2), obras_con_gesto_en_el_grupo:gr.obras.length})))};
+  } catch(e){ if (t === GX.tC) gxError(cont, e); }
+  finally { if (t === GX.tC) ocupado(cont, false); }
 }
-// Obras de una celda de la matriz de gestos, dentro de los filtros.
-async function abrirCruceGesto(dG, itG, cruce, itC){
-  abrirPanelDetalle(`${nombreItem(itG)} · ${nombreItem(itC)}`);
-  const filtroTxt = S.permitidas ? ' dentro de los filtros activos' : '';
-  const base = `${escHTML(dG.label)}: <b>${escHTML(nombreItem(itG))}</b> · ${escHTML(nombreItem(itC))}.`;
-  $('dCuerpo').innerHTML = `<p class="dato">${base}</p><div class="galeria" id="dGaleria"><span class="dato">Buscando obras…</span></div>`;
+
+/* Red de gestos: qué gestos se combinan en una misma obra, o con qué términos de otro campo */
+async function gxGrafo(){
+  if (!gxActiva()) return;
+  const t = ++GX.tG, cont = $('gxGrafo'), juntos = $('gxRelModo').value === 'juntos';
+  const dim = DIMS[$('gxRelCampo').value], topG = +$('gxRelTop').value, topB = +$('gxRelTopB').value, minW = +$('gxRelMin').value;
+  $('gxRelCampoL').hidden = juntos; $('gxRelTopBL').hidden = juntos;
+  ocupado(cont, true);
   try {
-    const {obras, total} = await traerObras({_and:[condicionDim(dG, itG), cruce.cond(itC)]}, 24);
-    $('dCuerpo').querySelector('.dato').innerHTML = `${base} <b>${fmt(total)}</b> obras${filtroTxt}; se muestran ${obras.length < total ? `las primeras ${fmt(obras.length)}` : 'todas'}.`;
-    pintarGaleria(obras, $('dGaleria'));
-  } catch(e){ $('dGaleria').innerHTML = `<span class="dato">No se pudieron traer las obras: ${escHTML(e.message)}</span>`; }
+    const [B, vals] = await Promise.all([baseGX(), juntos ? null : valoresPorObra(dim)]);
+    if (t !== GX.tG) return;
+    const campo = juntos ? '' : dim.label.toLowerCase();
+    $('gxGrafoLeyenda').innerHTML = `<span style="--c:${VIOLETA}">Gestos</span>` + (juntos ? '' : `<span style="--c:${CATEG[1]}">${escHTML(dim.label)}</span>`)
+      + `<span style="--c:transparent;box-shadow:inset 0 0 0 2px var(--oro);border-radius:50%;width:10px;height:10px;display:inline-block;margin-right:-8px"></span><span style="--c:transparent">gestos elegidos en «Asociaciones»</span>`;
+    if (juntos && B.campos.length === 1){
+      cont.innerHTML = '<div class="vacio">Con una sola casilla cada obra tiene un solo gesto, así que no hay gestos que aparezcan juntos.</div>';
+      leer('gxGrafoLectura', 'Para ver qué gestos se combinan en una misma pintura, elige «Los tres campos juntos» en <b>Campos de gesto que se cuentan</b>, o cambia <b>Relacionar</b> a «Gestos con otro campo».');
+      return;
+    }
+    // Gestos de la red: los más frecuentes, más los elegidos en «Asociaciones»
+    const gestos = B.lista.slice(0, topG);
+    for (const c of GX.sels || []) if (B.porGesto.has(c) && !gestos.some(g => g.clave === c)) gestos.push(B.porGesto.get(c));
+    const enRed = new Set(gestos.map(g => g.clave));
+    const nodosInfo = new Map(gestos.map(g => [`g:${g.clave}`, {id:`g:${g.clave}`, gesto:true, clave:g.clave, item:g.item, n:g.obras.size, ids:[...g.obras]}]));
+    const vinculos = new Map();
+    const sumar = (a, b, o) => { const k = a < b ? `${a}|${b}` : `${b}|${a}`; let e = vinculos.get(k); if (!e){ e = {k, ids:[]}; vinculos.set(k, e); } e.ids.push(o); };
+    if (juntos){
+      for (const [o, gs] of B.deObra){
+        const l = [...gs].filter(c => enRed.has(c));
+        for (let i = 0; i < l.length; i++) for (let j = i + 1; j < l.length; j++) sumar(`g:${l[i]}`, `g:${l[j]}`, o);
+      }
+    } else {
+      // Términos del otro campo: los más presentes en obras con alguno de los gestos de la red
+      const terminos = new Map();
+      for (const [o, gs] of B.deObra){
+        const m = vals.get(o); if (!m || ![...gs].some(c => enRed.has(c))) continue;
+        for (const [c, it] of m){ let e = terminos.get(c); if (!e){ e = {clave:c, item:it, ids:[]}; terminos.set(c, e); } e.ids.push(o); }
+      }
+      const elegidos = [...terminos.values()].sort((a,b) => b.ids.length - a.ids.length).slice(0, topB);
+      elegidos.forEach(e => nodosInfo.set(`t:${e.clave}`, {id:`t:${e.clave}`, gesto:false, clave:e.clave, item:e.item, n:e.ids.length, ids:e.ids}));
+      const enB = new Set(elegidos.map(e => e.clave));
+      for (const [o, gs] of B.deObra){
+        const m = vals.get(o); if (!m) continue;
+        for (const c of gs) if (enRed.has(c)) for (const tc of m.keys()) if (enB.has(tc)) sumar(`g:${c}`, `t:${tc}`, o);
+      }
+    }
+    const aristas = [...vinculos.values()].map(e => { const [a, b] = e.k.split('|'); return {source:a, target:b, w:e.ids.length, ids:e.ids}; })
+      .filter(a => a.w >= minW).sort((a,b) => b.w - a.w).slice(0, 400);
+    const usados = new Set(aristas.flatMap(a => [a.source, a.target]));
+    for (const c of GX.sels || []) if (nodosInfo.has(`g:${c}`)) usados.add(`g:${c}`);
+    const nodos = [...usados].map(id => ({...nodosInfo.get(id)}));
+    S.datos['gx-grafo'] = {filas: aristas.map(a => ({termino_a:nombreItem(nodosInfo.get(a.source).item), termino_b:nombreItem(nodosInfo.get(a.target).item), obras_compartidas:a.w}))};
+
+    // Lectura
+    const nom = id => `<b>${escHTML(nombreItem(nodosInfo.get(id).item))}</b>`;
+    let txt = juntos
+      ? `La red toma los ${negrita(gestos.length)} gestos más frecuentes ${delFiltro()} y une los que aparecen juntos en una misma pintura en al menos ${nObras(minW)}: hay ${negrita(aristas.length)} ${aristas.length === 1 ? 'pareja' : 'parejas'}.`
+      : `La red une los ${negrita(gestos.length)} gestos más frecuentes con los ${negrita(nodosInfo.size - gestos.length)} términos de ${campo} más presentes en sus obras; cada línea es un vínculo de al menos ${nObras(minW)}: hay ${negrita(aristas.length)}.`;
+    if (aristas.length){
+      const [a1, a2] = aristas;
+      txt += juntos ? ` La pareja más frecuente es ${nom(a1.source)} con ${nom(a1.target)}, juntos en ${nObras(a1.w)}.` : ` El vínculo más fuerte es ${nom(a1.source)} con ${nom(a1.target)}, en ${nObras(a1.w)}.`;
+      if (a2) txt += ` Le sigue ${nom(a2.source)} con ${nom(a2.target)} (${negrita(a2.w)}).`;
+      const grado = new Map(); aristas.forEach(a => [a.source, a.target].forEach(id => grado.set(id, (grado.get(id)||0) + 1)));
+      const hub = [...grado].filter(([id]) => id.startsWith('g:')).sort((a,b) => b[1] - a[1])[0];
+      if (hub) txt += ` El gesto con más vínculos es ${nom(hub[0])} (${negrita(hub[1])}).`;
+    } else txt += ` Baja «Obras mínimas por vínculo» para ver vínculos más débiles.`;
+    if (juntos){
+      const varios = [...B.deObra.values()].filter(m => m.size > 1).length;
+      txt += ` Solo ${nObras(varios)} con gesto tienen más de un gesto distinto, así que solo ellas forman parejas.`;
+    }
+    leer('gxGrafoLectura', txt);
+    if (!nodos.length){ cont.innerHTML = '<div class="vacio">No hay vínculos con ese mínimo de obras. Baja el umbral o amplía los filtros.</div>'; return; }
+
+    const W = cont.clientWidth || 900, H = Math.max(480, Math.min(720, W * .62));
+    const r = d3.scaleSqrt([0, d3.max(nodos, d => d.n)], [4, Math.max(14, W/40)]);
+    const maxW = d3.max(aristas, d => d.w) || 1;
+    const grosor = d3.scaleSqrt([minW, Math.max(minW + 1, maxW)], [.6, 7]);
+    const svg = d3.create('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', juntos ? 'Red de gestos que aparecen juntos' : `Red de gestos y ${campo}`);
+    const fondo = svg.append('rect').attr('width', W).attr('height', H).attr('fill', 'transparent');
+    const g = svg.append('g');
+    svg.call(d3.zoom().scaleExtent([.4, 5]).on('zoom', ev => g.attr('transform', ev.transform)));
+    const lA = g.append('g').selectAll('line').data(aristas).join('line').attr('class', 'arista').attr('stroke-width', d => grosor(d.w)).attr('stroke-opacity', .35);
+    // Las líneas finas son difíciles de tocar: una copia invisible y más ancha recibe el cursor.
+    const lH = g.append('g').selectAll('line').data(aristas).join('line').attr('stroke', 'transparent').attr('stroke-width', d => Math.max(10, grosor(d.w) + 6)).style('cursor', 'pointer');
+    const anillo = d => d.gesto && (GX.sels || []).includes(d.clave);
+    const lN = g.append('g').selectAll('circle').data(nodos).join('circle').attr('class', 'nodo')
+      .attr('r', d => r(d.n)).attr('fill', d => d.gesto ? VIOLETA : CATEG[1])
+      .style('stroke', d => anillo(d) ? 'var(--oro)' : null).style('stroke-width', d => anillo(d) ? '4px' : null);
+    const umbral = d3.quantile(nodos.map(d => d.n).sort(d3.ascending), .25);
+    const lT = g.append('g').selectAll('text').data(nodos.filter(d => d.n >= umbral || anillo(d))).join('text').attr('class', 'etiqueta')
+      .attr('text-anchor', 'middle').text(d => recortar(nombreItem(d.item), 34));
+    const vecinos = new Map(nodos.map(n => [n.id, new Set([n.id])]));
+    aristas.forEach(a => { vecinos.get(a.source)?.add(a.target); vecinos.get(a.target)?.add(a.source); });
+    const resaltar = (enNodo, enArista) => {
+      lN.attr('opacity', n => enNodo(n) ? 1 : .15); lT.attr('opacity', n => enNodo(n) ? 1 : .15);
+      lA.attr('stroke-opacity', a => enArista(a) ? .9 : .05).attr('stroke', a => enArista(a) ? 'var(--oro)' : null);
+    };
+    const limpiar = () => { lN.attr('opacity', 1); lT.attr('opacity', 1); lA.attr('stroke-opacity', .35).attr('stroke', null); };
+    const deNodo = d => resaltar(n => vecinos.get(d.id).has(n.id), a => a.source.id === d.id || a.target.id === d.id);
+    const deArista = x => resaltar(n => n.id === x.source.id || n.id === x.target.id, a => a === x);
+    lN.on('mouseenter', (ev, d) => deNodo(d))
+      .on('mousemove', (ev, d) => mostrarTip(ev, `<strong>${escHTML(nombreItem(d.item))}</strong><br>${d.gesto ? 'Gesto' : escHTML(dim.label)}: ${fmt(d.n)} obras${d.gesto ? '' : ' con gesto'}<br>${vecinos.get(d.id).size - 1} vínculos<br><em>Clic para ver sus obras</em>`))
+      .on('mouseleave', () => { ocultarTip(); limpiar(); })
+      .on('click', (ev, d) => {
+        ocultarTip();
+        exGaleria(nombreItem(d.item), d.ids, d.gesto ? 'Obras con este gesto.' : `${dim.label}: obras que además tienen algún gesto.`);
+      })
+      .call(d3.drag()
+        .on('start', (ev, d) => { if (!ev.active) GX.sim.alphaTarget(.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .on('drag', (ev, d) => { d.fx = ev.x; d.fy = ev.y; })
+        .on('end', (ev, d) => { if (!ev.active) GX.sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+    lH.on('mouseenter', (ev, a) => deArista(a))
+      .on('mousemove', (ev, a) => mostrarTip(ev, `<strong>${escHTML(nombreItem(a.source.item))}</strong> + <strong>${escHTML(nombreItem(a.target.item))}</strong><br>Juntos en ${fmt(a.w)} obras<br><em>Clic para ver esas obras</em>`))
+      .on('mouseleave', () => { ocultarTip(); limpiar(); })
+      .on('click', (ev, a) => { ocultarTip(); exGaleria(`${nombreItem(a.source.item)} + ${nombreItem(a.target.item)}`, a.ids, juntos ? 'Obras con los dos gestos.' : `Gesto y ${campo}.`); });
+    fondo.on('click', limpiar);
+
+    if (GX.sim) GX.sim.stop();
+    const borde = d => r(d.n) + 8;
+    nodos.forEach((d, i) => { const a = i * 2.4, rad = 12 * Math.sqrt(i); d.x = W/2 + rad * Math.cos(a); d.y = H/2 + rad * Math.sin(a); });
+    GX.sim = d3.forceSimulation(nodos)
+      .force('center', d3.forceCenter(W/2, H/2))
+      .force('link', d3.forceLink(aristas).id(d => d.id).distance(d => 120 + 40/Math.sqrt(d.w)).strength(d => .04 + .2 * Math.sqrt(d.w/maxW)))
+      .force('charge', d3.forceManyBody().strength(d => -300 - 14 * r(d.n)).distanceMax(500))
+      .force('collide', d3.forceCollide(d => r(d.n) + 16).strength(1).iterations(3))
+      // Con otro campo, gestos a la izquierda y términos a la derecha
+      .force('x', d3.forceX(d => juntos ? W/2 : (d.gesto ? W * .36 : W * .64)).strength(.07))
+      .force('y', d3.forceY(H/2).strength(.08))
+      .on('tick', () => {
+        nodos.forEach(d => { d.x = Math.max(borde(d), Math.min(W - borde(d), d.x)); d.y = Math.max(borde(d) + 12, Math.min(H - borde(d), d.y)); });
+        lA.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+        lH.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+        lN.attr('cx', d => d.x).attr('cy', d => d.y);
+        lT.attr('x', d => d.x).attr('y', d => d.y - r(d.n) - 4);
+      });
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches){ GX.sim.stop(); for (let i = 0; i < 300; i++) GX.sim.tick(); GX.sim.on('tick')(); }
+    cont.replaceChildren(svg.node());
+  } catch(e){ if (t === GX.tG) gxError(cont, e); }
+  finally { if (t === GX.tG) ocupado(cont, false); }
+}
+
+/* Pestañas: el análisis por gestos solo se calcula al abrirlo */
+function verPestana(p){
+  document.querySelectorAll('.pestanas button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.p === p)));
+  $('vistaGeneral').hidden = p !== 'general';
+  $('vistaGestos').hidden = p !== 'gestos';
+  try { localStorage.setItem('arca.pestana', p); } catch {}
+  if (p === 'gestos') dibujarGestosTab();
 }
 
 /* ---------- Análisis comparativo ---------- */
@@ -2484,10 +3195,82 @@ function condicionDim(dim, item){
   if (dim.tipo === 'm2m') return { [dim.col]: { _some: { [dim.key]: { _eq: item.id } } } };
   return { [dim.campo]: { _eq: item.id } };
 }
+// Último clic (o Enter) dentro del tablero: de ahí sale la gráfica que acompaña a las obras.
+let ultimoToque = null, horaToque = 0;
+const guardarToque = e => { ultimoToque = e.target.closest?.('.rejilla section.bloque, .rejilla-g section.bloque') ? e.target : null; horaToque = Date.now(); };
+document.addEventListener('click', guardarToque, true);
+document.addEventListener('keydown', e => { if (e.key === 'Enter') guardarToque(e); }, true);
+const FORMAS = ['rect','path','circle'];
+// Elementos que se resaltan en la copia: la forma tocada o, si se tocó un rótulo o un
+// grupo, las formas que lo acompañan.
+function marcables(t){
+  if (t instanceof SVGElement){
+    if (FORMAS.includes(t.tagName)) return [t];
+    const g = t.tagName === 'g' ? t : t.parentNode;
+    return [...g.children].filter(c => FORMAS.includes(c.tagName));
+  }
+  return [t.closest('[tabindex],button,a,li,tr') || t];
+}
+// Posición de un nodo dentro de otro, como lista de índices: sirve para hallarlo en la copia.
+function rutaDe(el, raiz){
+  const r = [];
+  while (el && el !== raiz){ r.unshift([...el.parentNode.children].indexOf(el)); el = el.parentNode; }
+  return el === raiz ? r : null;
+}
+function copiaDeGrafica(t){
+  const bloque = t.closest('section.bloque'), lienzo = t.closest('.lienzo') || bloque.querySelector('.lienzo');
+  if (!lienzo) return null;
+  const frag = document.createDocumentFragment();
+  const h = document.createElement('h4'); h.textContent = bloque.dataset.titulo || ''; frag.append(h);
+  const p = document.createElement('p'); p.className = 'pista-viz'; frag.append(p);
+  const copia = lienzo.cloneNode(true);
+  const rutas = lienzo.contains(t) ? marcables(t).map(el => rutaDe(el, lienzo)).filter(Boolean) : [];
+  for (const r of rutas){
+    let el = copia; for (const k of r) el = el?.children[k];
+    el?.classList.add('marcado');
+  }
+  p.textContent = (rutas.length ? 'Lo que tocaste aparece marcado. ' : '') + 'Toca otro elemento de la gráfica para ver sus obras.';
+  frag.append(copia);
+  const ley = bloque.querySelector('.leyenda-escala');
+  if (ley && ley.textContent.trim()) frag.append(ley.cloneNode(true));
+  frag.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));   // sin ids repetidos
+  conectarCopia(copia, lienzo.id);
+  return frag;
+}
+// La copia responde como la gráfica del tablero: cada clic o paso del cursor se reenvía al
+// elemento equivalente del original, que ya sabe qué tooltip mostrar y qué obras abrir.
+function conectarCopia(copia, idOriginal){
+  const original = t => {
+    const r = rutaDe(t, copia), raiz = $(idOriginal);
+    if (!r || !raiz) return null;
+    let el = raiz; for (const k of r) el = el?.children[k];
+    return el || null;
+  };
+  const reenviar = (el, tipo, e) => el.dispatchEvent(new MouseEvent(tipo, {bubbles:tipo !== 'mouseleave', clientX:e.clientX, clientY:e.clientY}));
+  let previo = null;
+  copia.addEventListener('mousemove', e => {
+    const o = original(e.target);
+    if (previo && previo !== o) reenviar(previo, 'mouseleave', e);
+    previo = o;
+    if (o) reenviar(o, 'mousemove', e); else ocultarTip();
+  });
+  copia.addEventListener('mouseleave', e => { if (previo) reenviar(previo, 'mouseleave', e); previo = null; ocultarTip(); });
+  copia.addEventListener('click', e => { const o = original(e.target); if (o){ e.preventDefault(); reenviar(o, 'click', e); } });
+}
 function abrirPanelDetalle(titulo){
-  const panel = $('detalle');
+  const panel = $('detalle'), viz = $('dViz');
   $('dTitulo').textContent = titulo;
-  panel.classList.add('abierto'); panel.setAttribute('aria-hidden','false'); $('dCerrar').focus();
+  // solo cuenta un toque reciente: si el panel se abre desde otro lugar, no se muestra gráfica
+  const copia = ultimoToque && Date.now() - horaToque < 3000 ? copiaDeGrafica(ultimoToque) : null;
+  ultimoToque = null;
+  viz.replaceChildren(...(copia ? [copia] : []));
+  $('dCaja').classList.toggle('sin-viz', !copia);
+  panel.classList.add('abierto'); panel.setAttribute('aria-hidden','false');
+  document.body.style.overflow = 'hidden';
+  // si lo marcado quedó fuera de la vista (listas largas), se trae a la vista dentro de la copia
+  const m = viz.querySelector('.marcado');
+  if (m) m.scrollIntoView({block:'center', inline:'nearest'});
+  $('dCerrar').focus({preventScroll:true});
 }
 function pintarGaleria(obras, cont){
   if (!obras.length){ cont.innerHTML = '<span class="dato">No hay obras que cumplan a la vez este término y los filtros activos.</span>'; return; }
@@ -2551,7 +3334,11 @@ async function abrirRelacion(A, B, w){
     pintarGaleria(obras, $('dGaleria'));
   } catch(e){ $('dGaleria').innerHTML = `<span class="dato">No se pudieron traer las obras: ${escHTML(e.message)}</span>`; }
 }
-function cerrarDetalle(){ const p=$('detalle'); p.classList.remove('abierto'); p.setAttribute('aria-hidden','true'); }
+function cerrarDetalle(){
+  const p=$('detalle'); p.classList.remove('abierto'); p.setAttribute('aria-hidden','true');
+  $('dViz').replaceChildren();
+  document.body.style.overflow = $('explorador').classList.contains('abierto') ? 'hidden' : '';
+}
 
 /* ---------- Explorar a fondo ----------
    Una sola vista de detalle que cruza dos campos cualesquiera de ARCA (incluidos
@@ -2577,7 +3364,7 @@ const claveIt = it => String(it.id ?? it.slug);
 // Configuración con que cada gráfica abre el explorador
 const PRESETS = {
   pulso:       () => ({a:'gesto1', b:'cuarto', vista:'lineas', medida:'col'}),
-  mapa:        () => ({a: S.mapaModo === 'origen' ? 'pais_origen' : 'pais_conservacion', b:'categoria1', vista:'mapa', medida:'fila'}),
+  mapa:        () => ({a: S.mapaModo.startsWith('origen') ?'pais_origen' : 'pais_conservacion', b:'categoria1', vista:'mapa', medida:'fila'}),
   tiempo:      () => ({a:'categoria1', b:'decada', vista:'lineas', medida:'col'}),
   atlas:       () => ({a:'categoria1', b:'cuarto', vista:'lineas', medida:'col'}),
   flujos:      () => $('fNivel').value === 'ciudad'
@@ -3697,10 +4484,10 @@ const PF = (()=>{
   function publicar(){
     S.filtro.pais = state.pais ? { id:String(state.pais), nombre:nombreDe('paises', state.pais) || '' } : null;
     S.filtro.desde = state.fechaDesde; S.filtro.hasta = state.fechaHasta;  }
-  // Último campo de «Datos de análisis» o «Datos de gestos» que se modificó y quedó con
-  // algún valor: el tablero muestra ese mismo campo en «Obras por término» o en «Gestos».
+  // Último campo de «Datos de análisis» que se modificó y quedó con algún valor:
+  // el tablero muestra ese mismo campo en «Pinturas en relación a campos».
   const foto = f => JSON.stringify(state[f] ?? null);
-  const vigilados = [...GROUP_FIELDS.analisis, ...GROUP_FIELDS.gestos];
+  const vigilados = [...GROUP_FIELDS.analisis];
   const previo = Object.fromEntries(vigilados.map(f => [f, foto(f)]));
   const tieneValor = v => Array.isArray(v) ? v.length > 0 : v != null;
   function campoTocado(){
@@ -3714,7 +4501,7 @@ const PF = (()=>{
   }
   function onFilterChanged(){
     const tocado = campoTocado();
-    if (tocado) (GROUP_FIELDS.gestos.includes(tocado) ? enfocarGestos : enfocarRanking)(tocado);
+    if (tocado) enfocarRanking(tocado);
     publicar();
     updateChips();
     clearTimeout(espera);
@@ -4212,10 +4999,32 @@ document.addEventListener('click', e => ['A','B'].forEach(l => {
 $('fNivel').onchange = dibujarFlujos;
 montarHerramientas();
 observarBloque('comparativo', dibujarComparativo);
-observarBloque('gestos', dibujarGestos);
-llenarSelect($('gCampo'),'gesto1',['gestos']);
-['gCampo','gCruce','gTop'].forEach(id=>$(id).onchange=dibujarGestos);
 $('tTop').onchange = dibujarTecnicas;
+montarCarruselPulso();
+// Pestaña de gestos: cruces con cualquier campo salvo las propias casillas de gesto
+llenarSelect($('gxCruce'), 'categoria1', null, /^gesto\d$/);
+llenarSelect($('gxGrupo'), 'pais_conservacion', null, /^gesto\d$/);
+$('gxCampos').onchange = dibujarGestosTab;
+['gxOrden','gxMostrar'].forEach(id => $(id).onchange = gxLista);
+let esperaBusqueda; $('gxBuscar').oninput = () => { clearTimeout(esperaBusqueda); esperaBusqueda = setTimeout(gxLista, 150); };
+['gxCruce','gxMedida','gxTopA'].forEach(id => $(id).onchange = gxAsoc);
+['gxGrupo','gxNG','gxNK','gxMedC'].forEach(id => $(id).onchange = gxComp);
+llenarSelect($('gxRelCampo'), 'personajes', null, /^gesto\d$/);
+['gxRelModo','gxRelCampo','gxRelTop','gxRelTopB','gxRelMin'].forEach(id => $(id).onchange = gxGrafo);
+document.querySelectorAll('.pestanas button').forEach(b => b.onclick = () => verPestana(b.dataset.p));
+// Cajón de filtros en móvil
+const cajonFiltros = abrir => {
+  document.body.classList.toggle('filtros-abiertos', abrir);
+  $('abrirFiltros').setAttribute('aria-expanded', String(abrir));
+  if (abrir) $('cerrarFiltros').focus({preventScroll:true});
+};
+$('abrirFiltros').onclick = () => cajonFiltros(true);
+$('cerrarFiltros').onclick = () => cajonFiltros(false);
+$('fondoFiltros').onclick = () => cajonFiltros(false);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('filtros-abiertos')) cajonFiltros(false); });
+// La pista de uso es fija; se limpia la marca de quienes la ocultaron cuando tenía botón de cerrar
+try { localStorage.removeItem('arca.pistaOculta'); } catch {}
+try { if (localStorage.getItem('arca.pestana') === 'gestos') verPestana('gestos'); } catch {}
 observarBloque('detalle', dibujarAutores);
 
 // Tabla de obras: paginación y ordenamiento
@@ -4238,10 +5047,18 @@ pintarCabecerasTabla();
 const conMapa = fn => { if (S.mapaCtl) fn(S.mapaCtl); };
 $('mapaMas').onclick   = ()=>conMapa(m=>m.svg.transition().duration(250).call(m.zoom.scaleBy, 1.6));
 $('mapaMenos').onclick = ()=>conMapa(m=>m.svg.transition().duration(250).call(m.zoom.scaleBy, 1/1.6));
+document.querySelectorAll('.mapa-forma button').forEach(b => b.onclick = () => {
+  S.mapaForma = b.dataset.forma;
+  document.querySelectorAll('.mapa-forma button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  dibujarMapa();
+  dibujarTecnicas();   // cambia el alto de la columna: Técnicas y Temática se vuelven a alinear
+});
+$('atlasMedida').onchange = ()=>{ dibujarAtlas(); dibujarTecnicas(); };   // Técnicas vuelve a alinear las columnas
 $('mapaModo').onchange = ()=>{ S.mapaModo = $('mapaModo').value; S.mapaVista = null; dibujarMapa(); };
 $('quitarTodo').onclick = PF.reiniciar;
 $('reintentar').onclick = ()=>{ $('aviso').classList.remove('visible'); conectar(); };
 $('dCerrar').onclick = cerrarDetalle;
+$('detalle').addEventListener('click', e => { if (e.target === $('detalle')) cerrarDetalle(); });   // clic fuera de la ventana
 $('pf-reiniciar').onclick = PF.reiniciar;
 document.addEventListener('keydown', e=>{
   if (e.key !== 'Escape') return;
@@ -4250,7 +5067,8 @@ document.addEventListener('keydown', e=>{
   if ($('explorador').classList.contains('abierto')) return cerrarExplorador();
 });
 PF.init();
-let espera; new ResizeObserver(()=>{ clearTimeout(espera); espera=setTimeout(()=>{ if(S.obras.length){ dibujarMapa(); dibujarTecnicas(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRed(); if(vistos.has('gestos')) dibujarGestos(); if(vistos.has('comparativo')) dibujarComparativo(); if(vistos.has('detalle')) dibujarAutores(); } }, 250); }).observe(document.querySelector('.rejilla'));
+let espera; new ResizeObserver(()=>{ clearTimeout(espera); espera=setTimeout(()=>{ if(S.obras.length){ dibujarMapa(); dibujarTecnicas(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRed(); if(vistos.has('comparativo')) dibujarComparativo(); if (vistos.has('detalle')) dibujarAutores(); } }, 250); }).observe(document.querySelector('.rejilla'));
+let esperaGX; new ResizeObserver(()=>{ clearTimeout(esperaGX); esperaGX=setTimeout(()=>{ if (gxActiva()){ gxAsoc(); gxGrafo(); gxComp(); } }, 250); }).observe($('vistaGestos'));
 if (typeof d3 === 'undefined'){ estado('No cargó la librería D3 (revisa la conexión a internet).', true); }
 else conectar();
 </script>
