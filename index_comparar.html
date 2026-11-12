@@ -1250,25 +1250,29 @@ async function iniciarCarga(){
   const escena = $('cargaEscena');
   try {
     // Una muestra al azar de obras con imagen (pocas: es solo para acompañar la espera)
-    const params = new URLSearchParams({limit:'14', offset:String(Math.floor(Math.random()*15000)), fields:'id,titulo,imagen',
+    const params = new URLSearchParams({limit:'40', offset:String(Math.floor(Math.random()*15000)), fields:'id,titulo,imagen',
       filter:JSON.stringify({imagen:{_nnull:true}})});
     const r = await fetch(`https://apiarca.uniandes.edu.co/items/obras?${params}`);
     const obras = ((await r.json()).data || []).filter(o => o.imagen).sort(() => Math.random() - .5);
     if ($('carga').classList.contains('lista') || !obras.length) return;
-    // Se usa la imagen original (la miniatura es muy pequeña), pero una a la vez:
-    // mientras se ve una obra se descarga la siguiente, sin competir con la lectura de datos.
-    let siguiente = null, k = 0;
+    // Se usa la imagen original (la miniatura es muy pequeña). Siempre hay varias
+    // descargándose a la vez, así que la siguiente obra casi siempre está lista.
+    const listas = [], PARALELO = 5;
+    let k = 0, enCurso = 0;
     const precargar = () => {
-      if (k >= obras.length * 3) return;
-      const o = obras[k++ % obras.length], img = new Image();
-      img.alt = ''; img.dataset.titulo = o.titulo || '';
-      img.src = `https://apiarca.uniandes.edu.co/assets/${typeof o.imagen === 'string' ? o.imagen : o.imagen.id}`;
-      img.onload = () => { siguiente = img; };
-      img.onerror = precargar;
+      while (enCurso + listas.length < PARALELO && k < obras.length){
+        const o = obras[k++], img = new Image();
+        enCurso++;
+        img.alt = ''; img.dataset.titulo = o.titulo || '';
+        img.onload = () => { enCurso--; listas.push(img); if (!escena.querySelector('img.activa')) mostrar(); precargar(); };
+        img.onerror = () => { enCurso--; precargar(); };
+        img.src = `https://apiarca.uniandes.edu.co/assets/${typeof o.imagen === 'string' ? o.imagen : o.imagen.id}`;
+      }
+      if (k >= obras.length && !listas.length && !enCurso) k = 0;   // si la carga dura mucho, vuelve a empezar
     };
     const mostrar = () => {
-      if (!siguiente || $('carga').classList.contains('lista')) return;
-      const sig = siguiente; siguiente = null;
+      if (!listas.length || $('carga').classList.contains('lista')) return;
+      const sig = listas.shift();
       const actual = escena.querySelector('img.activa');
       if (actual){ actual.classList.remove('activa'); actual.classList.add('sale'); setTimeout(() => actual.remove(), 1300); }
       escena.append(sig); void sig.offsetWidth; sig.classList.add('activa');
@@ -1277,8 +1281,7 @@ async function iniciarCarga(){
       precargar();
     };
     precargar();
-    CARGA.timer = setInterval(mostrar, 3400);
-    setTimeout(mostrar, 900);
+    CARGA.timer = setInterval(() => { precargar(); mostrar(); }, 2600);
   } catch { escena.innerHTML = '<div class="sin-img">✦</div>'; }
 }
 function ocultarCarga(){
