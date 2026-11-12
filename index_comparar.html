@@ -516,11 +516,41 @@ label.faceta-rotulo select{margin-top:4px}
   .ex-mandos{border-right:0;border-bottom:1px solid var(--linea);overflow:visible}
   .ex-vista{overflow:visible}
 }
+/* ---------- Pantalla de carga ---------- */
+.carga{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 40%,#3a2a20 0%,#1d1411 70%);display:flex;align-items:center;justify-content:center;transition:opacity .7s ease,visibility .7s}
+.carga.lista{opacity:0;visibility:hidden}
+body.cargando{overflow:hidden}
+.carga-marco{width:min(560px,92vw);text-align:center;color:#e8d9bd}
+.carga-nombre{font-family:var(--serif);font-size:clamp(1.6rem,4vw,2.3rem);color:#d2a94b;margin:0 0 10px}
+.carga-nombre i{color:#f1e8d8}
+.carga-escena{position:relative;height:min(52vh,420px);margin:0 auto}
+/* Cada obra flota sin marco: los bordes se funden con el fondo */
+.carga-escena img{position:absolute;left:50%;top:50%;max-height:100%;max-width:88%;object-fit:contain;opacity:0;
+  transform:translate(-20%,-50%) scale(.92);transition:opacity 1.1s ease,transform 3.2s ease;
+  -webkit-mask-image:radial-gradient(ellipse 72% 72% at 50% 50%,#000 58%,transparent 100%);mask-image:radial-gradient(ellipse 72% 72% at 50% 50%,#000 58%,transparent 100%);
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,.55))}
+.carga-escena img.activa{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.carga-escena img.sale{opacity:0;transform:translate(-80%,-50%) scale(.92)}
+.carga-escena .sin-img{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:4rem;color:#5a4430}
+.carga-obra{min-height:2.6em;margin:10px 0 14px;font-family:var(--serif);font-style:italic;font-size:1rem;color:#cdbb9c;transition:opacity .6s}
+.carga-barra{height:4px;border-radius:999px;background:#4a3a31;overflow:hidden;margin:0 auto;width:80%}
+.carga-barra span{display:block;height:100%;width:4%;background:#d2a94b;border-radius:999px;transition:width .5s ease}
+.carga-estado{font-size:.85rem;color:#b5a48c;margin:10px 0 0;min-height:1.3em}
+@media (prefers-reduced-motion:reduce){.carga-escena img{transition:opacity .6s}.carga-escena img,.carga-escena img.activa,.carga-escena img.sale{transform:translate(-50%,-50%)}}
 footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
+<div class="carga" id="carga" role="status" aria-live="polite">
+  <div class="carga-marco">
+    <p class="carga-nombre">ARCA <i>Arte Colonial Americano</i></p>
+    <div class="carga-escena" id="cargaEscena" aria-hidden="true"></div>
+    <p class="carga-obra" id="cargaObra"></p>
+    <div class="carga-barra"><span id="cargaBarra"></span></div>
+    <p class="carga-estado" id="cargaEstado">Conectando con el archivo de ARCA…</p>
+  </div>
+</div>
 <div class="envoltura">
   <header class="cabeza">
     <div>
@@ -552,8 +582,8 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
   </header>
 
   <nav class="pestanas" role="tablist" aria-label="Tipo de análisis">
-    <button type="button" role="tab" data-p="analisis" aria-selected="true" aria-controls="vistaAnalisis">Posibles análisis</button>
-    <button type="button" role="tab" data-p="general" aria-selected="false" aria-controls="vistaGeneral">Análisis general</button>
+    <button type="button" role="tab" data-p="general" aria-selected="true" aria-controls="vistaGeneral">Análisis general</button>
+    <button type="button" role="tab" data-p="analisis" aria-selected="false" aria-controls="vistaAnalisis">Posibles análisis</button>
     <button type="button" role="tab" data-p="gestos" aria-selected="false" aria-controls="vistaGestos">Análisis por gestos</button>
   </nav>
 
@@ -566,7 +596,7 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
   </div>
 
 
-  <div class="vista-analisis" id="vistaAnalisis" role="tabpanel">
+  <div class="vista-analisis" id="vistaAnalisis" role="tabpanel" hidden>
     <section class="bloque b-comparar" data-bloque="comparar" data-titulo="Análisis posibles">
       <h2>Análisis posibles<span class="info" tabindex="0" role="button" aria-label="Cómo usar estos análisis"><span class="info-globo" role="tooltip">Cada opción abre un análisis ya armado: un top, una comparación entre países, los temas dentro de un país, un cruce entre campos… Una vez abierto puedes seguir explorando: cambiar la vista (barras, matriz de calor, líneas o mapa), cambiar la medida (número de obras o porcentajes), elegir otros términos de la misma categoría (por ejemplo, cambiar Perú por Ecuador), cambiar cualquiera de los dos campos o acotar todo a un país, un siglo o un tema. Los filtros del panel lateral se aplican encima, salvo que los desactives allí. Todo se descarga en PNG, SVG o CSV con su leyenda.</span></span></h2>
       <p class="lectura">Preguntas que se pueden responder con los datos de ARCA. Toca una para abrirla; después puedes cambiar la vista, elegir otros países o términos y seguir cruzando.</p>
@@ -574,7 +604,7 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
     </section>
   </div>
 
-  <div class="rejilla" id="vistaGeneral" role="tabpanel" hidden>
+  <div class="rejilla" id="vistaGeneral" role="tabpanel">
     <section class="bloque b-pulso" data-bloque="pulso" data-titulo="Pulso de la colección">
       <h2>Pulso de la colección<span class="info" tabindex="0" role="button" aria-label="Cómo leer este resumen"><span class="info-globo" role="tooltip">Resume las obras que cumplen los filtros del panel: cuántas son, cuántos pintores identificados las hicieron, cuántas son anónimas, y cuántos personajes, técnicas, lugares de conservación, países y gestos distintos aparecen en ellas. Cuando aplica, la tarjeta indica también el total registrado en ARCA como referencia. Sin filtros, describe toda la colección. Usa las flechas, los puntos o desliza para ver todas las cifras; el carrusel avanza solo y se detiene al pasar el cursor.</span></span></h2>
       <p class="lectura" id="pulsoLectura">Calculando…</p>
@@ -1204,7 +1234,62 @@ const S = {
 };
 const fmt = n => new Intl.NumberFormat('es-CO').format(n);
 const $ = id => document.getElementById(id);
-const estado = (t, error=false) => { const e=$('estado'); e.textContent=t; e.classList.toggle('error', error); };
+const estado = (t, error=false) => {
+  const e=$('estado'); e.textContent=t; e.classList.toggle('error', error);
+  if (!$('carga').classList.contains('lista')){
+    $('cargaEstado').textContent = t;
+    // «Leyendo obras 8.000 de 27.000…»: la barra avanza con la descarga
+    const m = t.match(/([\d.]+) de ([\d.]+)/);
+    if (m){ const v = +m[1].replace(/\./g,''), tot = +m[2].replace(/\./g,''); if (tot) $('cargaBarra').style.width = Math.max(8, Math.min(96, 10 + v/tot*85)) + '%'; }
+  }
+};
+/* ---------- Pantalla de carga: obras de ARCA que van pasando mientras se lee la API ---------- */
+const CARGA = {timer:null, i:0};
+async function iniciarCarga(){
+  document.body.classList.add('cargando');
+  const escena = $('cargaEscena');
+  try {
+    // Una muestra al azar de obras con imagen (pocas: es solo para acompañar la espera)
+    const params = new URLSearchParams({limit:'14', offset:String(Math.floor(Math.random()*15000)), fields:'id,titulo,imagen',
+      filter:JSON.stringify({imagen:{_nnull:true}})});
+    const r = await fetch(`https://apiarca.uniandes.edu.co/items/obras?${params}`);
+    const obras = ((await r.json()).data || []).filter(o => o.imagen).sort(() => Math.random() - .5);
+    if ($('carga').classList.contains('lista') || !obras.length) return;
+    // Se usa la imagen original (la miniatura es muy pequeña), pero una a la vez:
+    // mientras se ve una obra se descarga la siguiente, sin competir con la lectura de datos.
+    let siguiente = null, k = 0;
+    const precargar = () => {
+      if (k >= obras.length * 3) return;
+      const o = obras[k++ % obras.length], img = new Image();
+      img.alt = ''; img.dataset.titulo = o.titulo || '';
+      img.src = `https://apiarca.uniandes.edu.co/assets/${typeof o.imagen === 'string' ? o.imagen : o.imagen.id}`;
+      img.onload = () => { siguiente = img; };
+      img.onerror = precargar;
+    };
+    const mostrar = () => {
+      if (!siguiente || $('carga').classList.contains('lista')) return;
+      const sig = siguiente; siguiente = null;
+      const actual = escena.querySelector('img.activa');
+      if (actual){ actual.classList.remove('activa'); actual.classList.add('sale'); setTimeout(() => actual.remove(), 1300); }
+      escena.append(sig); void sig.offsetWidth; sig.classList.add('activa');
+      const t = $('cargaObra'); t.style.opacity = 0;
+      setTimeout(() => { t.textContent = sig.dataset.titulo; t.style.opacity = 1; }, 400);
+      precargar();
+    };
+    precargar();
+    CARGA.timer = setInterval(mostrar, 3400);
+    setTimeout(mostrar, 900);
+  } catch { escena.innerHTML = '<div class="sin-img">✦</div>'; }
+}
+function ocultarCarga(){
+  $('cargaBarra').style.width = '100%';
+  setTimeout(() => {
+    $('carga').classList.add('lista');
+    document.body.classList.remove('cargando');
+    clearInterval(CARGA.timer);
+    setTimeout(() => $('cargaEscena').replaceChildren(), 900);
+  }, 350);
+}
 
 /* ---------- API ---------- */
 // La API de ARCA responde lento y de forma irregular: sin límite propio, una
@@ -1328,9 +1413,11 @@ async function conectar(){
     S.catalogo = {autores, personajes, ubicaciones, gestos, paises:S.paises.length};
     estado(`Conectado a ${S.api} · ${cuando}`);
     aplicarFiltros();
+    ocultarCarga();
   } catch(e){
     console.error(e);
     estado('Error de conexión', true);
+    ocultarCarga();
     $('avisoTexto').textContent = `Detalle: ${e.message}`;
     $('aviso').classList.add('visible');
   }
@@ -6127,7 +6214,7 @@ $('fondoFiltros').onclick = () => cajonFiltros(false);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('filtros-abiertos')) cajonFiltros(false); });
 // La pista de uso es fija; se limpia la marca de quienes la ocultaron cuando tenía botón de cerrar
 try { localStorage.removeItem('arca.pistaOculta'); } catch {}
-// Siempre se empieza en «Posibles análisis»
+// Siempre se empieza en «Análisis general»
 observarBloque('detalle', dibujarAutores);
 
 // Tabla de obras: paginación y ordenamiento
@@ -6173,7 +6260,7 @@ PF.init();
 let espera; new ResizeObserver(()=>{ clearTimeout(espera); espera=setTimeout(()=>{ if(S.obras.length){ dibujarSeleccion(); dibujarMapa(); dibujarTecnicas(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRed(); if(vistos.has('comparativo')) dibujarComparativo(); if (vistos.has('detalle')) dibujarAutores(); } }, 250); }).observe(document.querySelector('.rejilla'));
 let esperaGX; new ResizeObserver(()=>{ clearTimeout(esperaGX); esperaGX=setTimeout(()=>{ if (gxActiva()){ gxAsoc(); gxGrafo(); gxComp(); } }, 250); }).observe($('vistaGestos'));
 if (typeof d3 === 'undefined'){ estado('No cargó la librería D3 (revisa la conexión a internet).', true); }
-else conectar();
+else { iniciarCarga(); conectar(); }
 </script>
 </body>
 </html>
