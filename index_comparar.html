@@ -380,7 +380,12 @@ label.faceta-rotulo select{margin-top:4px}
 .pf-lista .vacio-f,.pf-check .vacio-f{color:var(--tenue);cursor:default}
 .pf-lista .n,.pf-check .n{color:var(--tenue);font-size:.74rem;white-space:nowrap;margin-left:auto;font-variant-numeric:tabular-nums}
 .pf-check{padding:4px 9px}
-.pf-rejilla[hidden]{display:none!important}
+.pf-rejilla[hidden],.pf-rejilla > div[hidden]{display:none!important}
+.b-seleccion{grid-column:1/-1;border:2px solid var(--oro)}
+.pf-avanzado{margin-top:8px;font-size:.78rem}
+.pf-avanzado summary{cursor:pointer;color:var(--tenue)}
+.pf-comparar{margin:8px 0;padding:8px 10px;border-radius:8px;background:#d2a94b;color:#241910;font-size:.8rem}
+.pf-comparar .boton{display:block;margin-top:6px;width:100%;background:#241910;color:#f3e6c8;font-size:.8rem;padding:6px 10px}
 .pf-multi{margin-top:6px;border:1px solid var(--linea);border-radius:6px;background:var(--panel2)}
 .pf-multi summary{cursor:pointer;padding:5px 9px;font-size:.8rem;font-weight:600;color:var(--texto)}
 .pf-multi summary .n{font-weight:400;color:var(--oro)}
@@ -582,6 +587,24 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
     </section>
 
 
+
+    <section class="bloque b-seleccion" data-bloque="seleccion" data-titulo="Tu selección, comparada">
+      <h2>Tu selección, comparada<span class="info" tabindex="0" role="button" aria-label="Cómo funciona"><span class="info-globo" role="tooltip">Cuando en el panel de filtros marcas dos o más valores de un mismo campo (varios países, temas, siglos, técnicas, pintores, gestos…), este bloque los pone lado a lado: un panel por cada valor marcado. En <b>Qué contar</b> eliges qué se compara entre ellos. Los demás filtros del panel se aplican encima. Es el mismo cálculo de «Posibles análisis» y de «Explorar a fondo», donde puedes abrirlo para seguir cambiando la vista.</span></span></h2>
+      <p class="lectura" id="selVacia">Marca <b>dos o más valores de un mismo campo</b> en el panel de filtros y aquí verás la comparación lado a lado. Por ejemplo: los países Colombia, México y Perú; los temas Santos y Mariología; los siglos XVII y XVIII; o dos pintores.</p>
+      <div id="selCuerpo" hidden>
+        <div class="controles">
+          <label>Comparar entre<select id="selEntre"></select></label>
+          <label>Qué contar<select id="selQue"></select></label>
+          <label>Medida<select id="selMedida"><option value="col" selected>% de las obras de cada grupo</option><option value="conteo">Número de obras</option></select></label>
+          <button class="boton sec" id="selAbrir" type="button">Abrir en Explorar a fondo ↗</button>
+        </div>
+        <h3 class="pregunta-ex" id="selPregunta"></h3>
+        <p class="lectura-ex" id="selLectura"></p>
+        <p class="aviso-ex" id="selAviso"></p>
+        <div class="lienzo" id="selLienzo"></div>
+        <div class="leyenda-escala" id="selLeyenda"></div>
+      </div>
+    </section>
 
     <div class="col-izq">
     <section class="bloque b-mapa" data-bloque="mapa" data-titulo="Geografía">
@@ -937,6 +960,7 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
   </div>
   <div class="cuerpo">
     <div class="pf-chips" id="pf-chips"></div>
+    <div class="pf-comparar" id="pf-comparar" hidden></div>
     <p class="pf-pista" id="pf-carga">Cargando opciones de filtro…</p>
 
     <section class="pf-grupo g-basicos" data-group="basicos">
@@ -998,19 +1022,24 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
             <button type="button" data-d="1750" data-h="1799">1750–1799</button>
             <button type="button" data-d="" data-h="">Todas las fechas</button>
           </div>
+          <details class="pf-multi" data-m="mSiglo"><summary>Siglos (puedes marcar varios) <span class="n"></span></summary><input type="search" hidden><div class="lista"></div></details>
         </div>
 
         <div class="faceta">
-          <span class="faceta-rotulo">Clasificación</span>
-          <p class="pf-pista">Hasta 6 niveles; cada uno depende del anterior.</p>
+          <span class="faceta-rotulo">Tema y subtema</span>
+          <p class="pf-pista">Marca uno o varios temas (clasificación nivel 1); los subtemas (nivel 2) se acotan a los temas marcados.</p>
+          <div data-mfk="mTema" data-rot="Tema"></div>
+          <div data-mfk="mSubtema" data-rot="Subtema"></div>
+          <details class="pf-avanzado"><summary>Clasificación detallada (niveles 3 a 6)</summary>
           <div class="pf-rejilla">
-            <div><label for="pf-cat-0">Nivel 1</label><select id="pf-cat-0"></select></div>
-            <div><label for="pf-cat-1">Nivel 2</label><select id="pf-cat-1"></select></div>
+            <div hidden><label for="pf-cat-0">Nivel 1</label><select id="pf-cat-0"></select></div>
+            <div hidden><label for="pf-cat-1">Nivel 2</label><select id="pf-cat-1"></select></div>
             <div><label for="pf-cat-2">Nivel 3</label><select id="pf-cat-2"></select></div>
             <div><label for="pf-cat-3">Nivel 4</label><select id="pf-cat-3"></select></div>
             <div><label for="pf-cat-4">Nivel 5</label><select id="pf-cat-4"></select></div>
             <div><label for="pf-cat-5">Nivel 6</label><select id="pf-cat-5"></select></div>
           </div>
+          </details>
         </div>
 
         <div class="faceta" data-facet="tecnicas">
@@ -1329,7 +1358,7 @@ function aplicarFiltros(){
   const n = S.permitidas ? S.permitidas.size : S.total;
   $('alcance').textContent = activo ? `${fmt(n)} de ${fmt(S.total)} obras en el filtro` : `${fmt(S.total)} obras`;
   avisarSiNoCambia(n, activo);
-  dibujarPulso(); dibujarMapa(); dibujarTecnicas(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRanking(); dibujarRed();
+  dibujarPulso(); dibujarSeleccion(); dibujarMapa(); dibujarTecnicas(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRanking(); dibujarRed();
   if (vistos.has('comparativo')) dibujarComparativo();
   if (vistos.has('detalle')) dibujarAutores();
   S.tablaPag = 0; dibujarTabla();
@@ -4012,21 +4041,21 @@ function abrirSelector(lado){
 const normTxt = s => (s||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 
 /* --- Cálculo del cruce --- */
-async function exCalcular(){
-  const dA = DIMS[EX.a], dB = EX.b ? DIMS[EX.b] : null;
-  const dD = EX.dentroCampo && EX.dentroK ? DIMS[EX.dentroCampo] : null;
+async function exCalcular(C = EX){
+  const dA = DIMS[C.a], dB = C.b ? DIMS[C.b] : null;
+  const dD = C.dentroCampo && C.dentroK ? DIMS[C.dentroCampo] : null;
   const [fA, fB, fD] = await Promise.all([cargarDim(dA, $('exCarga')), dB ? cargarDim(dB, $('exCarga')) : null, dD ? cargarDim(dD, $('exCarga')) : null]);
   // «Acotar a»: solo cuentan las obras que tienen ese término (p. ej. País de origen: Colombia)
   let dentro = null;
-  EX.dentroNombre = '';
+  C.dentroNombre = '';
   if (dD){
     dentro = new Set();
-    for (const r of fD) if (claveIt(r.it) === EX.dentroK){ dentro.add(r.o); EX.dentroNombre = nombreItem(r.it); }
+    for (const r of fD) if (claveIt(r.it) === C.dentroK){ dentro.add(r.o); C.dentroNombre = nombreItem(r.it); }
   }
-  const pasaFiltros = o => !EX.filtros || !S.permitidas || S.permitidas.has(o);
+  const pasaFiltros = o => !C.filtros || !S.permitidas || S.permitidas.has(o);
   const visible = o => pasaFiltros(o) && (!dentro || dentro.has(o));
   const universo = dentro ? [...dentro].filter(pasaFiltros).length
-    : EX.filtros && S.permitidas ? S.permitidas.size : S.obras.length;
+    : C.filtros && S.permitidas ? S.permitidas.size : S.obras.length;
   const agrupar = (filas, d) => {
     const m = new Map(), sinDato = !d.local;
     for (const r of filas){
@@ -4043,7 +4072,7 @@ async function exCalcular(){
     let lista = [...g.values()];
     if (sel.length){ const s = new Set(sel); lista = lista.filter(x => s.has(x.k)); }
     // Los periodos no se recortan: una línea de tiempo con huecos engaña.
-    else if (!d.periodo && !(EX.vista === 'mapa' && d.pais)) lista = lista.sort((a,b)=>b.obras.size-a.obras.size).slice(0, EX.top);
+    else if (!d.periodo && !(C.vista === 'mapa' && d.pais)) lista = lista.sort((a,b)=>b.obras.size-a.obras.size).slice(0, C.top);
     if (d.periodo){
       lista.sort((a,b)=>a.item.id-b.item.id);
       if (!sel.length && lista.length > 1){        // rellena los periodos vacíos intermedios
@@ -4055,19 +4084,19 @@ async function exCalcular(){
     } else lista.sort((a,b)=>b.obras.size-a.obras.size);
     return lista;
   };
-  const filas = elegir(gA, dA, EX.selA), cols = dB ? elegir(gB, dB, EX.selB) : [];
+  const filas = elegir(gA, dA, C.selA), cols = dB ? elegir(gB, dB, C.selB) : [];
   const colDe = new Map();
   cols.forEach((c,j) => { for (const o of c.obras){ let a = colDe.get(o); if (!a){ a = []; colDe.set(o, a); } a.push(j); } });
   const celdas = filas.map(() => cols.map(() => []));
   filas.forEach((r,i) => { for (const o of r.obras){ const js = colDe.get(o); if (js) for (const j of js) celdas[i][j].push(o); } });
-  return {dA, dB, gA, gB, filas, cols, celdas, universo};
+  return {dA, dB, gA, gB, filas, cols, celdas, universo, medida:C.medida, vista:C.vista, dentroNombre:C.dentroNombre};
 }
 function exValor(R, i, j){
-  if (j == null){ const n = R.filas[i].obras.size; return EX.medida === 'conteo' ? n : n / (R.universo || 1); }
+  if (j == null){ const n = R.filas[i].obras.size; return R.medida === 'conteo' ? n : n / (R.universo || 1); }
   const n = R.celdas[i][j].length;
-  if (EX.medida === 'conteo') return n;
-  if (EX.medida === 'fila') return n / (R.filas[i].obras.size || 1);
-  if (EX.medida === 'col') return n / (R.cols[j].obras.size || 1);
+  if (R.medida === 'conteo') return n;
+  if (R.medida === 'fila') return n / (R.filas[i].obras.size || 1);
+  if (R.medida === 'col') return n / (R.cols[j].obras.size || 1);
   return n / (R.universo || 1);
 }
 function explicarCelda(R, i, j){
@@ -4156,13 +4185,13 @@ const MIN_PANEL = 5;   // un panel con menos obras da porcentajes engañosos (1 
 const pctTxt = v => v > 0 && v < .01 ? 'menos de 1 %' : `${Math.round(v*100)} %`;
 // Qué es cada panel y qué es cada barra según la medida elegida
 function ejesPaneles(R){
-  const porFila = EX.medida === 'fila';
+  const porFila = R.medida === 'fila';
   return {porFila,
     paneles: porFila ? R.filas : R.cols, barras: porFila ? R.cols : R.filas,
     dP: porFila ? R.dA : R.dB, dBar: porFila ? R.dB : R.dA,
     celda: (p, b) => porFila ? [p, b] : [b, p]};
 }
-function exPaneles(R, cont){
+function exPaneles(R, cont, avisoEl = $('exAviso'), leyEl = $('exLeyenda')){
   const {paneles, barras, dP, dBar, celda} = ejesPaneles(R);
   const MAXB = 10, MAXP = 12;
   const bs = barras.slice(0, MAXB);
@@ -4179,7 +4208,7 @@ function exPaneles(R, cont){
   const etq = Math.min(130, pw * .42), ancho = pw - etq - 70;
   const x = d3.scaleLinear([0, max || 1], [0, ancho]);
   const color = colorCateg(bs.map(b => b.k));
-  const fmtV = v => EX.medida === 'conteo' ? fmt(v) : pctTxt(v);
+  const fmtV = v => R.medida === 'conteo' ? fmt(v) : pctTxt(v);
   const svg = d3.create('svg').attr('viewBox', `0 0 ${W0} ${H}`).attr('role','img')
     .attr('aria-label', `${dBar.label} en cada ${dP.label}`);
   ps.forEach(({P, i:p}, orden) => {
@@ -4211,14 +4240,14 @@ function exPaneles(R, cont){
   if (barras.length > MAXB) avisos.push(`Cada panel muestra ${artDim(dBar, true)} ${MAXB} ${nomDim(dBar, true)} más frecuentes.`);
   if (pocos) avisos.push(`Se omiten ${pocos} ${pocos === 1 ? 'grupo' : 'grupos'} con menos de ${MIN_PANEL} obras: sus porcentajes no serían fiables.`);
   if (conObras.length > MAXP) avisos.push(`Se muestran ${MAXP} paneles de ${conObras.length}; elige términos concretos para ver otros.`);
-  $('exAviso').textContent = avisos.join(' ');
-  $('exLeyenda').innerHTML = `<span>${EX.medida === 'conteo' ? 'Número de obras' : EX.medida === 'fila' || EX.medida === 'col' ? `Porcentaje de las obras de cada ${escHTML(nomDim(dP))}` : 'Porcentaje de todas las obras'} · «—» = ninguna obra</span>`;
+  avisoEl.textContent = avisos.join(' ');
+  leyEl.innerHTML = `<span>${R.medida === 'conteo' ? 'Número de obras' : R.medida === 'fila' || R.medida === 'col' ? `Porcentaje de las obras de cada ${escHTML(nomDim(dP))}` : 'Porcentaje de todas las obras'} · «—» = ninguna obra</span>`;
 }
 
 // Pregunta y lectura en palabras para cualquier vista del explorador
 function exExplicar(R){
   const A1 = nomDim(R.dA), An = nomDim(R.dA, true), B1 = R.dB ? nomDim(R.dB) : '', Bn = R.dB ? nomDim(R.dB, true) : '';
-  const dentro = EX.dentroNombre ? ` en ${escHTML(EX.dentroNombre)}` : '';
+  const dentro = R.dentroNombre ? ` en ${escHTML(R.dentroNombre)}` : '';
   let pregunta, lectura = '';
   if (!R.dB){
     pregunta = `¿Cuáles son ${artDim(R.dA, true)} ${An} más frecuentes${dentro}?`;
@@ -4226,25 +4255,25 @@ function exExplicar(R){
     if (f) lectura = `Cada barra es el número de obras en que aparece cada ${A1}. El más frecuente es <b>${escHTML(nombreItem(f.item))}</b>, en ${nObras(f.obras.size)} (${pctTxt(f.obras.size/(R.universo||1))} del total).`;
     return {pregunta, lectura};
   }
-  if (EX.vista === 'lineas'){
+  if (R.vista === 'lineas'){
     const tB = R.dB.periodo, serie = tB ? An : Bn, tiempo = tB ? B1 : A1, dS = tB ? R.dA : R.dB, fem = artDim(dS, true) === 'las';
     pregunta = `¿Cómo cambian ${artDim(dS, true)} ${serie}${dentro} a lo largo del tiempo?`;
-    lectura = `Cada línea es ${fem ? 'una de las' : 'uno de los'} ${serie} y el eje horizontal avanza por ${tiempo}. ${EX.medida === 'conteo' ? 'La altura es el número de obras.' : 'La altura es el porcentaje de las obras de cada periodo, así que se comparan épocas con distinta cantidad de obras.'}`;
+    lectura = `Cada línea es ${fem ? 'una de las' : 'uno de los'} ${serie} y el eje horizontal avanza por ${tiempo}. ${R.medida === 'conteo' ? 'La altura es el número de obras.' : 'La altura es el porcentaje de las obras de cada periodo, así que se comparan épocas con distinta cantidad de obras.'}`;
     return {pregunta, lectura};
   }
-  if (EX.medida === 'conteo'){
+  if (R.medida === 'conteo'){
     pregunta = `¿Cuántas obras hay de cada ${A1} en cada ${B1}${dentro}?`;
     lectura = 'Las cifras son números de obras: los grupos con más obras tienen barras más largas, así que sirven para ver volumen, no proporciones.';
     return {pregunta, lectura};
   }
-  if (EX.medida === 'total'){
+  if (R.medida === 'total'){
     pregunta = `¿Qué parte de todas las obras combina cada ${A1} con cada ${B1}?`;
     return {pregunta, lectura:'Cada cifra es el porcentaje sobre todas las obras de la lectura.'};
   }
-  const porFila = EX.medida === 'fila';
+  const porFila = R.medida === 'fila';
   const grupo = porFila ? A1 : B1, term = porFila ? B1 : A1, terms = porFila ? Bn : An;
   pregunta = `Para cada ${grupo}${dentro}, ¿qué porcentaje de sus obras tiene cada ${term}?`;
-  lectura = `${EX.vista === 'paneles' ? `Hay un panel por cada ${grupo}. Cada barra` : 'Cada cifra'} dice qué porcentaje de las obras de ese grupo tiene cada ${term}. Al ser porcentajes, se pueden comparar grupos con cantidades de obras muy distintas. Una obra puede tener varios ${terms}, así que los porcentajes no siempre suman 100.`;
+  lectura = `${R.vista === 'paneles' ? `Hay un panel por cada ${grupo}. Cada barra` : 'Cada cifra'} dice qué porcentaje de las obras de ese grupo tiene cada ${term}. Al ser porcentajes, se pueden comparar grupos con cantidades de obras muy distintas. Una obra puede tener varios ${terms}, así que los porcentajes no siempre suman 100.`;
   // Ejemplo con cifras reales: el término principal donde pesa más y donde pesa menos
   const grupos = porFila ? R.filas : R.cols, lista = porFila ? R.cols : R.filas;
   if (lista.length && grupos.length > 1){
@@ -4256,6 +4285,64 @@ function exExplicar(R){
     }
   }
   return {pregunta, lectura};
+}
+
+/* ---------- Tu selección, comparada ----------
+   Lo marcado en el panel (dos o más valores de un mismo campo) se compara lado a lado
+   con el mismo cálculo del explorador. */
+const QUE_CONTAR = [['categoria1','Temas'], ['categoria2','Subtemas'], ['personajes','Personajes'], ['simbolos','Símbolos'],
+  ['gesto1','Gestos'], ['tecnicas','Técnicas'], ['objetos','Objetos'], ['escenarios','Escenarios'], ['autores','Pintores'],
+  ['pais_origen','Países de origen'], ['pais_conservacion','Países de conservación']];
+const QUE_POR_DEFECTO = {categoria1:'simbolos', categoria2:'simbolos', simbolos:'categoria1', personajes:'simbolos'};
+let turnoSel = 0;
+function pintarAvisoPanel(sel){
+  const caja = $('pf-comparar');
+  if (!sel.length){ caja.hidden = true; return; }
+  const s0 = sel[0];
+  caja.hidden = false;
+  caja.innerHTML = `<b>Marcaste ${s0.ids.length} ${escHTML(s0.rot.toLowerCase())}.</b> Puedes verlos lado a lado.<button class="boton" type="button">Ver la comparación →</button>`;
+  caja.querySelector('button').onclick = () => {
+    verPestana('general');
+    try { cajonFiltros(false); } catch {}
+    setTimeout(() => document.querySelector('.b-seleccion').scrollIntoView({behavior:'smooth', block:'start'}), 60);
+  };
+}
+async function dibujarSeleccion(){
+  if (!S.obras.length) return;
+  const sel = PF.seleccionMultiple();
+  pintarAvisoPanel(sel);
+  $('selVacia').hidden = !!sel.length; $('selCuerpo').hidden = !sel.length;
+  if (!sel.length){ S.datos.seleccion = null; return; }
+  const prevE = $('selEntre').value;
+  $('selEntre').innerHTML = sel.map(x => `<option value="${x.dim}">${escHTML(x.rot)} (${x.ids.length})</option>`).join('');
+  if (sel.some(x => x.dim === prevE)) $('selEntre').value = prevE;
+  const entre = sel.find(x => x.dim === $('selEntre').value);
+  const opciones = QUE_CONTAR.filter(([d]) => d !== entre.dim);
+  const prevQ = $('selQue').value;
+  $('selQue').innerHTML = opciones.map(([d, t]) => `<option value="${d}">${t}</option>`).join('');
+  const preferida = QUE_POR_DEFECTO[entre.dim] || 'categoria1';
+  $('selQue').value = $('selQue').dataset.elegido && opciones.some(([d]) => d === prevQ) ? prevQ : (opciones.some(([d]) => d === preferida) ? preferida : opciones[0][0]);
+  const turno = ++turnoSel, cont = $('selLienzo');
+  ocupado(cont, true);
+  try {
+    const C = {a:$('selQue').value, b:entre.dim, selA:[], selB:entre.ids, top:10, medida:$('selMedida').value, vista:'paneles', filtros:true, dentroCampo:'', dentroK:''};
+    const R = await exCalcular(C);
+    if (turno !== turnoSel) return;
+    exPaneles(R, cont, $('selAviso'), $('selLeyenda'));
+    const ex = exExplicar(R);
+    $('selPregunta').innerHTML = ex.pregunta; $('selLectura').innerHTML = ex.lectura;
+    S.datos.seleccion = {filas: filasDelCruce(R)};
+    S.selCfg = C;
+  } catch(e){ if (turno === turnoSel) cont.innerHTML = `<div class="vacio">No se pudo calcular la comparación: ${escHTML(e.message)}</div>`; }
+  finally { if (turno === turnoSel) ocupado(cont, false); }
+}
+function filasDelCruce(R){
+  const filas = [];
+  R.filas.forEach((a, i) => R.cols.forEach((b, j) => {
+    const n = R.celdas[i][j].length;
+    filas.push({[R.dA.label]:nombreItem(a.item), [R.dB.label]:nombreItem(b.item), obras:n, [`porcentaje_de_${R.dB.label}`]:+(n/(b.obras.size||1)*100).toFixed(2)});
+  }));
+  return filas;
 }
 
 /* --- Vista: matriz de calor --- */
@@ -4663,11 +4750,26 @@ const PF = (()=>{
   const FK_FIELDS = [
     'pais','ciudad','ubicacion','ciudad_origen',
     'categoria1','categoria2','categoria3','categoria4','categoria5','categoria6',
-    'relato_visual','donante','cartela_filacteria',
-    'fisiognomica','fisiognomica_imagen','rostro','tipo_gestual',
-    'gesto1','gesto2','gesto3','complejo_gestual',
   ];
   const M2M_FIELDS = ['autores','tecnicas','simbolos','caracteristicas','escenarios','objetos','descriptores','personajes'];
+  // Campos que antes admitían un solo valor y ahora varios (casillas): tema, subtema, gestos, relato visual…
+  const MFK = {
+    mTema:              {campo:'categoria1',          col:'categorias1',          label:'Tema',                 group:'basicos'},
+    mSubtema:           {campo:'categoria2',          col:'categorias2',          label:'Subtema',              group:'basicos'},
+    relato_visual:      {campo:'relato_visual',       col:'relatos_visuales',     label:'Relato visual',        group:'analisis'},
+    donante:            {campo:'donante',             col:'donantes',             label:'Donante',              group:'analisis'},
+    cartela_filacteria: {campo:'cartela_filacteria',  col:'cartelas_filacterias', label:'Cartela / filacteria', group:'analisis'},
+    fisiognomica:       {campo:'fisiognomica',        col:'fisiognomicas',        label:'Fisiognómica: postura',group:'gestos'},
+    fisiognomica_imagen:{campo:'fisiognomica_imagen', col:'fisiognomicas_imagen', label:'Fisiognómica: cuerpo', group:'gestos'},
+    rostro:             {campo:'rostro',              col:'rostros',              label:'Rostro',               group:'gestos'},
+    tipo_gestual:       {campo:'tipo_gestual',        col:'tipos_gestuales',      label:'Tipo gestual',         group:'gestos'},
+    gesto1:             {campo:'gesto1',              col:'gestos',               label:'Gesto nivel 1',        group:'gestos'},
+    gesto2:             {campo:'gesto2',              col:'gestos',               label:'Gesto nivel 2',        group:'gestos'},
+    gesto3:             {campo:'gesto3',              col:'gestos',               label:'Gesto nivel 3',        group:'gestos'},
+    complejo_gestual:   {campo:'complejo_gestual',    col:'complejos_gestuales',  label:'Complejo gestual',     group:'gestos'},
+  };
+  // Nombre de campo «antiguo» (el que usan el buscador y las gráficas) → lista de casillas
+  const A_MFK = f => MFK[f] ? f : ({categoria1:'mTema', categoria2:'mSubtema'})[f];
   const FACET_META = {
     autores:            { collection:'autores',             label:'Autor',               group:'basicos' },
     tecnicas:           { collection:'tecnicas',            label:'Técnicas',            group:'basicos' },
@@ -4690,7 +4792,7 @@ const PF = (()=>{
     complejo_gestual:   { collection:'complejos_gestuales', label:'Complejo gestual',    group:'gestos' },
   };
   const GROUP_FIELDS = {
-    basicos: ['pais','ciudad','ubicacion','ciudad_origen','mPais','mCiudad','mUbic','mPaisO','mCiudadO','categoria1','categoria2','categoria3','categoria4','categoria5','categoria6','autores','tecnicas','fecha','titulo'],
+    basicos: ['pais','ciudad','ubicacion','ciudad_origen','mPais','mCiudad','mUbic','mPaisO','mCiudadO','mTema','mSubtema','mSiglo','categoria1','categoria2','categoria3','categoria4','categoria5','categoria6','autores','tecnicas','fecha','titulo'],
     analisis: ['simbolos','descriptores','caracteristicas','escenarios','objetos','relato_visual','donante','cartela_filacteria','personajes'],
     gestos: ['fisiognomica','fisiognomica_imagen','rostro','tipo_gestual','gesto1','gesto2','gesto3','complejo_gestual'],
   };
@@ -4711,8 +4813,9 @@ const PF = (()=>{
   maps.ciudadesByPais = {}; maps.ubicacionesByCiudad = {};
 
   const state = { fechaDesde:null, fechaHasta:null, origenPaisUI:null, titulo:'',
-                  mPais:[], mCiudad:[], mUbic:[], mPaisO:[], mCiudadO:[] };   // ubicación y origen: varios valores a la vez
-  const MULTI = ['mPais','mCiudad','mUbic','mPaisO','mCiudadO'];
+                  mPais:[], mCiudad:[], mUbic:[], mPaisO:[], mCiudadO:[], mSiglo:[] };   // ubicación, origen y siglos: varios valores a la vez
+  const MULTI = ['mPais','mCiudad','mUbic','mPaisO','mCiudadO','mSiglo'];
+  Object.keys(MFK).forEach(k => state[k] = []);
   FK_FIELDS.forEach(f => state[f] = null);
   M2M_FIELDS.forEach(f => state[f] = []);
 
@@ -4764,6 +4867,9 @@ const PF = (()=>{
       const ids = state.mPaisO.flatMap(pid => (maps.ciudadesByPais[pid] || []).map(c => c.id));
       and.push({ ciudad_origen: { _in: ids.length ? ids : [-1] } });
     }
+    Object.entries(MFK).forEach(([k, c]) => { if (!ex.has(k) && state[k].length) and.push({ [c.campo]: { _in: state[k] } }); });
+    // Siglos: la fecha inicial cae en cualquiera de los siglos marcados
+    if (!ex.has('mSiglo') && state.mSiglo.length) and.push({ _or: state.mSiglo.map(d => ({ fecha_inicial: { _between: [d, d + 99] } })) });
     if (!ex.has('titulo') && state.titulo) and.push({ titulo: { _icontains: state.titulo } });
     if (!ex.has('fecha')){
       if (state.fechaHasta != null) and.push({ fecha_inicial: { _lte: state.fechaHasta } });
@@ -4999,6 +5105,10 @@ const PF = (()=>{
   function opcionesMulti(m){
     const cuenta = new Map(), add = (it, extra) => { if (!it || it.id == null) return; const k = Number(it.id);
       const e = cuenta.get(k) || {id:k, nombre:it.nombre || ('#' + k), n:0, ...extra}; e.n++; cuenta.set(k, e); };
+    if (m === 'mSiglo'){
+      for (const o of S.obras) if (o.fi != null && o.fi >= 1400 && o.fi < 2000){ const d = Math.floor(o.fi/100)*100; add({id:d, nombre:`Siglo ${romano(d/100+1)}`}); }
+      return [...cuenta.values()].sort((a, b) => a.id - b.id);
+    }
     for (const o of S.obras){
       if (m === 'mPais') add(o.conserva);
       else if (m === 'mCiudad') add(o.ciudadC, {pais:Number(o.pais)});
@@ -5018,7 +5128,7 @@ const PF = (()=>{
   }
   function pintarMulti(){
     if (!S.obras.length) return;
-    document.querySelectorAll('#panelFiltros .pf-multi').forEach(box => {
+    document.querySelectorAll('#panelFiltros .pf-multi[data-m]').forEach(box => {
       const m = box.dataset.m, sel = state[m], lista = opcionesMulti(m);
       const q = norm(box.querySelector('input[type=search]').value);
       const visibles = lista.filter(x => sel.includes(x.id) || !q || norm(x.nombre).includes(q));
@@ -5045,7 +5155,7 @@ const PF = (()=>{
       state[hijo] = state[hijo].filter(id => validos.has(id));
     }
   }
-  document.querySelectorAll('#panelFiltros .pf-multi input[type=search]').forEach(inp => {
+  document.querySelectorAll('#panelFiltros .pf-multi[data-m] input[type=search]').forEach(inp => {
     let t; inp.addEventListener('input', () => { clearTimeout(t); t = setTimeout(pintarMulti, 150); });
   });
   const nombreMulti = (m, id) => {
@@ -5053,6 +5163,59 @@ const PF = (()=>{
     return nombreDe(col, id) || opcionesMulti(m).find(x => x.id === id)?.nombre || ('#' + id);
   };
   const resumenLista = (m) => { const ns = state[m].map(id => nombreMulti(m, id)); return ns.length > 3 ? `${ns.slice(0, 3).join(', ')} y ${ns.length - 3} más` : ns.join(', '); };
+
+  const mfkCuentas = {};
+  function opcionesMfk(k){
+    const c = MFK[k], cu = mfkCuentas[k];
+    let items = REF[c.col] || [];
+    if (k === 'mSubtema' && state.mTema.length) items = items.filter(x => state.mTema.includes(Number(x.ancestro)));
+    let lista = items.map(x => ({id:Number(x.id), nombre:x.nombre || ('#' + x.id), n: cu ? (cu[x.id] || 0) : null}));
+    if (cu) lista = lista.filter(x => x.n > 0 || state[k].includes(x.id));
+    return lista.sort((a, b) => (cu ? b.n - a.n : 0) || a.nombre.localeCompare(b.nombre, 'es'));
+  }
+  function pintarMfk(k){
+    const box = document.querySelector(`#panelFiltros .pf-multi[data-f="${k}"]`); if (!box) return;
+    const sel = state[k], q = norm(box.querySelector('input[type=search]').value);
+    const lista = opcionesMfk(k).filter(x => sel.includes(x.id) || !q || norm(x.nombre).includes(q));
+    box.querySelector('.n').textContent = sel.length ? `· ${sel.length} ${sel.length === 1 ? 'marcado' : 'marcados'}` : '';
+    const cont = box.querySelector('.lista');
+    cont.innerHTML = (sel.length ? '<button type="button" class="quitar">Quitar todos</button>' : '')
+      + (lista.length ? lista.slice(0, 300).map(x => `<label><input type="checkbox" value="${x.id}"${sel.includes(x.id) ? ' checked' : ''}> ${esc(x.nombre)}${x.n != null ? `<span class="c">${fmt(x.n)}</span>` : ''}</label>`).join('')
+        : '<div class="vacio-m">Nada coincide.</div>');
+    cont.querySelector('.quitar')?.addEventListener('click', () => { state[k] = []; if (k === 'mTema') podarSubtemas(); pintarMfk(k); pintarMfk('mSubtema'); onFilterChanged(); });
+    cont.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => {
+      const id = Number(cb.value);
+      state[k] = cb.checked ? [...state[k], id] : state[k].filter(x => x !== id);
+      if (k === 'mTema'){ podarSubtemas(); pintarMfk('mSubtema'); }
+      pintarMfk(k); onFilterChanged();
+    }));
+  }
+  function podarSubtemas(){
+    if (!state.mTema.length) return;
+    state.mSubtema = state.mSubtema.filter(id => state.mTema.includes(Number(maps.categorias2[id]?.ancestro)));
+  }
+  async function refrescarMfk(k){
+    try { mfkCuentas[k] = await fetchGroupCounts(MFK[k].campo, hierarchyExclusions(MFK[k].group, k)); } catch {}
+    pintarMfk(k);
+  }
+  function montarMfk(k, cont, rotulo, abierto){
+    cont.innerHTML = (rotulo ? `<span class="faceta-rotulo">${esc(rotulo)}</span>` : '')
+      + `<details class="pf-multi" data-f="${k}"${abierto ? ' open' : ''}><summary>${esc(rotulo ? 'Elegir' : cont.dataset.rot)} <span class="n"></span></summary><input type="search" placeholder="Buscar…"><div class="lista"></div></details>`;
+    let t; cont.querySelector('input[type=search]').addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => pintarMfk(k), 150); });
+    pintarMfk(k);
+  }
+  const nombresMfk = k => { const ns = state[k].map(id => nombreDe(MFK[k].col, id) || ('#' + id)); return ns.length > 3 ? `${ns.slice(0, 3).join(', ')} y ${ns.length - 3} más` : ns.join(', '); };
+  // Selecciones con dos o más valores en un mismo campo: el tablero las compara lado a lado
+  function seleccionMultiple(){
+    const out = [], add = (dim, ids, rot) => { if (ids.length >= 2) out.push({dim, ids: ids.map(String), rot}); };
+    add('pais_conservacion', state.mPais, 'Países de conservación'); add('ciudad_conservacion', state.mCiudad, 'Ciudades de conservación');
+    add('lugar_conservacion', state.mUbic, 'Lugares de conservación'); add('pais_origen', state.mPaisO, 'Países de origen');
+    add('ciudad_origen', state.mCiudadO, 'Ciudades de origen'); add('siglo', state.mSiglo, 'Siglos');
+    add('categoria1', state.mTema, 'Temas'); add('categoria2', state.mSubtema, 'Subtemas');
+    M2M_FIELDS.forEach(f => add(f, state[f], f === 'autores' ? 'Pintores' : FACET_META[f].label));
+    Object.keys(MFK).filter(k => k !== 'mTema' && k !== 'mSubtema').forEach(k => add(k, state[k], MFK[k].label));
+    return out;
+  }
 
   // ── Lugar de origen (país → ciudad) ──
   const selPaisOrigen = $('pf-pais-origen'), selCiudadOrigen = $('pf-ciudad-origen');
@@ -5222,9 +5385,8 @@ const PF = (()=>{
     ['simbolos','caracteristicas','escenarios','objetos','descriptores','personajes'].forEach(f => {
       if (state[f].length) parts.push([f, `${FACET_META[f].label} (${state[f].length})`]);
     });
-    ['relato_visual','donante','cartela_filacteria','fisiognomica','fisiognomica_imagen','rostro','tipo_gestual','gesto1','gesto2','gesto3','complejo_gestual'].forEach(f => {
-      if (state[f]) parts.push([f, `${FACET_META[f].label}: ${nombreDe(FACET_META[f].collection, state[f])}`]);
-    });
+    Object.entries(MFK).forEach(([k, c]) => { if (state[k].length) parts.push([k, `${c.label}: ${nombresMfk(k)}`]); });
+    if (state.mSiglo.length) parts.push(['siglos', `Siglos: ${resumenLista('mSiglo')}`]);
     return parts;
   }
   function limpiarUbicacion(){
@@ -5241,6 +5403,8 @@ const PF = (()=>{
     else if (key === 'ubicacion') limpiarUbicacion();
     else if (key === 'origen'){ state.origenPaisUI = null; state.ciudad_origen = null; state.mPaisO = []; state.mCiudadO = []; selPaisOrigen.value = ''; refreshCiudadOrigenOptions(false); pintarMulti(); }
     else if (key === 'fecha') limpiarFecha();
+    else if (key === 'siglos'){ state.mSiglo = []; pintarMulti(); }
+    else if (MFK[key]){ state[key] = []; if (key === 'mTema') podarSubtemas(); pintarMfk(key); pintarMfk('mSubtema'); }
     else if (/^cat\d$/.test(key)){
       const lvl = Number(key.slice(3));
       for (let l = lvl; l <= 5; l++) state[catField(l)] = null;
@@ -5257,7 +5421,8 @@ const PF = (()=>{
     onFilterChanged();
   }
   function facetGroupOf(key){
-    if (['autores','ubicacion','origen','fecha','tecnicas','titulo'].includes(key) || /^cat\d$/.test(key)) return 'basicos';
+    if (MFK[key]) return MFK[key].group;
+    if (['autores','ubicacion','origen','fecha','siglos','tecnicas','titulo'].includes(key) || /^cat\d$/.test(key)) return 'basicos';
     return FACET_META[key] ? FACET_META[key].group : '';
   }
   function updateChips(){
@@ -5282,6 +5447,14 @@ const PF = (()=>{
   // Escribe un valor en el estado y deja la interfaz del panel coherente.
   function aplicarValor(field, value){
     const aLista = {pais:'mPais', ciudad:'mCiudad', ubicacion:'mUbic', origenPaisUI:'mPaisO', ciudad_origen:'mCiudadO'}[field];
+    const aMfk = A_MFK(field);
+    if (aMfk){
+      const ids = value == null ? [] : (Array.isArray(value) ? value : [value]).map(Number);
+      state[aMfk] = ids;
+      if (aMfk === 'mSubtema') ids.forEach(id => { const a = Number(maps.categorias2[id]?.ancestro); if (a && !state.mTema.includes(a)) state.mTema.push(a); });
+      pintarMfk('mTema'); pintarMfk('mSubtema'); pintarMfk(aMfk);
+      return;
+    }
     if (aLista){
       const ids = value == null ? [] : (Array.isArray(value) ? value : [value]).map(Number);
       state[aLista] = ids;
@@ -5367,11 +5540,21 @@ const PF = (()=>{
     if (!field || id == null) return false;
     const aLista = {pais:'mPais', ciudad:'mCiudad', ubicacion:'mUbic', origenPaisUI:'mPaisO', ciudad_origen:'mCiudadO'}[field];
     if (aLista) return state[aLista].includes(Number(id));
+    const aMfk = A_MFK(field);
+    if (aMfk && (state[aMfk].includes(Number(id)))) return true;
+    if (aMfk && MFK[field]) return false;
     if (M2M_FIELDS.includes(field)) return state[field].includes(Number(id));
     return state[field] != null && String(state[field]) === String(id);
   }
   function alternarFaceta(field, id){
     if (!field || id == null) return;
+    const aMfk = A_MFK(field);
+    if (aMfk){
+      const n = Number(id);
+      aplicarValor(aMfk, state[aMfk].includes(n) ? state[aMfk].filter(x => x !== n) : [...state[aMfk], n]);
+      onFilterChanged();
+      return;
+    }
     if (M2M_FIELDS.includes(field)){
       const n = Number(id);
       aplicarValor(field, state[field].includes(n) ? state[field].filter(x => x !== n) : [...state[field], n]);
@@ -5383,7 +5566,9 @@ const PF = (()=>{
   const valorFaceta = f => {
     const aLista = {pais:'mPais', ciudad:'mCiudad', ubicacion:'mUbic', origenPaisUI:'mPaisO', ciudad_origen:'mCiudadO'}[f];
     if (aLista) return state[aLista].length === 1 ? state[aLista][0] : null;   // el mapa resalta un país solo si hay uno
-    return state[f];
+    const aMfk = A_MFK(f);
+    if (aMfk && state[aMfk].length) return state[aMfk].length === 1 ? state[aMfk][0] : null;
+    return MFK[f] ? null : state[f];
   };
 
   // ── Orquestación con el tablero ──
@@ -5465,15 +5650,15 @@ const PF = (()=>{
       const g = group.dataset.group;
       if (g === 'basicos'){
         for (let l = 0; l <= 5; l++) refreshSelectCounts(catSelects[l], catField(l), hierarchyExclusions('basicos', catField(l)), true);
+        refrescarMfk('mTema'); refrescarMfk('mSubtema');
         refreshChecklistCounts('tecnicas');
       }
       if (g === 'analisis'){
-        ['relato_visual','donante','cartela_filacteria'].forEach(f => refreshSelectCounts(fkSelectEls[f], f, hierarchyExclusions('analisis', f)));
+        ['relato_visual','donante','cartela_filacteria'].forEach(refrescarMfk);
         ['simbolos','caracteristicas','escenarios','objetos','descriptores'].forEach(refreshChecklistCounts);
       }
       if (g === 'gestos'){
-        ['fisiognomica','fisiognomica_imagen','rostro','tipo_gestual','gesto1','gesto2','gesto3','complejo_gestual'].forEach(f =>
-          refreshSelectCounts(fkSelectEls[f], f, hierarchyExclusions('gestos', f), true));
+        ['fisiognomica','fisiognomica_imagen','rostro','tipo_gestual','gesto1','gesto2','gesto3','complejo_gestual'].forEach(refrescarMfk);
       }
     });
   }
@@ -5509,6 +5694,7 @@ const PF = (()=>{
     M2M_FIELDS.forEach(f => state[f] = []);
     state.origenPaisUI = null;
     MULTI.forEach(m => state[m] = []);
+    Object.keys(MFK).forEach(k => state[k] = []);
     panel.querySelectorAll('.pf-multi input[type=search]').forEach(inp => inp.value = '');
     pintarMulti();
     state.titulo = ''; entradaTitulo.value = '';
@@ -5523,6 +5709,7 @@ const PF = (()=>{
       panel.querySelectorAll('.pf-check label').forEach(label => label.style.display = '');
       panel.querySelectorAll('.pf-check .vacio-f').forEach(el => el.remove());
       panel.querySelectorAll('[data-facet]').forEach(c => c._renderChips && c._renderChips());
+      Object.keys(MFK).forEach(pintarMfk);
     }
     onFilterChanged();
   }
@@ -5536,10 +5723,12 @@ const PF = (()=>{
     for (let l = 0; l <= 5; l++) refreshCatOptions(l, false);
     Object.keys(FACET_META).forEach(field => {
       const container = document.querySelector(`#panelFiltros [data-facet="${field}"]`);
-      if (container.querySelector('select')) initGenericFkFacet(field);
+      if (MFK[field]) montarMfk(field, container, container.querySelector('.faceta-rotulo').childNodes[0].textContent.trim());
+      else if (container.querySelector('select')) initGenericFkFacet(field);
       else if (container.querySelector('.pf-typeahead')) initTypeahead(field);
       else if (container.querySelector('.pf-check')) initChecklist(field);
     });
+    document.querySelectorAll('#panelFiltros [data-mfk]').forEach(el => montarMfk(el.dataset.mfk, el, '', el.dataset.mfk === 'mTema'));
     $('pf-carga').remove();
     listo = true;
     sincronizar();
@@ -5548,7 +5737,7 @@ const PF = (()=>{
   }
 
   return { init, reiniciar, sincronizar,
-           resumen: facetSummary, quitar: clearFacet, valor: valorFaceta, pintarMulti,
+           resumen: facetSummary, quitar: clearFacet, valor: valorFaceta, pintarMulti, seleccionMultiple,
            filtroActual: () => buildFilter([]),
            // Vocabulario de referencia (para el buscador del encabezado); null hasta que cargue
            referencias: () => listo ? {REF, maps} : null,
@@ -5894,6 +6083,10 @@ llenarSelect($('fA'),'categoria1'); llenarSelect($('fB'),'pais_origen');
 ['tModo','tPaso'].forEach(id => $(id).onchange = dibujarTiempo);
 ['atlasEje','atlasVista','atlasNivel'].forEach(id => $(id).onchange = () => { dibujarAtlas(); dibujarTecnicas(); });
 montarCatalogo();
+$('selEntre').onchange = () => { $('selQue').dataset.elegido = ''; dibujarSeleccion(); };
+$('selQue').onchange = () => { $('selQue').dataset.elegido = '1'; dibujarSeleccion(); };
+$('selMedida').onchange = dibujarSeleccion;
+$('selAbrir').onclick = () => { if (S.selCfg) abrirExploradorCon({...S.selCfg, selB:[...S.selCfg.selB]}, 'seleccion'); };
 llenarSelect($('cA'),'categoria1'); llenarSelect($('cB'),'gesto1');
 montarExplorador();
 ['rDim','rTop'].forEach(id=>$(id).onchange=dibujarRanking);
@@ -5977,7 +6170,7 @@ document.addEventListener('keydown', e=>{
   if ($('explorador').classList.contains('abierto')) return cerrarExplorador();
 });
 PF.init();
-let espera; new ResizeObserver(()=>{ clearTimeout(espera); espera=setTimeout(()=>{ if(S.obras.length){ dibujarMapa(); dibujarTecnicas(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRed(); if(vistos.has('comparativo')) dibujarComparativo(); if (vistos.has('detalle')) dibujarAutores(); } }, 250); }).observe(document.querySelector('.rejilla'));
+let espera; new ResizeObserver(()=>{ clearTimeout(espera); espera=setTimeout(()=>{ if(S.obras.length){ dibujarSeleccion(); dibujarMapa(); dibujarTecnicas(); dibujarTiempo(); dibujarAtlas(); dibujarFlujos(); dibujarRed(); if(vistos.has('comparativo')) dibujarComparativo(); if (vistos.has('detalle')) dibujarAutores(); } }, 250); }).observe(document.querySelector('.rejilla'));
 let esperaGX; new ResizeObserver(()=>{ clearTimeout(esperaGX); esperaGX=setTimeout(()=>{ if (gxActiva()){ gxAsoc(); gxGrafo(); gxComp(); } }, 250); }).observe($('vistaGestos'));
 if (typeof d3 === 'undefined'){ estado('No cargó la librería D3 (revisa la conexión a internet).', true); }
 else conectar();
