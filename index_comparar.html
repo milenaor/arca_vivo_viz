@@ -1526,7 +1526,7 @@ function montarHerramientas(){
     if (bloque === 'comparar') return;   // el comparador abre su resultado en el explorador, que tiene sus propias descargas
     const svgs = !['pulso','gx-resumen','gx-lista'].includes(bloque);
     // Cada gráfica del tablero general puede abrirse en el explorador ya configurada
-    const cruzar = PRESETS[bloque] ? '<button data-t="cruzar" class="explorar" title="Abrir en el comparador para cruzar con otros campos">Cruzar ↗</button>' : '';
+    const cruzar = PRESETS[bloque] ? '<button data-t="cruzar" class="explorar" title="Abrir en «Explorar a fondo» para cruzar con otros campos">Explorar ↗</button>' : '';
     barra.innerHTML = cruzar + (svgs ?'<button data-t="png" title="Descargar imagen PNG (con su leyenda)">PNG</button><button data-t="svg" title="Descargar vector SVG (con su leyenda)">SVG</button>' : '')
       + '<button data-t="csv" title="Descargar los datos de esta gráfica">CSV</button>';
     barra.querySelectorAll('button').forEach(b => b.onclick = () => {
