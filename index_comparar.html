@@ -380,6 +380,16 @@ label.faceta-rotulo select{margin-top:4px}
 .pf-lista .vacio-f,.pf-check .vacio-f{color:var(--tenue);cursor:default}
 .pf-lista .n,.pf-check .n{color:var(--tenue);font-size:.74rem;white-space:nowrap;margin-left:auto;font-variant-numeric:tabular-nums}
 .pf-check{padding:4px 9px}
+.pf-rejilla[hidden]{display:none!important}
+.pf-multi{margin-top:6px;border:1px solid var(--linea);border-radius:6px;background:var(--panel2)}
+.pf-multi summary{cursor:pointer;padding:5px 9px;font-size:.8rem;font-weight:600;color:var(--texto)}
+.pf-multi summary .n{font-weight:400;color:var(--oro)}
+.pf-multi input[type=search]{width:calc(100% - 14px);margin:0 7px 4px;padding:3px 6px;border:1px solid var(--linea);border-radius:5px;background:var(--panel);font-size:.78rem}
+.pf-multi .lista{max-height:180px;overflow-y:auto;padding:0 9px 6px}
+.pf-multi label{display:flex;align-items:center;gap:7px;font-size:.8rem;padding:2px 0;cursor:pointer}
+.pf-multi label .c{margin-left:auto;color:var(--tenue);font-size:.72rem;font-variant-numeric:tabular-nums}
+.pf-multi .quitar{all:unset;cursor:pointer;color:var(--oro);font-size:.74rem;text-decoration:underline;margin:0 9px 6px;display:inline-block}
+.pf-multi .vacio-m{font-size:.75rem;color:var(--tenue);padding:2px 0}
 .pf-check label{display:flex;align-items:center;gap:7px;font-size:.8rem;padding:3px 0;cursor:pointer}
 .pf-check input{accent-color:var(--oro)}
 .desplegable .pf-check{display:none}
@@ -940,8 +950,11 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
 
         <div class="faceta">
           <span class="faceta-rotulo">Ubicación actual</span>
-          <p class="pf-pista">Elige país, ciudad o lugar; los demás campos se ajustan solos.</p>
-          <div class="pf-rejilla">
+          <p class="pf-pista">Marca uno o varios países; si quieres, luego ciudades y lugares dentro de ellos.</p>
+          <details class="pf-multi" data-m="mPais" open><summary>País <span class="n"></span></summary><input type="search" placeholder="Buscar país…"><div class="lista"></div></details>
+          <details class="pf-multi" data-m="mCiudad"><summary>Ciudad <span class="n"></span></summary><input type="search" placeholder="Buscar ciudad…"><div class="lista"></div></details>
+          <details class="pf-multi" data-m="mUbic"><summary>Lugar (museo, iglesia…) <span class="n"></span></summary><input type="search" placeholder="Buscar lugar…"><div class="lista"></div></details>
+          <div class="pf-rejilla" hidden>
             <div><label for="pf-pais">País</label><select id="pf-pais"></select></div>
             <div><label for="pf-ciudad">Ciudad</label><select id="pf-ciudad"></select></div>
             <div><label for="pf-ubicacion">Lugar</label><select id="pf-ubicacion"></select></div>
@@ -951,8 +964,10 @@ footer{margin-top:30px;color:var(--tenue);font-size:.8rem;max-width:80ch}
 
         <div class="faceta">
           <span class="faceta-rotulo">Lugar de origen</span>
-          <p class="pf-pista">Dónde se creó la obra, no dónde está hoy.</p>
-          <div class="pf-rejilla">
+          <p class="pf-pista">Dónde se creó la obra, no dónde está hoy. Puedes marcar varios.</p>
+          <details class="pf-multi" data-m="mPaisO" open><summary>País <span class="n"></span></summary><input type="search" placeholder="Buscar país…"><div class="lista"></div></details>
+          <details class="pf-multi" data-m="mCiudadO"><summary>Ciudad <span class="n"></span></summary><input type="search" placeholder="Buscar ciudad…"><div class="lista"></div></details>
+          <div class="pf-rejilla" hidden>
             <div><label for="pf-pais-origen">País</label><select id="pf-pais-origen"></select></div>
             <div><label for="pf-ciudad-origen">Ciudad</label><select id="pf-ciudad-origen"></select></div>
           </div>
@@ -1309,6 +1324,7 @@ function aplicarFiltros(){
   const activo = f.pais || f.desde!=null || f.hasta!=null || S.panelIds;
   S.permitidas = activo ? new Set(S.obras.filter(o=>pasaPanel(o) && pasaPeriodo(o) && (!f.pais || o.pais===f.pais.id)).map(o=>o.id)) : null;
   PF.sincronizar();
+  if (!S.multiPintado){ S.multiPintado = true; PF.pintarMulti(); }   // listas de lugares, una vez cargadas las obras
   pintarBarraActiva();
   const n = S.permitidas ? S.permitidas.size : S.total;
   $('alcance').textContent = activo ? `${fmt(n)} de ${fmt(S.total)} obras en el filtro` : `${fmt(S.total)} obras`;
@@ -4674,7 +4690,7 @@ const PF = (()=>{
     complejo_gestual:   { collection:'complejos_gestuales', label:'Complejo gestual',    group:'gestos' },
   };
   const GROUP_FIELDS = {
-    basicos: ['pais','ciudad','ubicacion','ciudad_origen','categoria1','categoria2','categoria3','categoria4','categoria5','categoria6','autores','tecnicas','fecha','titulo'],
+    basicos: ['pais','ciudad','ubicacion','ciudad_origen','mPais','mCiudad','mUbic','mPaisO','mCiudadO','categoria1','categoria2','categoria3','categoria4','categoria5','categoria6','autores','tecnicas','fecha','titulo'],
     analisis: ['simbolos','descriptores','caracteristicas','escenarios','objetos','relato_visual','donante','cartela_filacteria','personajes'],
     gestos: ['fisiognomica','fisiognomica_imagen','rostro','tipo_gestual','gesto1','gesto2','gesto3','complejo_gestual'],
   };
@@ -4694,7 +4710,9 @@ const PF = (()=>{
   Object.keys(REF_QUERIES).forEach(col => { REF[col] = []; maps[col] = {}; });
   maps.ciudadesByPais = {}; maps.ubicacionesByCiudad = {};
 
-  const state = { fechaDesde:null, fechaHasta:null, origenPaisUI:null, titulo:'' };
+  const state = { fechaDesde:null, fechaHasta:null, origenPaisUI:null, titulo:'',
+                  mPais:[], mCiudad:[], mUbic:[], mPaisO:[], mCiudadO:[] };   // ubicación y origen: varios valores a la vez
+  const MULTI = ['mPais','mCiudad','mUbic','mPaisO','mCiudadO'];
   FK_FIELDS.forEach(f => state[f] = null);
   M2M_FIELDS.forEach(f => state[f] = []);
 
@@ -4735,6 +4753,15 @@ const PF = (()=>{
     });
     if (!ex.has('ciudad_origen') && !state.ciudad_origen && state.origenPaisUI){
       const ids = (maps.ciudadesByPais[state.origenPaisUI] || []).map(c => c.id);
+      and.push({ ciudad_origen: { _in: ids.length ? ids : [-1] } });
+    }
+    // Ubicación y origen con varios valores: dentro de una lista suman (cualquiera); entre niveles se acotan.
+    if (!ex.has('mPais') && state.mPais.length) and.push({ pais: { _in: state.mPais } });
+    if (!ex.has('mCiudad') && state.mCiudad.length) and.push({ ciudad: { _in: state.mCiudad } });
+    if (!ex.has('mUbic') && state.mUbic.length) and.push({ ubicacion: { _in: state.mUbic } });
+    if (!ex.has('mCiudadO') && state.mCiudadO.length) and.push({ ciudad_origen: { _in: state.mCiudadO } });
+    else if (!ex.has('mPaisO') && state.mPaisO.length){
+      const ids = state.mPaisO.flatMap(pid => (maps.ciudadesByPais[pid] || []).map(c => c.id));
       and.push({ ciudad_origen: { _in: ids.length ? ids : [-1] } });
     }
     if (!ex.has('titulo') && state.titulo) and.push({ titulo: { _icontains: state.titulo } });
@@ -4966,6 +4993,67 @@ const PF = (()=>{
     onFilterChanged();
   });
 
+  // ── Listas de varios valores (país, ciudad, lugar; país y ciudad de origen) ──
+  // Las cifras salen de las obras ya cargadas: cuántas obras de ARCA hay en cada término.
+  const PADRE = {mCiudad:'mPais', mUbic:'mCiudad', mCiudadO:'mPaisO'};
+  function opcionesMulti(m){
+    const cuenta = new Map(), add = (it, extra) => { if (!it || it.id == null) return; const k = Number(it.id);
+      const e = cuenta.get(k) || {id:k, nombre:it.nombre || ('#' + k), n:0, ...extra}; e.n++; cuenta.set(k, e); };
+    for (const o of S.obras){
+      if (m === 'mPais') add(o.conserva);
+      else if (m === 'mCiudad') add(o.ciudadC, {pais:Number(o.pais)});
+      else if (m === 'mUbic') add(o.lugar, {ciudad:Number(o.ciudadC?.id), pais:Number(o.pais)});
+      else if (m === 'mPaisO') add(o.origen);
+      else if (m === 'mCiudadO') add(o.ciudadO, {pais:Number(o.origen?.id)});
+    }
+    let lista = [...cuenta.values()];
+    // Se acota a lo marcado en el nivel superior (para lugares: ciudades o, si no hay, países)
+    if (m === 'mCiudad' && state.mPais.length) lista = lista.filter(x => state.mPais.includes(x.pais));
+    if (m === 'mCiudadO' && state.mPaisO.length) lista = lista.filter(x => state.mPaisO.includes(x.pais));
+    if (m === 'mUbic'){
+      if (state.mCiudad.length) lista = lista.filter(x => state.mCiudad.includes(x.ciudad));
+      else if (state.mPais.length) lista = lista.filter(x => state.mPais.includes(x.pais));
+    }
+    return lista.sort((a, b) => b.n - a.n || a.nombre.localeCompare(b.nombre, 'es'));
+  }
+  function pintarMulti(){
+    if (!S.obras.length) return;
+    document.querySelectorAll('#panelFiltros .pf-multi').forEach(box => {
+      const m = box.dataset.m, sel = state[m], lista = opcionesMulti(m);
+      const q = norm(box.querySelector('input[type=search]').value);
+      const visibles = lista.filter(x => sel.includes(x.id) || !q || norm(x.nombre).includes(q));
+      const LIM = 300;
+      box.querySelector('.n').textContent = sel.length ? `· ${sel.length} ${sel.length === 1 ? 'marcado' : 'marcados'}` : '';
+      const cont = box.querySelector('.lista');
+      cont.innerHTML = (sel.length ? '<button type="button" class="quitar">Quitar todos</button>' : '')
+        + (visibles.length ? visibles.slice(0, LIM).map(x => `<label><input type="checkbox" value="${x.id}"${sel.includes(x.id) ? ' checked' : ''}> ${esc(x.nombre)}<span class="c">${fmt(x.n)}</span></label>`).join('')
+            + (visibles.length > LIM ? `<div class="vacio-m">Hay ${fmt(visibles.length - LIM)} más: escribe para buscarlos.</div>` : '')
+          : '<div class="vacio-m">Nada coincide.</div>');
+      cont.querySelector('.quitar')?.addEventListener('click', () => { state[m] = []; podar(); pintarMulti(); onFilterChanged(); });
+      cont.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', () => {
+        const id = Number(cb.value);
+        state[m] = cb.checked ? [...state[m], id] : state[m].filter(x => x !== id);
+        podar(); pintarMulti(); onFilterChanged();
+      }));
+    });
+  }
+  // Al desmarcar un país se quitan sus ciudades y lugares marcados, y así sucesivamente.
+  function podar(){
+    if (!S.obras.length) return;
+    for (const hijo of ['mCiudad','mUbic','mCiudadO']){
+      const validos = new Set(opcionesMulti(hijo).map(x => x.id));
+      state[hijo] = state[hijo].filter(id => validos.has(id));
+    }
+  }
+  document.querySelectorAll('#panelFiltros .pf-multi input[type=search]').forEach(inp => {
+    let t; inp.addEventListener('input', () => { clearTimeout(t); t = setTimeout(pintarMulti, 150); });
+  });
+  const nombreMulti = (m, id) => {
+    const col = {mPais:'paises', mPaisO:'paises', mCiudad:'ciudades', mCiudadO:'ciudades', mUbic:'ubicaciones'}[m];
+    return nombreDe(col, id) || opcionesMulti(m).find(x => x.id === id)?.nombre || ('#' + id);
+  };
+  const resumenLista = (m) => { const ns = state[m].map(id => nombreMulti(m, id)); return ns.length > 3 ? `${ns.slice(0, 3).join(', ')} y ${ns.length - 3} más` : ns.join(', '); };
+
   // ── Lugar de origen (país → ciudad) ──
   const selPaisOrigen = $('pf-pais-origen'), selCiudadOrigen = $('pf-ciudad-origen');
   function refreshCiudadOrigenOptions(preserve){
@@ -5118,13 +5206,11 @@ const PF = (()=>{
     const parts = [];
     if (state.titulo) parts.push(['titulo', `Título contiene: “${state.titulo}”`]);
     if (state.autores.length) parts.push(['autores', `Autor (${state.autores.length})`]);
-    if (state.pais || state.ciudad || state.ubicacion){
-      const bits = [nombreDe('ubicaciones', state.ubicacion), nombreDe('ciudades', state.ciudad), nombreDe('paises', state.pais)].filter(Boolean);
-      parts.push(['ubicacion', `Ubicación: ${bits[0] || ''}`]);
-    }
-    if (state.ciudad_origen || state.origenPaisUI){
-      parts.push(['origen', `Origen: ${nombreDe('ciudades', state.ciudad_origen) || nombreDe('paises', state.origenPaisUI)}`]);
-    }
+    // Se nombra el nivel más concreto que tenga algo marcado
+    const ubic = ['mUbic','mCiudad','mPais'].find(m => state[m].length);
+    if (ubic) parts.push(['ubicacion', `Ubicación: ${resumenLista(ubic)}`]);
+    const orig = ['mCiudadO','mPaisO'].find(m => state[m].length);
+    if (orig) parts.push(['origen', `Origen: ${resumenLista(orig)}`]);
     if (state.fechaDesde != null || state.fechaHasta != null){
       parts.push(['fecha', `Fecha: ${state.fechaDesde ?? '…'} – ${state.fechaHasta ?? '…'}`]);
     }
@@ -5143,7 +5229,8 @@ const PF = (()=>{
   }
   function limpiarUbicacion(){
     state.pais = null; state.ciudad = null; state.ubicacion = null;
-    selPais.value = ''; refreshCiudadOptions(false); refreshUbicacionOptions(false); refreshGeoLink();
+    state.mPais = []; state.mCiudad = []; state.mUbic = [];
+    selPais.value = ''; refreshCiudadOptions(false); refreshUbicacionOptions(false); refreshGeoLink(); pintarMulti();
   }
   function limpiarFecha(){
     state.fechaDesde = null; state.fechaHasta = null;
@@ -5152,7 +5239,7 @@ const PF = (()=>{
   function clearFacet(key){
     if (key === 'titulo'){ state.titulo = ''; entradaTitulo.value = ''; }
     else if (key === 'ubicacion') limpiarUbicacion();
-    else if (key === 'origen'){ state.origenPaisUI = null; state.ciudad_origen = null; selPaisOrigen.value = ''; refreshCiudadOrigenOptions(false); }
+    else if (key === 'origen'){ state.origenPaisUI = null; state.ciudad_origen = null; state.mPaisO = []; state.mCiudadO = []; selPaisOrigen.value = ''; refreshCiudadOrigenOptions(false); pintarMulti(); }
     else if (key === 'fecha') limpiarFecha();
     else if (/^cat\d$/.test(key)){
       const lvl = Number(key.slice(3));
@@ -5194,6 +5281,19 @@ const PF = (()=>{
   // ── Cambios pedidos desde las gráficas del tablero ──
   // Escribe un valor en el estado y deja la interfaz del panel coherente.
   function aplicarValor(field, value){
+    const aLista = {pais:'mPais', ciudad:'mCiudad', ubicacion:'mUbic', origenPaisUI:'mPaisO', ciudad_origen:'mCiudadO'}[field];
+    if (aLista){
+      const ids = value == null ? [] : (Array.isArray(value) ? value : [value]).map(Number);
+      state[aLista] = ids;
+      // Se completan los niveles superiores para que las listas queden coherentes
+      const c = id => maps.ciudades[id], u = id => maps.ubicaciones[id];
+      if (aLista === 'mUbic') ids.forEach(id => { const ci = u(id)?.ciudad; if (ci != null && !state.mCiudad.includes(ci)) state.mCiudad.push(ci); });
+      if (aLista === 'mUbic' || aLista === 'mCiudad') state.mCiudad.forEach(id => { const pa = c(id)?.pais; if (pa != null && !state.mPais.includes(pa)) state.mPais.push(pa); });
+      if (aLista === 'mCiudadO') ids.forEach(id => { const pa = c(id)?.pais; if (pa != null && !state.mPaisO.includes(pa)) state.mPaisO.push(pa); });
+      if (aLista === 'mPais' || aLista === 'mPaisO') podar();
+      pintarMulti();
+      return;
+    }
     if (field === 'titulo'){ state.titulo = value || ''; entradaTitulo.value = state.titulo; return; }
     if (field === 'pais'){
       state.pais = value ?? null;
@@ -5265,6 +5365,8 @@ const PF = (()=>{
   const fijarFaceta = (field, value) => fijarVarias({[field]: value});
   function tieneFaceta(field, id){
     if (!field || id == null) return false;
+    const aLista = {pais:'mPais', ciudad:'mCiudad', ubicacion:'mUbic', origenPaisUI:'mPaisO', ciudad_origen:'mCiudadO'}[field];
+    if (aLista) return state[aLista].includes(Number(id));
     if (M2M_FIELDS.includes(field)) return state[field].includes(Number(id));
     return state[field] != null && String(state[field]) === String(id);
   }
@@ -5278,6 +5380,11 @@ const PF = (()=>{
     }
     fijarFaceta(field, tieneFaceta(field, id) ? null : Number(id));
   }
+  const valorFaceta = f => {
+    const aLista = {pais:'mPais', ciudad:'mCiudad', ubicacion:'mUbic', origenPaisUI:'mPaisO', ciudad_origen:'mCiudadO'}[f];
+    if (aLista) return state[aLista].length === 1 ? state[aLista][0] : null;   // el mapa resalta un país solo si hay uno
+    return state[f];
+  };
 
   // ── Orquestación con el tablero ──
   function publicar(){
@@ -5357,11 +5464,6 @@ const PF = (()=>{
     document.querySelectorAll('#panelFiltros .pf-grupo.open').forEach(group => {
       const g = group.dataset.group;
       if (g === 'basicos'){
-        refreshSelectCounts(selPais, 'pais', hierarchyExclusions('basicos', 'pais'), true);
-        refreshSelectCounts(selCiudad, 'ciudad', hierarchyExclusions('basicos', 'ciudad'), true);
-        refreshSelectCounts(selUbicacion, 'ubicacion', hierarchyExclusions('basicos', 'ubicacion'), true);
-        refreshOrigenPaisCounts();
-        refreshSelectCounts(selCiudadOrigen, 'ciudad_origen', hierarchyExclusions('basicos', 'ciudad_origen'), true);
         for (let l = 0; l <= 5; l++) refreshSelectCounts(catSelects[l], catField(l), hierarchyExclusions('basicos', catField(l)), true);
         refreshChecklistCounts('tecnicas');
       }
@@ -5406,6 +5508,9 @@ const PF = (()=>{
     FK_FIELDS.forEach(f => state[f] = null);
     M2M_FIELDS.forEach(f => state[f] = []);
     state.origenPaisUI = null;
+    MULTI.forEach(m => state[m] = []);
+    panel.querySelectorAll('.pf-multi input[type=search]').forEach(inp => inp.value = '');
+    pintarMulti();
     state.titulo = ''; entradaTitulo.value = '';
     limpiarFecha();
     if (listo){
@@ -5443,7 +5548,7 @@ const PF = (()=>{
   }
 
   return { init, reiniciar, sincronizar,
-           resumen: facetSummary, quitar: clearFacet, valor: f => state[f],
+           resumen: facetSummary, quitar: clearFacet, valor: valorFaceta, pintarMulti,
            filtroActual: () => buildFilter([]),
            // Vocabulario de referencia (para el buscador del encabezado); null hasta que cargue
            referencias: () => listo ? {REF, maps} : null,
